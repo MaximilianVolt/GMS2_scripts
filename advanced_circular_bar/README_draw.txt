@@ -1,4 +1,4 @@
-///@ADVANCED CIRCULAR BAR v2.0.5 - TOWARDS ANIMATION
+///@ADVANCED CIRCULAR BAR v2.0.6 - TOWARDS ANIMATION
 
 /*
 	--------------------------------
@@ -8,7 +8,7 @@
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/8/2022
-	Last updated on [DMY]: 4/11/2023
+	Last updated on [DMY]: 7/11/2023
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:

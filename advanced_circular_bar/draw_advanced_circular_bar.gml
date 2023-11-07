@@ -491,7 +491,9 @@ function __circular_bar_rounded_triangle_edge(radius, angle, width, dir, ext, po
 	var ylen = p2y - p1y;
 	var bx = (p1x + p2x) / 2;
 	var by = (p1y + p2y) / 2;
-	var vx = bx, vy = by;
+	var v1x = bx, v1y = by;
+	var v2x = bx, v2y = by;
+	var angle_diff = sign(dir) * 30;
 
 	switch (position)
 	{
@@ -503,13 +505,19 @@ function __circular_bar_rounded_triangle_edge(radius, angle, width, dir, ext, po
 			p2y -= ylen / 4;
 			bx = p2x;
 			by = p2y;
-			vx = bx + lengthdir_x(ew, angle);
-			vy = by + lengthdir_y(ew, angle);
+
+			angle_diff = dir - radtodeg(arctan(2 * sqrt(2)) * sign(dir));
+			v1x = bx + lengthdir_x(ew, angle + angle_diff);
+			v1y = by + lengthdir_y(ew, angle + angle_diff);
+			v2x = bx;
+			v2y = by;
 		break;
 
 		case CENTER:
-			vx = bx + lengthdir_x(ew, angle);
-			vy = by + lengthdir_y(ew, angle);
+			v1x = bx + lengthdir_x(ew, angle + angle_diff);
+			v1y = by + lengthdir_y(ew, angle + angle_diff);
+			v2x = bx + lengthdir_x(ew, angle - angle_diff);
+			v2y = by + lengthdir_y(ew, angle - angle_diff);
 		break;
 
 		case BOTTOM:
@@ -517,12 +525,17 @@ function __circular_bar_rounded_triangle_edge(radius, angle, width, dir, ext, po
 			p1y += ylen / 4;
 			bx = p1x;
 			by = p1y;
-			vx = bx + lengthdir_x(ew, angle);
-			vy = by + lengthdir_y(ew, angle);
+
+			angle_diff = dir - radtodeg(arctan(2 * sqrt(2)) * sign(dir));
+			v2x = bx + lengthdir_x(ew, angle - angle_diff);
+			v2y = by + lengthdir_y(ew, angle - angle_diff);
+			v1x = bx;
+			v1y = by;
 		break;
 	}
 
-	draw_triangle(p1x, p1y, p2x, p2y, vx, vy, false);
+	draw_triangle(p1x, p1y, bx, by, v1x, v1y, false);
+	draw_triangle(p2x, p2y, bx, by, v2x, v2y, false);
 	draw_circle(bx, by, qw, false);
 }
 
