@@ -1,4 +1,4 @@
-///@ADVANCED CIRCULAR BAR v2.0.6 - TOWARDS ANIMATION
+///@ADVANCED CIRCULAR BAR v2.0.7 - TOWARDS ANIMATION
 
 /*
 	--------------------------------
@@ -8,7 +8,7 @@
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/8/2022
-	Last updated on [DMY]: 7/11/2023
+	Last updated on [DMY]: 8/11/2023
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
@@ -18,7 +18,7 @@
 	> CONSIDER USING draw_set_circle_precision() TO CHANGE THE BAR'S INNER SMOOTHNESS
 		> MAXIMUM PRECISION SUPPORTED: 999
 
-	>	TO REMOVE EDGES' EXTENSION CALCULATION, DECOMMENT LINE 287
+	>	TO REMOVE EDGES' EXTENSION CALCULATION, DECOMMENT LINE 286
 
 	> refresh_mask IS A HEAVY PARAMETER TO PASS AS true, YOU SHOULD RESET IT TO false AS SOON AS
 	* YOU'RE DONE MAKING THE GRAPHICAL CHANGES TO THE BAR MASK
