@@ -81,6 +81,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = 359, colors = [c_bla
 						if (other.__angle_to_placement_percentage(edge_angles[j]) == edge_placements[k])
 						{
 							edge = other.edges[k % array_length(other.edges)];
+							break;
 						}
 					}
 
