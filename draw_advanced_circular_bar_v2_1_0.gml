@@ -1,3 +1,5 @@
+#macro ADVANCED_CIRCULAR_BAR_MINIMUM_VISIBLE_VALUE 0.005
+
 enum ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS
 {
 	TOP = 0,
@@ -21,7 +23,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 	self.y = y;
 	self.value = value;
 	self.precision = precision;
-	set_colors(colors[0], colors[1]);
+	__set_colors(colors[0], colors[1]);
 	self.transparency = transparency;
 	self.start_angle = start_angle;
 	self.end_angle = end_angle;
@@ -36,7 +38,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 	self.redraw = true;
 	self.mask = -1;
 
-	update(true);
+	__update(true);
 	#endregion
 
 	static edge_requires_change =
@@ -64,7 +66,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 	];
 
 	#region Base functions
-	static copy = function(precision_override = self.precision)
+	static __copy = function(precision_override = self.precision)
 	{
 		var bar_copy = json_parse(json_stringify(self));
 		static_set(bar_copy, static_get(Advanced_circular_bar));
@@ -72,24 +74,24 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		return bar_copy;
 	}
 
-	static update = function(refresh_mask = false)
+	static __update = function(refresh_mask = false)
 	{
 		redraw = true;
 		if (refresh_mask && surface_exists(mask)) {surface_free(mask);}
 	}
 
-	static get_sector = function(value = self.value)
+	static __get_sector = function(value = self.value)
 	{
-		return ceil(value * precision) - (value < 0.005);
+		return ceil(value * precision) - (value < ADVANCED_CIRCULAR_BAR_MINIMUM_VISIBLE_VALUE);
 	}
 
-	static set_colors = function(color_start, color_end)
+	static __set_colors = function(color_start, color_end)
 	{
 		colors = [color_start, color_end];
 		color = merge_color(color_start, color_end, value);
 	}
 
-	static make_border_of = function(bar, border_width)
+	static __make_border_of = function(bar, border_width)
 	{
 		radius = bar.radius + border_width;
 		width = bar.width + 2 * border_width;
@@ -100,7 +102,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		start_angle = _start_angle - dir * border_angle * edge_requires_change[edge_type_start];
 		end_angle = _end_angle + dir * border_angle * edge_requires_change[edge_type_final];
 
-		var edge_placements = get_placement_values();
+		var edge_placements = __get_placement_values();
 
 		// I hate this
 		for (var i = 0; i < array_length(divisors); i++)
@@ -120,10 +122,10 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 			}
 		}
 
-		update(true);
+		__update(true);
 	}
 
-	static get_placement_values = function()
+	static __get_placement_values = function()
 	{
 		var placement_values = [];
 		var _ = __angle_to_placement_percentage;
@@ -146,8 +148,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 	#region Main
 	static __draw = function(x = self.x, y = self.y, refresh_mask = false)
 	{
-		if (get_sector() < 1 || transparency <= 0) {exit;}
-		update(refresh_mask);
+		if (__get_sector() < 1 || transparency <= 0) {exit;}
 
 		var side = radius * 2 + 1;
 
@@ -158,6 +159,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		}
 
 		surface_set_target(surface);
+		__update(refresh_mask);	// Trying to find a better automatic improvement
 
 		if (!redraw)
 		{
@@ -221,34 +223,36 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 	static __draw_progression = function(precision_override)
 	{
 		// Only likes this radius somehow
-		var _angle, _radius = radius + 1, sector_count = get_sector();
+		var _radius = radius + 1, sector_count = __get_sector(), angle;
 
-		draw_set_color(color);
 		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(_radius, _radius);
 
-		var rotation_direction = sign(end_angle - start_angle) * 90;
-		var sector_size = abs(end_angle - start_angle) / precision_override;
-		var increment = rotation_direction / 90, calibrated_start_angle = start_angle - 180;
+		var angle_diff = end_angle - start_angle;
+		var rotation_increment = sign(angle_diff);
+		var sector_size = abs(angle_diff) / precision_override;
+		var calibrated_start_angle = start_angle - 180;
 
-		for (var i = 0; abs(i) <= sector_count; i += increment)
+		for (var i = 0; abs(i) <= sector_count; i += rotation_increment)
 		{
-			_angle = sector_size * i + calibrated_start_angle;
-			var _cos = lengthdir_x(radius, _angle);
-			var _sin = lengthdir_y(radius, _angle);
+			angle = sector_size * i + calibrated_start_angle;
+			var _cos = lengthdir_x(radius, angle);
+			var _sin = lengthdir_y(radius, angle);
 			draw_vertex(_radius - _cos, _radius - _sin);
 		}
 
 		draw_primitive_end();
-		return _angle;
+		return angle;
 	}
 
 	static __draw_endpoints = function(current_angle)
 	{
+		// Still testing
+		__draw_edges([edge_type_final, edge_type_start], [__angle_to_placement_percentage(current_angle + 180), 0]);
 		//var ext = __calculate_extension(current_angle);
-		var rotation_direction = sign(end_angle - start_angle) * 90;
-		__draw_edge(edge_type_start, start_angle, -rotation_direction, 1);
-		__draw_edge(edge_type_final, current_angle + 180, rotation_direction, 1);
+		//var rotation_direction = sign(end_angle - start_angle) * 90;
+		//__draw_edge(edge_type_start, start_angle, -rotation_direction, 1);
+		//__draw_edge(edge_type_final, current_angle + 180, rotation_direction, 1);
 	}
 
 	/*static __calculate_extension = function(angle)
@@ -264,24 +268,19 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 	static __finalise_surface = function(x = self.x, y = self.y)
 	{
 		surface_reset_target();
-		draw_set_color(color);
-		draw_set_alpha(transparency);
-		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, c_white, transparency);
+		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, transparency);
 		draw_set_color(c_white);
 		draw_set_alpha(1);
 	}
 	#endregion
 
 	#region Divisors management
-	static add_divisor = function(divisor)
+	static __add_divisor = function(divisor)
 	{
 		array_push(divisors, divisor);
-		//array_sort(divisors, function(d1, d2, angle_diff = end_angle - start_angle)
-		////return (d1.position - start_angle) / angle_diff - (d2.position - start_angle) / angle_diff;
-		//});
 	}
 
-	static auto_generate_divisors = function(divisor_count, divisor_amplitudes, divisor_edges)
+	static __auto_generate_divisors = function(divisor_count, divisor_amplitudes, divisor_edges)
 	{
 		var angle_diff = end_angle - start_angle;
 		var start_index = (angle_diff % 360 != 0);
@@ -316,7 +315,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 
 	static __draw_divisor = function(divisor)
 	{
-		var variation = 90 * (divisor.amplitude >= 180);
+		var variation = (divisor.amplitude >= 180) * 90;
 		var angles = divisor.edge_angles;
 		var position = divisor.position;
 		var len = radius * sqrt(2);
@@ -339,7 +338,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		draw_triangle(tmx1, tmy1, tmx2, tmy2, tmx3, tmy3, false);
 	}
 
-	static __draw_edges = function(edges_to_draw = edges, placement_values = get_placement_values())
+	static __draw_edges = function(edges_to_draw = edges, placement_values = __get_placement_values())
 	{
 		var angle_diff = end_angle - start_angle;
 		var dir = sign(angle_diff) * 90;
@@ -402,7 +401,6 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		var p2x = radius + lengthdir_x(radius, angle);
 		var p2y = radius + lengthdir_y(radius, angle);
 
-		// Perpendicular progression's angle
 		angle += dir;
 
 		var mpx = mean(p1x, p2x);
@@ -428,7 +426,6 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 
 		angle += dir;
 
-		// Quarter bar width's points
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
 		var m1x = p1x + xlen / 4;
@@ -438,7 +435,6 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		var p3x = m1x, p3y = m1y;
 		var p4x = m2x, p4y = m2y;
 
-		// Trapezoid vertexes
 		switch (position)
 		{
 			default:
@@ -492,13 +488,11 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 
 		angle += dir;
 
-		// Edges vertexes
 		var e1x = p1x + lengthdir_x(ew, angle);
 		var e1y = p1y + lengthdir_y(ew, angle);
 		var e2x = p2x + lengthdir_x(ew, angle);
 		var e2y = p2y + lengthdir_y(ew, angle);
 
-		// Bar's width middle point
 		var mpx = mean(p1x, p2x);
 		var mpy = mean(p1y, p2y);
 		var p3x = mpx + lengthdir_x(ew / 2, angle);
@@ -682,21 +676,6 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		draw_triangle(p2x, p2y, v2x, v2y, b1x, b1y, false);
 	}
 	#endregion
-
-	#region Secondary animation tool functions
-	static __flash = function(start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration)
-	{
-		color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
-		transparency = wave(start_aplha, end_alhpa, alpha_pulse_duration);
-	}
-
-	static __rotate = function(rotation_variation)
-	{
-		rotation = clamp((rotation + rotation_variation) % 360, -360, 360);
-		var r = radius + 1, r2 = r * sqrt(2), angle = (rotation + 135) % 360;
-		return {x: r + lengthdir_x(r2, angle), y: r + lengthdir_y(r2, angle), dir: angle};
-	}
-	#endregion
 }
 
 // Main
@@ -707,44 +686,44 @@ function draw_advanced_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = fa
 
 function copy_circular_bar(bar, precision = bar.precision)
 {
-	return bar.copy(precision);
+	return bar.__copy(precision);
 }
 
 function update_circular_bar(bar, refresh_mask = false)
 {
-	bar.update(refresh_mask);
+	bar.__update(refresh_mask);
 }
 
 function get_circular_bar_sector(bar)
 {
-	return bar.get_sector();
+	return bar.__get_sector();
 }
 
 function change_circular_bar_colors(bar, color_start, color_end)
 {
-	bar.set_colors(color_start, color_end);
+	bar.__set_colors(color_start, color_end);
 }
 
 function auto_set_circular_bar_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
 {
-	bar.auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
+	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
 }
 
 function add_circular_bar_divisors(bar, divisors)
 {
 	for (var i = 0; i < array_length(divisors); i++)
 	{
-		bar.add_divisor(divisors[i]);
+		bar.__add_divisor(divisors[i]);
 	}
 }
 
 function add_circular_bar_divisor(bar, position, amplitude)
 {
 	var half_amplitude = amplitude / 2;
-	bar.add_divisor({position, amplitude, edge_angles: [position - half_amplitude, position + half_amplitude]});
+	bar.__add_divisor({position, amplitude, edge_angles: [position - half_amplitude, position + half_amplitude]});
 }
 
 function make_circular_bar_border(border_bar, target_bar, border_width)
 {
-	border_bar.make_border_of(target_bar, border_width);
+	border_bar.__make_border_of(target_bar, border_width);
 }

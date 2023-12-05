@@ -27,7 +27,7 @@ function Animated_advanced_circular_bar(x, y, bars = []) constructor
 
 		for (var i = 0; i < array_length(bars); i++)
 		{
-			rotation_positions[i] = bars[i].__rotate(rotation);
+			rotation_positions[i] = rotate(bars[i], rotation);
 			array_push(positions[_x], x + shake_positions.x + rotation_positions[i].x);
 			array_push(positions[_y], y + shake_positions.y + rotation_positions[i].y);
 		}
@@ -65,7 +65,8 @@ function approach(value, target, amount)
 
 function flash(bar, start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration)
 {
-	bar.__flash(start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration);
+	bar.color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
+	bar.transparency = wave(start_aplha, end_alhpa, alpha_pulse_duration);
 }
 
 function wave(from, to, duration, offset = 0)
@@ -81,6 +82,8 @@ function shake(strength)
 
 function rotate(bar, rotation_variation)
 {
-	return bar.__rotate(rotation_variation);
+	bar.rotation = (bar.rotation + rotation_variation) % 360;
+	var r = bar.radius + 1, r2 = r * sqrt(2), angle = (bar.rotation + 135) % 360;
+	return {x: r + lengthdir_x(r2, angle), y: r + lengthdir_y(r2, angle), dir: angle};
 }
 #endregion Animation tool functions
