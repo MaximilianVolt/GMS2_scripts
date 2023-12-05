@@ -113,7 +113,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 
 				for (var j = 0; j < array_length(edge_angles); j++)
 				{
-					edge = array_get_index(edge_placements, other.__angle_to_placement_percentage(edge_angles[j])) % array_length(other.edges);
+					edge = other.edges[array_get_index(edge_placements, other.__angle_to_placement_percentage(edge_angles[j])) % array_length(other.edges)];
 					edge_angles[j] += border_angle * sign(position - edge_angles[j]) * other.edge_requires_change[edge];
 				}
 
