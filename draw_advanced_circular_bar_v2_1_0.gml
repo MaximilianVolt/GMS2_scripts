@@ -16,29 +16,30 @@ enum ADVANCED_CIRCULAR_BAR_QUALITY
 	PLUS_ULTRA = 999
 }
 
-function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], transparency = 1, start_angle, end_angle, radius, width, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0]) constructor
+function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], transparency = 1, start_angle, end_angle, radius, width, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true) constructor
 {
 	#region Constructor
 	self.x = x;
 	self.y = y;
 	self.value = value;
 	self.precision = precision;
-	__set_colors(colors[0], colors[1]);
+	self.colors = colors;
+	self.color = merge_color(colors[0], colors[1], value);
 	self.transparency = transparency;
 	self.start_angle = start_angle;
 	self.end_angle = end_angle;
 	self.radius = radius;
 	self.width = width;
+	self.active = activation_override;
 	self.edge_type_start = edge_type_start;
 	self.edge_type_final = edge_type_final;
 	self.divisors = divisors;
 	self.edges = edges;
 	self.rotation = 0;
-	self.surface = -1;
+	self.surface = noone;
 	self.redraw = true;
-	self.mask = -1;
+	self.mask = noone;
 
-	__update(true);
 	#endregion
 
 	static edge_requires_change =
@@ -74,9 +75,9 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		return bar_copy;
 	}
 
-	static __update = function(refresh_mask = false)
+	static __update = function(refresh_mask = false, active = self.active)
 	{
-		redraw = true;
+		redraw = active;
 		if (refresh_mask && surface_exists(mask)) {surface_free(mask);}
 	}
 
@@ -155,11 +156,10 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		if (!surface_exists(surface))
 		{
 			surface = surface_create(side, side);
-			redraw = true;
 		}
 
 		surface_set_target(surface);
-		__update(refresh_mask);	// Trying to find a better automatic improvement
+		__update(refresh_mask);
 
 		if (!redraw)
 		{
@@ -185,7 +185,6 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		__finalise_surface(x, y);
 
 		color = merge_color(colors[0], colors[1], value);
-		redraw = false;
 	}
 
 	static __draw_mask = function(side)
@@ -247,12 +246,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 
 	static __draw_endpoints = function(current_angle)
 	{
-		// Still testing
 		__draw_edges([edge_type_final, edge_type_start], [__angle_to_placement_percentage(current_angle + 180), 0]);
-		//var ext = __calculate_extension(current_angle);
-		//var rotation_direction = sign(end_angle - start_angle) * 90;
-		//__draw_edge(edge_type_start, start_angle, -rotation_direction, 1);
-		//__draw_edge(edge_type_final, current_angle + 180, rotation_direction, 1);
 	}
 
 	/*static __calculate_extension = function(angle)
@@ -689,17 +683,28 @@ function copy_circular_bar(bar, precision = bar.precision)
 	return bar.__copy(precision);
 }
 
-function update_circular_bar(bar, refresh_mask = false)
+function activate_circular_bar(bar)
 {
-	bar.__update(refresh_mask);
+	bar.active = true;
 }
 
-function get_circular_bar_sector(bar)
+function deactivate_circular_bar(bar)
 {
-	return bar.__get_sector();
+	bar.__draw();
+	bar.active = false;
 }
 
-function change_circular_bar_colors(bar, color_start, color_end)
+function update_circular_bar(bar, refresh_mask = false, deactivate = false)
+{
+	bar.__update(refresh_mask, deactivate);
+}
+
+function get_circular_bar_sector(bar, value = bar.value)
+{
+	return bar.__get_sector(value);
+}
+
+function set_circular_bar_colors(bar, color_start, color_end)
 {
 	bar.__set_colors(color_start, color_end);
 }
@@ -719,8 +724,7 @@ function add_circular_bar_divisors(bar, divisors)
 
 function add_circular_bar_divisor(bar, position, amplitude)
 {
-	var half_amplitude = amplitude / 2;
-	bar.__add_divisor({position, amplitude, edge_angles: [position - half_amplitude, position + half_amplitude]});
+	bar.__add_divisor(bar.__create_divisor(position, amplitude));
 }
 
 function make_circular_bar_border(border_bar, target_bar, border_width)
