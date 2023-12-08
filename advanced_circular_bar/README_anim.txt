@@ -1,4 +1,4 @@
-///@ANIMATE ADVANCED CIRCULAR BAR v1.3.0
+///@ ADVANCED CIRCULAR BAR v1.3.1
 
 /*
 	--------------------------------
