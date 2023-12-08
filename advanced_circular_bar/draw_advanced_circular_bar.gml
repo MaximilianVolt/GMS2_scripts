@@ -98,12 +98,15 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		width = bar.width + 2 * border_width;
 
 		var border_angle = radtodeg(arctan(border_width / (radius + 2 * border_width)));
-		var _start_angle = bar.start_angle, _end_angle = bar.end_angle;
-		var dir = sign(_end_angle - _start_angle);
-		start_angle = _start_angle - dir * border_angle * edge_requires_change[edge_type_start];
-		end_angle = _end_angle + dir * border_angle * edge_requires_change[edge_type_final];
+		var _start_angle = bar.start_angle, _end_angle = bar.end_angle, angle_diff = _end_angle - _start_angle;
+		var is_not_explementary = (angle_diff % 360 != 0);
+		var dir = sign(angle_diff);
+		start_angle = _start_angle - dir * border_angle * edge_requires_change[edge_type_start] * is_not_explementary;
+		end_angle = _end_angle + dir * border_angle * edge_requires_change[edge_type_final] * is_not_explementary;
 
+		divisors = json_parse(json_stringify(bar.divisors));
 		var edge_placements = __get_placement_values();
+		edges = bar.edges;
 
 		// I hate this
 		for (var i = 0; i < array_length(divisors); i++)
@@ -163,7 +166,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 
 		if (!redraw)
 		{
-			__finalise_surface();
+			__finalise_surface(x, y);
 			exit;
 		}
 
@@ -193,7 +196,7 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		surface_reset_target();
 
 		surface_set_target(temp_surface);
-		__draw_body(min(ADVANCED_CIRCULAR_BAR_QUALITY.LOW, precision));
+		__draw_body(min(ADVANCED_CIRCULAR_BAR_QUALITY.LOW, precision), 1);
 
 		if (array_length(divisors) > 0)
 		{
@@ -209,20 +212,20 @@ function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BA
 		draw_clear_alpha(c_black, 1);
 
 		gpu_set_blendmode(bm_subtract);
-		draw_surface(temp_surface, 0 ,0);
+		draw_surface(temp_surface, 0, 0);
 		gpu_set_blendmode(bm_normal);
 		surface_free(temp_surface);
 	}
 
-	static __draw_body = function(precision_override = self.precision)
+	static __draw_body = function(precision_override = self.precision, value_override = self.value)
 	{
-		__draw_endpoints(__draw_progression(precision_override));
+		__draw_endpoints(__draw_progression(precision_override, value_override));
 	}
 
-	static __draw_progression = function(precision_override)
+	static __draw_progression = function(precision_override, value_override = self.value)
 	{
 		// Only likes this radius somehow
-		var _radius = radius + 1, sector_count = __get_sector(), angle;
+		var _radius = radius + 1, sector_count = __get_sector(value_override), angle;
 
 		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(_radius, _radius);
@@ -712,6 +715,7 @@ function set_circular_bar_colors(bar, color_start, color_end)
 function auto_set_circular_bar_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
 {
 	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
+	bar.__update(true);
 }
 
 function add_circular_bar_divisors(bar, divisors)
