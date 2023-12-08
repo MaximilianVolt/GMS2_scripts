@@ -11,7 +11,7 @@
 	Description: animation tool function for circular bars with advanced aesthetics
 
 	NOTES:
-	> THE SCRIPT ONLY WORKS WITH draw_advanced_circular_bar
+	> THE SCRIPT ONLY WORKS WITH draw_circular_bar
 
 	> IT IS RECOMMENDED TO USE DIFFERENT TIME SOURCES FOR EACH ANIMATED BAR
 */
@@ -23,13 +23,13 @@
 	1. Initialise an object
 	------------------------------
 
-	my_animated_bar = new Animated_advanced_circular_bar(...);
+	my_animated_bar = advanced_circular_bar_create(...);
 
-	// MORE INFO IN THE draw_advanced_circular_bar SCRIPT
+	// MORE INFO IN THE draw_circular_bar SCRIPT
 
 	------------------------------
 	2. Call the script
 	------------------------------
 
-	animate_advanced_circular_bar(my_animated_bar, ...);
+	draw_advanced_circular_bar(my_animated_bar, ...);
 */

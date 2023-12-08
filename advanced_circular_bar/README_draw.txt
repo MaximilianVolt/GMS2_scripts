@@ -27,10 +27,10 @@
 	* ARE ARRAYS, AND ARE ALL MARKED WITH PLURAL NAMES.
   *
 	* E.G:
-	* * auto_set_circular_bar_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
+	* * circular_bar_auto_set_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
   * *                                                               ARRAY ^        ARRAY ^
 	* *
-	* * auto_set_circular_bar_divisors(myBar, 3, [15], [1]);
+	* * circular_bar_auto_set_divisors(myBar, 3, [15], [1]);
 
 	> IT IS NOT RECOMMENDED TO EDIT NOR CALL ANY OF THE METHODS DIRECTLY.
 */
@@ -42,7 +42,7 @@
 	1. Initialise an object
 	------------------------------
 
-	bar = new Advanced_circular_bar(...);
+	bar = circular_bar_create(...);
 
 	// EDGES:
 		// 0 = FLAT (NONE)
@@ -70,5 +70,5 @@
 	2. Call the script
 	------------------------------
 
-	draw_advanced_circular_bar(bar, ...);
+	draw_circular_bar(bar, ...);
 */
