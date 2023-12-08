@@ -1,4 +1,4 @@
-///@ADVANCED CIRCULAR BAR v2.0.7 - TOWARDS ANIMATION
+///@ADVANCED CIRCULAR BAR v2.1.0 - IMPROVED CUSTOMIZATION UPDATE
 
 /*
 	--------------------------------
@@ -8,7 +8,7 @@
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/8/2022
-	Last updated on [DMY]: 8/11/2023
+	Last updated on [DMY]: 8/12/2023
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
@@ -16,12 +16,23 @@
 	  > Please support the original circular bar script creator
 
 	> CONSIDER USING draw_set_circle_precision() TO CHANGE THE BAR'S INNER SMOOTHNESS
-		> MAXIMUM PRECISION SUPPORTED: 999
 
-	>	TO REMOVE EDGES' EXTENSION CALCULATION, DECOMMENT LINE 286
+	> MAXIMUM PRECISION SUPPORTED: 999. IT IS RECOMMENDED TO USE THE DEFAULT VALUES DEFINED IN
+	* ADVANCED_CIRCULAR_BAR_QUALITY
 
 	> refresh_mask IS A HEAVY PARAMETER TO PASS AS true, YOU SHOULD RESET IT TO false AS SOON AS
 	* YOU'RE DONE MAKING THE GRAPHICAL CHANGES TO THE BAR MASK
+
+	> WHEN OPERATING WITH THESE SCRIPTS, MAKE SURE TO PASS THE RIGHT DATA TYPES: SOME OF THEM
+	* ARE ARRAYS, AND ARE ALL MARKED WITH PLURAL NAMES.
+  *
+	* E.G:
+	* * auto_set_circular_bar_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
+  * *                                                               ARRAY ^        ARRAY ^
+	* *
+	* * auto_set_circular_bar_divisors(myBar, 3, [15], [1]);
+
+	> IT IS NOT RECOMMENDED TO EDIT NOR CALL ANY OF THE METHODS DIRECTLY.
 */
 
 /*
@@ -30,7 +41,7 @@
 	------------------------------
 	1. Initialise an object
 	------------------------------
-	
+
 	bar = new Advanced_circular_bar(...);
 
 	// EDGES:
@@ -39,15 +50,21 @@
 		// 2 = BUBBLY
 		// 3 = CHEVRON
 		// 4 = RECTANGLE
-		// 5 = TRIANGLE ON TOP
-		// 6 = TRIANGLE ON CENTER
-		// 7 = TRIANGLE ON BOTTOM
-		// 8 = TRAPEZOID ON TOP
-		// 9 = TRAPEZOID ON CENTER
-		// 10 = TRAPEZOID ON BOTTOM
-		// 11 = ROUNDED TRIANGLE ON TOP
-		// 12 = ROUNDED TRIANGLE ON CENTER
-		// 13 = ROUNDED TRIANGLE ON BOTTOM
+		// 5 = DIAMOND ON TOP
+		// 6 = DIAMOND ON CENTER
+		// 7 = DIAMOND ON BOTTOM
+		// 8 = TRIANGLE ON TOP
+		// 9 = TRIANGLE ON CENTER
+		// 10 = TRIANGLE ON BOTTOM
+		// 11 = TRAPEZOID ON TOP
+		// 12 = TRAPEZOID ON CENTER
+		// 13 = TRAPEZOID ON BOTTOM
+		// 14 = ROUNDED DIAMOND ON TOP
+		// 15 = ROUNDED DIAMOND ON CENTER
+		// 16 = ROUNDED DIAMOND ON BOTTOM
+		// 17 = DART ON TOP
+		// 18 = DART ON CENTER
+		// 19 = DART ON BOTTOM
 
 	------------------------------
 	2. Call the script

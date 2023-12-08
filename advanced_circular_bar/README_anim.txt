@@ -1,4 +1,4 @@
-///@ANIMATE ADVANCED CIRCULAR BAR v1.2.0
+///@ANIMATE ADVANCED CIRCULAR BAR v1.3.0
 
 /*
 	--------------------------------
@@ -7,11 +7,11 @@
 
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Created on [DMY]: 27/7/2023
-	Last updated on [DMY]: 4/11/2023
+	Last updated on [DMY]: 8/12/2023
 	Description: animation tool function for circular bars with advanced aesthetics
 
 	NOTES:
-	> IT ONLY WORKS WITH draw_advanced_circular_bar
+	> THE SCRIPT ONLY WORKS WITH draw_advanced_circular_bar
 
 	> IT IS RECOMMENDED TO USE DIFFERENT TIME SOURCES FOR EACH ANIMATED BAR
 */
