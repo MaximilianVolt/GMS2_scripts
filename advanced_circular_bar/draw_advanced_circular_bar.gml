@@ -16,7 +16,12 @@ enum ADVANCED_CIRCULAR_BAR_QUALITY
 	PLUS_ULTRA = 999
 }
 
-function Advanced_circular_bar(x, y, value = 1, precision = ADVANCED_CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], transparency = 1, start_angle, end_angle, radius, width, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true) constructor
+function circular_bar_create(x, y, value = 1, precision = ADVANCED_CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], transparency = 1, start_angle, end_angle, radius, width, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+{
+	return new Advanced_circular_bar(x, y, value, precision, colors, transparency, start_angle, end_angle, radius, width, edge_type_start, edge_type_final, divisors, edges, activation_override);
+}
+
+function Advanced_circular_bar(x, y, value, precision, colors, transparency, start_angle, end_angle, radius, width, edge_type_start, edge_type_final, divisors, edges, activation_override) constructor
 {
 	#region Constructor
 	self.x = x;
@@ -681,44 +686,44 @@ function draw_advanced_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = fa
 	bar.__draw(x, y, refresh_mask);
 }
 
-function copy_circular_bar(bar, precision = bar.precision)
+function circular_bar_copy(bar, precision = bar.precision)
 {
 	return bar.__copy(precision);
 }
 
-function activate_circular_bar(bar)
+function circular_bar_activate(bar)
 {
 	bar.active = true;
 }
 
-function deactivate_circular_bar(bar)
+function circular_bar_deactivate(bar)
 {
 	bar.__draw();
 	bar.active = false;
 }
 
-function update_circular_bar(bar, refresh_mask = false, deactivate = false)
+function circular_bar_update(bar, refresh_mask = false, deactivate = false)
 {
 	bar.__update(refresh_mask, deactivate);
 }
 
-function get_circular_bar_sector(bar, value = bar.value)
+function circular_bar_get_sector(bar, value = bar.value)
 {
 	return bar.__get_sector(value);
 }
 
-function set_circular_bar_colors(bar, color_start, color_end)
+function circular_bar_set_colors(bar, color_start, color_end)
 {
 	bar.__set_colors(color_start, color_end);
 }
 
-function auto_set_circular_bar_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
+function circular_bar_auto_set_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
 {
 	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
 	bar.__update(true);
 }
 
-function add_circular_bar_divisors(bar, divisors)
+function circular_bar_add_divisors(bar, divisors)
 {
 	for (var i = 0; i < array_length(divisors); i++)
 	{
@@ -726,12 +731,12 @@ function add_circular_bar_divisors(bar, divisors)
 	}
 }
 
-function add_circular_bar_divisor(bar, position, amplitude)
+function circular_bar_add_divisor(bar, position, amplitude)
 {
 	bar.__add_divisor(bar.__create_divisor(position, amplitude));
 }
 
-function make_circular_bar_border(border_bar, target_bar, border_width)
+function circular_bar_make_border(border_bar, target_bar, border_width)
 {
 	border_bar.__make_border_of(target_bar, border_width);
 }
