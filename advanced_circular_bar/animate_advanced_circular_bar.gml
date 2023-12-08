@@ -1,11 +1,11 @@
-#macro ANIMATED_ADVANCED_CIRCULAR_BAR_SMOOTH_UPDATE_CONSTANT 0.0825
+#macro ADVANCED_CIRCULAR_BAR_SMOOTH_UPDATE_CONSTANT 0.0825
 
-function animated_advanced_circular_bar_create(x, y, bars = [])
+function advanced_circular_bar_create(x, y, bars = [])
 {
-	return new Animated_advanced_circular_bar(x, y, bars);
+	return new Advanced_circular_bar(x, y, bars);
 }
 
-function Animated_advanced_circular_bar(x, y, bars) constructor
+function Advanced_circular_bar(x, y, bars) constructor
 {
 	self.x = x;
 	self.y = y;
@@ -42,23 +42,23 @@ function Animated_advanced_circular_bar(x, y, bars) constructor
 }
 
 // Main in Draw or Draw GUI
-function draw_animated_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [animation_bar.y], refresh_mask = false)
+function draw_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [animation_bar.y], refresh_mask = false)
 {
 	animation_bar.__animate(x, y, refresh_mask);
 }
 
-function draw_animated_advanced_circular_bar_positioned(animation_bar, position_array, refresh_mask = false)
+function draw_advanced_circular_bar_positioned(animation_bar, position_array, refresh_mask = false)
 {
 	animation_bar.__animate_positioned(position_array, refresh_mask);
 }
 
-function animated_advanced_circular_bar_position(animation_bar, strength_or_shake_positions, rotation)
+function advanced_circular_bar_position(animation_bar, strength_or_shake_positions, rotation)
 {
 	return animation_bar.__position(strength_or_shake_positions, rotation);
 }
 
 #region Animation tool functions
-function smoothen(value, target, smoothness = ANIMATED_ADVANCED_CIRCULAR_BAR_SMOOTH_UPDATE_CONSTANT)
+function smoothen(value, target, smoothness = ADVANCED_CIRCULAR_BAR_SMOOTH_UPDATE_CONSTANT)
 {
 	return lerp(value, target, smoothness);
 }

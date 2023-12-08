@@ -1,13 +1,13 @@
 #macro ADVANCED_CIRCULAR_BAR_MINIMUM_VISIBLE_VALUE 0.005
 
-enum ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS
+enum CIRCULAR_BAR_EDGE_POSITIONS
 {
 	TOP = 0,
 	CENTER = 1,
 	BOTTOM = 2
 }
 
-enum ADVANCED_CIRCULAR_BAR_QUALITY
+enum CIRCULAR_BAR_QUALITY
 {
 	LOW = 79,
 	MEDIUM = 179,
@@ -16,12 +16,12 @@ enum ADVANCED_CIRCULAR_BAR_QUALITY
 	PLUS_ULTRA = 999
 }
 
-function circular_bar_create(x, y, value = 1, precision = ADVANCED_CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], transparency = 1, start_angle, end_angle, radius, width, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+function circular_bar_create(x, y, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], transparency = 1, start_angle, end_angle, radius, width, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
 {
-	return new Advanced_circular_bar(x, y, value, precision, colors, transparency, start_angle, end_angle, radius, width, edge_type_start, edge_type_final, divisors, edges, activation_override);
+	return new Circular_bar(x, y, value, precision, colors, transparency, start_angle, end_angle, radius, width, edge_type_start, edge_type_final, divisors, edges, activation_override);
 }
 
-function Advanced_circular_bar(x, y, value, precision, colors, transparency, start_angle, end_angle, radius, width, edge_type_start, edge_type_final, divisors, edges, activation_override) constructor
+function Circular_bar(x, y, value, precision, colors, transparency, start_angle, end_angle, radius, width, edge_type_start, edge_type_final, divisors, edges, activation_override) constructor
 {
 	#region Constructor
 	self.x = x;
@@ -75,7 +75,7 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 	static __copy = function(precision_override = self.precision)
 	{
 		var bar_copy = json_parse(json_stringify(self));
-		static_set(bar_copy, static_get(Advanced_circular_bar));
+		static_set(bar_copy, static_get(Circular_bar));
 		bar_copy.precision = precision_override;
 		return bar_copy;
 	}
@@ -201,7 +201,7 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 		surface_reset_target();
 
 		surface_set_target(temp_surface);
-		__draw_body(min(ADVANCED_CIRCULAR_BAR_QUALITY.LOW, precision), 1);
+		__draw_body(min(CIRCULAR_BAR_QUALITY.LOW, precision), 1);
 
 		if (array_length(divisors) > 0)
 		{
@@ -360,21 +360,21 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 			function(angle) {__bubbly_edge(angle)},
 			function(angle, dir, ext) {__chevron_edge(angle, dir, ext)},
 			function(angle, dir, ext) {__rectangle_edge(angle, dir, ext)},
-			function(angle, dir, ext) {__diamond_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(angle, dir, ext) {__diamond_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(angle, dir, ext) {__diamond_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(angle, dir, ext) {__triangle_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(angle, dir, ext) {__triangle_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(angle, dir, ext) {__triangle_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(angle, dir, ext) {__trapezoid_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(angle, dir, ext) {__trapezoid_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(angle, dir, ext) {__trapezoid_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(angle, dir, ext) {__rounded_diamond_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(angle, dir, ext) {__rounded_diamond_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(angle, dir, ext) {__rounded_diamond_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(angle, dir, ext) {__dart_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(angle, dir, ext) {__dart_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(angle, dir, ext) {__dart_edge(angle, dir, ext, ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)}
+			function(angle, dir, ext) {__diamond_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(angle, dir, ext) {__diamond_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(angle, dir, ext) {__diamond_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(angle, dir, ext) {__triangle_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(angle, dir, ext) {__triangle_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(angle, dir, ext) {__triangle_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(angle, dir, ext) {__trapezoid_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(angle, dir, ext) {__trapezoid_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(angle, dir, ext) {__trapezoid_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(angle, dir, ext) {__rounded_diamond_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(angle, dir, ext) {__rounded_diamond_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(angle, dir, ext) {__rounded_diamond_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(angle, dir, ext) {__dart_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(angle, dir, ext) {__dart_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(angle, dir, ext) {__dart_edge(angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)}
 		];
 
 		if (edge < 1 || edge > array_length(edge_selector)) {return;}
@@ -442,7 +442,7 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 			default:
 			break;
 
-			case ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP:
+			case CIRCULAR_BAR_EDGE_POSITIONS.TOP:
 				m1x = p2x - xlen / 2;
 				m1y = p2y - ylen / 2;
 				m2x = p2x - xlen / 4;
@@ -453,14 +453,14 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 				p4y = m2y + lengthdir_y(ew, angle);
 			break;
 
-			case ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER:
+			case CIRCULAR_BAR_EDGE_POSITIONS.CENTER:
 				p3x = m1x + lengthdir_x(ew, angle);
 				p3y = m1y + lengthdir_y(ew, angle);
 				p4x = m2x + lengthdir_x(ew, angle);
 				p4y = m2y + lengthdir_y(ew, angle);
 			break;
 
-			case ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM:
+			case CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM:
 				m1x = p1x + xlen / 2;
 				m1y = p1y + ylen / 2;
 				m2x = p1x + xlen / 4;
@@ -571,7 +571,7 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 			default:
 			break;
 
-			case ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.TOP:
+			case CIRCULAR_BAR_EDGE_POSITIONS.TOP:
 				p2x -= xlen / 4;
 				p2y -= ylen / 4;
 				bx = p2x;
@@ -584,14 +584,14 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 				v2y = by;
 			break;
 
-			case ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.CENTER:
+			case CIRCULAR_BAR_EDGE_POSITIONS.CENTER:
 				v1x = bx + lengthdir_x(ew, angle + angle_diff);
 				v1y = by + lengthdir_y(ew, angle + angle_diff);
 				v2x = bx + lengthdir_x(ew, angle - angle_diff);
 				v2y = by + lengthdir_y(ew, angle - angle_diff);
 			break;
 
-			case ADVANCED_CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM:
+			case CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM:
 				p1x += xlen / 4;
 				p1y += ylen / 4;
 				bx = p1x;
@@ -681,7 +681,7 @@ function Advanced_circular_bar(x, y, value, precision, colors, transparency, sta
 }
 
 // Main
-function draw_advanced_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false)
+function draw_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false)
 {
 	bar.__draw(x, y, refresh_mask);
 }
