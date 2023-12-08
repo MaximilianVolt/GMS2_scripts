@@ -23,7 +23,7 @@
 	1. Initialise an object
 	------------------------------
 
-	my_animated_bar = advanced_circular_bar_create(...);
+	my_advanced_bar = advanced_circular_bar_create(...);
 
 	// MORE INFO IN THE draw_circular_bar SCRIPT
 
@@ -31,5 +31,5 @@
 	2. Call the script
 	------------------------------
 
-	draw_advanced_circular_bar(my_animated_bar, ...);
+	draw_advanced_circular_bar(my_advanced_bar, ...);
 */
