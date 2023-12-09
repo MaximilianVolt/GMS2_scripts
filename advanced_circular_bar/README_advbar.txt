@@ -1,9 +1,9 @@
 ///@ ADVANCED CIRCULAR BAR v1.3.1
 
 /*
-	--------------------------------
-	animate_advanced_circular_bar();
-	--------------------------------
+	-----------------------------
+	draw_advanced_circular_bar();
+	-----------------------------
 
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Created on [DMY]: 27/7/2023

@@ -1,9 +1,9 @@
-///@ CIRCULAR BAR v2.1.1 - IMPROVED CUSTOMIZATION UPDATE
+///@ CIRCULAR BAR v2.1.2 - IMPROVED CUSTOMIZATION UPDATE
 
 /*
-	--------------------------------
-	draw_advanced_circular_bar();
-	--------------------------------
+	--------------------
+	draw_circular_bar();
+	--------------------
 
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
