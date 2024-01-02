@@ -1,4 +1,4 @@
-///@ CIRCULAR BAR v2.1.2 - IMPROVED CUSTOMIZATION UPDATE
+///@ CIRCULAR BAR v2.2.0 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
 
 /*
 	--------------------
@@ -8,7 +8,7 @@
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/8/2022
-	Last updated on [DMY]: 9/12/2023
+	Last updated on [DMY]: 02/01/2023
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
@@ -47,24 +47,26 @@
 	// EDGES:
 		// 0 = FLAT (NONE)
 		// 1 = ROUND
-		// 2 = BUBBLY
-		// 3 = CHEVRON
-		// 4 = RECTANGLE
-		// 5 = DIAMOND ON TOP
-		// 6 = DIAMOND ON CENTER
-		// 7 = DIAMOND ON BOTTOM
-		// 8 = TRIANGLE ON TOP
-		// 9 = TRIANGLE ON CENTER
-		// 10 = TRIANGLE ON BOTTOM
-		// 11 = TRAPEZOID ON TOP
-		// 12 = TRAPEZOID ON CENTER
-		// 13 = TRAPEZOID ON BOTTOM
-		// 14 = ROUNDED DIAMOND ON TOP
-		// 15 = ROUNDED DIAMOND ON CENTER
-		// 16 = ROUNDED DIAMOND ON BOTTOM
-		// 17 = DART ON TOP
-		// 18 = DART ON CENTER
-		// 19 = DART ON BOTTOM
+		// 2 = CHEVRON
+		// 3 = RECTANGLE
+		// 4 = BUBBLY ON TOP
+		// 5 = BUBBLY ON CENTER
+		// 6 = BUBBLY ON BOTTOM
+		// 7 = DART ON TOP
+		// 8 = DART ON CENTER
+		// 9 = DART ON BOTTOM
+		// 10 = DIAMOND ON TOP
+		// 11 = DIAMOND ON CENTER
+		// 12 = DIAMOND ON BOTTOM
+		// 13 = TRIANGLE ON TOP
+		// 14 = TRIANGLE ON CENTER
+		// 15 = TRIANGLE ON BOTTOM
+		// 16 = TRAPEZOID ON TOP
+		// 17 = TRAPEZOID ON CENTER
+		// 18 = TRAPEZOID ON BOTTOM
+		// 19 = ROUNDED DIAMOND ON TOP
+		// 20 = ROUNDED DIAMOND ON CENTER
+		// 21 = ROUNDED DIAMOND ON BOTTOM
 
 	------------------------------
 	2. Call the script
