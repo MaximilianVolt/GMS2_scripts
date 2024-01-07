@@ -169,7 +169,7 @@ function circular_bar_add_divisors(bar, divisors)
 {
 	for (var i = 0; i < array_length(divisors); i++)
 	{
-		bar.__add_divisor(divisors[i]);
+		bar.__add_divisor(divisors[@ i]);
 	}
 }
 
@@ -253,7 +253,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 	self.value = value;
 	self.precision = precision;
 	self.colors = colors;
-	self.color = merge_color(colors[0], colors[1], value);
+	self.color = merge_color(colors[@ 0], colors[@ 1], value);
 	self.transparency = transparency;
 	self.start_angle = start_angle;
 	self.end_angle = end_angle;
@@ -365,8 +365,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 		var _start_angle = bar.start_angle, _end_angle = bar.end_angle, angle_diff = _end_angle - _start_angle;
 		var is_not_explementary = (angle_diff % 360 != 0);
 		var dir = sign(angle_diff);
-		start_angle = _start_angle - dir * border_angle * edge_requires_change[edge_type_start] * is_not_explementary;
-		end_angle = _end_angle + dir * border_angle * edge_requires_change[edge_type_final] * is_not_explementary;
+		start_angle = _start_angle - dir * border_angle * edge_requires_change[@ edge_type_start] * is_not_explementary;
+		end_angle = _end_angle + dir * border_angle * edge_requires_change[@ edge_type_final] * is_not_explementary;
 
 		divisors = json_parse(json_stringify(bar.divisors));
 		var edge_placements = __get_placement_values();
@@ -381,12 +381,12 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 				for (var j = 0; j < array_length(edge_angles); j++)
 				{
-					edge = other.edges[array_get_index(edge_placements, other.__angle_to_placement_percentage(edge_angles[j])) % array_length(other.edges)];
-					edge_angles[j] += border_angle * sign(position - edge_angles[j]) * other.edge_requires_change[edge];
+					edge = other.edges[@ array_get_index(edge_placements, other.__angle_to_placement_percentage(edge_angles[@ j])) % array_length(other.edges)];
+					edge_angles[@ j] += border_angle * sign(position - edge_angles[@ j]) * other.edge_requires_change[@ edge];
 				}
 
-				position = mean(edge_angles[0], edge_angles[1]);
-				amplitude = abs(edge_angles[0] - edge_angles[1]);
+				position = mean(edge_angles[@ 0], edge_angles[@ 1]);
+				amplitude = abs(edge_angles[@ 0] - edge_angles[@ 1]);
 			}
 		}
 
@@ -396,7 +396,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-	 *	@returns Array<Real>
+	 *	@returns {Array<Real>}
 	*/
 
 	static __get_placement_values = function()
@@ -406,7 +406,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 		for (var i = 0; i < array_length(divisors); i++)
 		{
-			array_push(placement_values, _(divisors[i].edge_angles[0]), _(divisors[i].edge_angles[1]));
+			array_push(placement_values, _(divisors[@ i].edge_angles[@ 0]), _(divisors[@ i].edge_angles[@ 1]));
 		}
 
 		array_sort(placement_values, true);
@@ -470,7 +470,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 		gpu_set_blendmode(bm_normal);
 		__finalise_surface(x, y);
 
-		color = merge_color(colors[0], colors[1], value);
+		color = merge_color(colors[@ 0], colors[@ 1], value);
 	}
 
 
@@ -643,7 +643,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 		for (var i = start_index; i < divisor_count; i++)
 		{
 			var position = angle_diff * i / divisor_count + start_angle;
-			var amplitude = divisor_amplitudes[(i - start_index) % array_length(divisor_amplitudes)];
+			var amplitude = divisor_amplitudes[@ (i - start_index) % array_length(divisor_amplitudes)];
 			array_push(divisors, __create_divisor(position, amplitude));
 		}
 
@@ -667,7 +667,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 	{
 		for (var i = 0; i < array_length(divisors); i++)
 		{
-			__draw_divisor(divisors[i]);
+			__draw_divisor(divisors[@ i]);
 		}
 
 		gpu_set_blendmode_ext_sepalpha(bm_one, bm_one, bm_src_alpha, bm_dest_alpha);
@@ -688,10 +688,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 		var len = radius * 1.5;
 		var center = radius;
 
-		var t1x1 = center + lengthdir_x(len, angles[0]);
-		var t1y1 = center + lengthdir_y(len, angles[0]);
-		var t2x1 = center + lengthdir_x(len, angles[1]);
-		var t2y1 = center + lengthdir_y(len, angles[1]);
+		var t1x1 = center + lengthdir_x(len, angles[@ 0]);
+		var t1y1 = center + lengthdir_y(len, angles[@ 0]);
+		var t2x1 = center + lengthdir_x(len, angles[@ 1]);
+		var t2y1 = center + lengthdir_y(len, angles[@ 1]);
 
 		var tmx3 = center + lengthdir_x(len, position);
 		var tmy3 = center + lengthdir_y(len, position);
@@ -726,10 +726,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 		for (var i = 0; i < array_length(placement_values); i++)
 		{
-			var edge = edges_to_draw[i % array_length(edges_to_draw)];
-			var placement_angle = placement_values[i] * angle_diff + start_angle;
-			var edge_direction = direction_values[i % array_length(direction_values)];
-			__draw_edge(edge, placement_angle, __calculate_variable_radius(placement_values[i]), edge_direction);
+			var edge = edges_to_draw[@ i % array_length(edges_to_draw)];
+			var placement_angle = placement_values[@ i] * angle_diff + start_angle;
+			var edge_direction = direction_values[@ i % array_length(direction_values)];
+			__draw_edge(edge, placement_angle, __calculate_variable_radius(placement_values[@ i]), edge_direction);
 		}
 	}
 
@@ -779,7 +779,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 		];
 
 		if (edge < 1 || edge > array_length(edge_selector)) {return;}
-		edge_selector[edge - 1](center, radius, width, placement, dir, ext);
+		edge_selector[@ edge - 1](center, radius, width, placement, dir, ext);
 	}
 	#endregion
 
@@ -824,8 +824,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 		var _x = 0, _y = 1;
 		var positions = [[p2x, mpx, p1x], [p2y, mpy, p1y]];
-		var p3x = lengthdir_x(ew, dir) + positions[_x][position];
-		var p3y = lengthdir_y(ew, dir) + positions[_y][position];
+		var p3x = lengthdir_x(ew, dir) + positions[@ _x][@ position];
+		var p3y = lengthdir_y(ew, dir) + positions[@ _y][@ position];
 
 		draw_triangle(p1x, p1y, p2x, p2y, p3x, p3y, false);
 	}
@@ -969,14 +969,14 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 		var _x = 0, _y = 1;
 		var positions = [[[m610x, m25x, m15x], [m45x, mpx, m15x], [m45x, m35x, m310x]], [[m610y, m25y, m15y], [m45y, mpy, m15y], [m45y, m35y, m310y]]];
-		var b1x = positions[_x][position][0];
-		var b1y = positions[_y][position][0];
-		var mbx = positions[_x][position][1];
-		var mby = positions[_y][position][1];
-		var b2x = positions[_x][position][2];
-		var b2y = positions[_y][position][2];
+		var b1x = positions[@ _x][@ position][@ 0];
+		var b1y = positions[@ _y][@ position][@ 0];
+		var mbx = positions[@ _x][@ position][@ 1];
+		var mby = positions[@ _y][@ position][@ 1];
+		var b2x = positions[@ _x][@ position][@ 2];
+		var b2y = positions[@ _y][@ position][@ 2];
 		var radius_multipliers = [[.3, .24, .2], [.2, .3, .2], [.2, .24, .3]];
-		var radiuses = [width * radius_multipliers[position][0], width * radius_multipliers[position][1], width * radius_multipliers[position][2]];
+		var radiuses = [width * radius_multipliers[@ position][@ 0], width * radius_multipliers[@ position][@ 1], width * radius_multipliers[@ position][@ 2]];
 
 		draw_circle(b1x, b1y, radiuses[0], false);
 		draw_circle(mbx, mby, radiuses[1], false);
@@ -1121,8 +1121,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 		var _x = 0, _y = 1;
 		var positions = [[m34x, mbx, m14x], [m34y, mby, m14y]];
-		var vx = lengthdir_x(ew, dir) + positions[_x][position];
-		var vy = lengthdir_y(ew, dir) + positions[_y][position];
+		var vx = lengthdir_x(ew, dir) + positions[@ _x][@ position];
+		var vy = lengthdir_y(ew, dir) + positions[@ _y][@ position];
 
 		draw_triangle(p1x, p1y, p2x, p2y, vx, vy, false);
 	}
@@ -1161,10 +1161,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 		var _x = 0, _y = 1;
 		var positions1 = [[m1016x, m616x, m316x], [m1016y, m616y, m316y]];
 		var positions2 = [[m1316x, m1016x, m616x], [m1316y, m1016y, m616y]];
-		var b1x = positions1[_x][position];
-		var b1y = positions1[_y][position];
-		var b2x = positions2[_x][position];
-		var b2y = positions2[_y][position];
+		var b1x = positions1[@ _x][@ position];
+		var b1y = positions1[@ _y][@ position];
+		var b2x = positions2[@ _x][@ position];
+		var b2y = positions2[@ _y][@ position];
 		var v1x = b1x + lengthdir_x(ew, dir);
 		var v1y = b1y + lengthdir_y(ew, dir);
 		var v2x = b2x + lengthdir_x(ew, dir);

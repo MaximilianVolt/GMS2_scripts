@@ -65,7 +65,7 @@ function advanced_circular_bar_activate(animation_bar)
 {
 	for (var i = 0; i < array_length(animation_bar.bars); i++)
 	{
-		animation_bar.bars[i].active = true;
+		animation_bar.bars[@ i].active = true;
 	}
 }
 
@@ -80,7 +80,7 @@ function advanced_circular_bar_deactivate(animation_bar)
 {
 	for (var i = 0; i < array_length(animation_bar.bars); i++)
 	{
-		animation_bar.bars[i].active = false;
+		animation_bar.bars[@ i].active = false;
 	}
 }
 
@@ -212,7 +212,7 @@ function Advanced_circular_bar(x, y, bars) constructor
 	{
 		for (var i = 0; i < array_length(bars); i++)
 		{
-			bars[i].__draw(x[i % array_length(x)], y[i % array_length(y)], refresh_mask);
+			bars[@ i].__draw(x[@ i % array_length(x)], y[@ i % array_length(y)], refresh_mask);
 		}
 	}
 
@@ -225,7 +225,7 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 	static __draw_positioned = function(position_array, refresh_mask)
 	{
-		__draw(position_array[0], position_array[1], refresh_mask);
+		__draw(position_array[@ 0], position_array[@ 1], refresh_mask);
 	}
 
 
@@ -243,9 +243,9 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 		for (var i = 0; i < array_length(bars); i++)
 		{
-			rotation_positions[i] = circular_bar_rotate(bars[i], rotation);
-			array_push(positions[_x], x + shake_positions.x + rotation_positions[i].x);
-			array_push(positions[_y], y + shake_positions.y + rotation_positions[i].y);
+			rotation_positions[@ i] = circular_bar_rotate(bars[@ i], rotation);
+			array_push(positions[@ _x], x + shake_positions.x + rotation_positions[@ i].x);
+			array_push(positions[@ _y], y + shake_positions.y + rotation_positions[@ i].y);
 		}
 
 		return positions;
