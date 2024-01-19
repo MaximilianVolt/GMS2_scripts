@@ -7,9 +7,10 @@
  *	@param {Real} [width] The bar's width.
  *	@param {Real} [start_angle] The bar's angle at 0%.
  *	@param {Real} [end_angle] The bar's angle at 100%.
- *	@param {Array<Constant.Color>} [colors] The colors from 0% to 100% of the value.
  *	@param {Real} [value] The value represented by the bar (0 <= x <= 1).
  *	@param {Real} [precision] The number of sectors used to draw the bar. IMPACTS ON PERFORMANCE.
+ *	@param {Array<Constant.Color>} [colors] The colors from 0% to 100% of the value.
+ *	@param {Real} [alpha] The bar's opacity.
  *	@param {Real} [edge_type_start] The edge drawn at the bar's 0% angle.
  *	@param {Real} [edge_type_final] The edge drawn at the bar's val% angle.
  *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_auto_set_divisors()).
@@ -17,9 +18,9 @@
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
 
-function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end_angle = 450, colors = [c_black, c_white], transparency = 1, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end_angle = 450, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
 {
-	return new Circular_bar(x, y, radius, width, start_angle, end_angle, colors, transparency, value, precision, edge_type_start, edge_type_final, divisors, edges, activation_override);
+	return new Circular_bar(x, y, radius, width, start_angle, end_angle, value, precision, colors, alphas, edge_type_start, edge_type_final, divisors, edges, activation_override);
 }
 
 
@@ -33,9 +34,10 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  *	@param {Real} [width] The bar's width.
  *	@param {Real} [center_angle] The bar's angle at 50%.
  *	@param {Real} [amplitude] The bar's total amplitude.
- *	@param {Array<Constant.Color>} [colors] The colors from 0% to 100% of the value.
  *	@param {Real} [value] The value represented by the bar (0 <= x <= 1).
  *	@param {Real} [precision] The number of sectors used to draw the bar. IMPACTS ON PERFORMANCE.
+ *	@param {Array<Constant.Color>} [colors] The colors from 0% to 100% of the value.
+ *	@param {Real} [alpha] The bar's opacity.
  *	@param {Real} [edge_type_start] The edge drawn at the bar's 0% angle.
  *	@param {Real} [edge_type_final] The edge drawn at the bar's val% angle.
  *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_auto_set_divisors()).
@@ -43,10 +45,10 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
 
-function circular_bar_create_amplitude(x, y, radius, width = radius, center_angle = 270, amplitude = 360, colors = [c_black, c_white], transparency = 1, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+function circular_bar_create_amplitude(x, y, radius, width = radius, center_angle = 270, amplitude = 360, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
 {
 	var half_amplitude = amplitude / 2;
-	return new Circular_bar(x, y, radius, width, center_angle - half_amplitude, center_angle + half_amplitude, colors, transparency, value, precision, edge_type_start, edge_type_final, divisors, edges, activation_override);
+	return new Circular_bar(x, y, radius, width, center_angle - half_amplitude, center_angle + half_amplitude, value, precision, colors, alphas, edge_type_start, edge_type_final, divisors, edges, activation_override);
 }
 
 
@@ -245,7 +247,7 @@ enum CIRCULAR_BAR_QUALITY
  *	@param {Bool} activation_override
 */
 
-function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, transparency, value, precision, edge_type_start, edge_type_final, divisors, edges, activation_override) constructor
+function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precision, colors, alphas, edge_type_start, edge_type_final, divisors, edges, activation_override) constructor
 {
 	#region Constructor
 	self.x = x;
@@ -254,7 +256,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 	self.precision = precision;
 	self.colors = colors;
 	self.color = merge_color(colors[@ 0], colors[@ 1], value);
-	self.transparency = transparency;
+	self.alphas = alphas;
 	self.start_angle = start_angle;
 	self.end_angle = end_angle;
 	self.radius = radius;
@@ -323,6 +325,17 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 	{
 		redraw = active;
 		if (refresh_mask && surface_exists(mask)) {surface_free(mask);}
+	}
+
+
+
+	/**
+	 *	@return {Real}
+	*/
+
+	static __get_alpha = function()
+	{
+		return (alphas[@ 1] - alphas[@ 0]) * value + alphas[@ 0];
 	}
 
 
@@ -435,7 +448,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 	static __draw = function(x = self.x, y = self.y, refresh_mask = false)
 	{
-		if (__get_sector() < 1 || transparency <= 0) {exit;}
+		if (__get_sector() < 1 || __get_alpha() <= 0) {exit;}
 
 		var side = radius * 2 + 1;
 
@@ -608,7 +621,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 	static __finalise_surface = function(x = self.x, y = self.y)
 	{
 		surface_reset_target();
-		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, transparency);
+		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, __get_alpha());
 		draw_set_color(c_white);
 		draw_set_alpha(1);
 	}
