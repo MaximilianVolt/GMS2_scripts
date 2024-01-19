@@ -417,7 +417,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle
+	 *	@param {Real} angle 
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -785,10 +785,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 	#region Edges
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
 	*/
 
 	static __round_edge = function(center, radius, width, angle)
@@ -803,13 +803,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
-		@param {Real} position
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
+	 *	@param {Real} position
 	*/
 
 	static __triangle_edge = function(center, radius, width, angle, dir, ext, position)
@@ -833,13 +833,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
-		@param {Real} position
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
+	 *	@param {Real} position
 	*/
 
 	static __trapezoid_edge = function(center, radius, width, angle, dir, ext, position)
@@ -903,12 +903,12 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
 	*/
 
 	static __chevron_edge = function(center, radius, width, angle, dir, ext)
@@ -935,11 +935,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} position
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} position
 	*/
 
 	static __bubbly_edge = function(center, radius, width, angle, position)
@@ -986,12 +986,12 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
 	*/
 
 	static __rectangle_edge = function(center, radius, width, angle, dir, ext)
@@ -1013,13 +1013,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
-		@param {Real} position
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
+	 *	@param {Real} position
 	*/
 
 	static __rounded_diamond_edge = function(center, radius, width, angle, dir, ext, position)
@@ -1093,13 +1093,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
-		@param {Real} position
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
+	 *	@param {Real} position
 	*/
 
 	static __diamond_edge = function(center, radius, width, angle, dir, ext, position)
@@ -1130,13 +1130,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, colors, trans
 
 
 	/**
-		@param {Real} center
-		@param {Real} radius
-		@param {Real} width
-		@param {Real} angle
-		@param {Real} dir
-		@param {Real} ext
-		@param {Real} position
+	 *	@param {Real} center
+	 *	@param {Real} radius
+	 *	@param {Real} width
+	 *	@param {Real} angle
+	 *	@param {Real} dir
+	 *	@param {Real} ext
+	 *	@param {Real} position
 	*/
 
 	static __dart_edge = function(center, radius, width, angle, dir, ext, position)
