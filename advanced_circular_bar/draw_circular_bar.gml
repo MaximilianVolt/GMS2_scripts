@@ -513,17 +513,16 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var temp_surface = surface_create(side, side);
 		surface_set_target(temp_surface);
 		__draw_body(mask_precision, 1);
+		gpu_set_blendmode(bm_subtract);
+
+		if (width < radius)
+		{
+			__draw_progression(mask_precision, 1, radius - width);
+		}
 
 		if (array_length(divisors) > 0)
 		{
 			__draw_divisors();
-		}
-
-		if (width < radius)
-		{
-			gpu_set_blendmode(bm_subtract);
-			__draw_progression(mask_precision, 1, radius - width);
-			gpu_set_blendmode(bm_normal);
 		}
 
 		surface_reset_target();
@@ -699,7 +698,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_divisors = function()
 	{
-		gpu_set_blendmode(bm_subtract);
 		var divisor_count = array_length(divisors);
 
 		for (var i = 0; i < divisor_count; i++)
