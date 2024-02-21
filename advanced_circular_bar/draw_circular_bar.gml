@@ -446,7 +446,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle
+	 *	@param {Real} angle 
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -464,7 +464,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw = function(x = self.x, y = self.y, refresh_mask = false)
 	{
-		if (__get_sector() < 1 || alpha <= 0) {exit;}
+		if (__get_sector() < 1 || alpha <= 0)
+		{
+			exit;
+		}
 
 		var side = radius * 2 + 1;
 
@@ -532,10 +535,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		draw_clear(c_black);
 
 		draw_surface(temp_surface, 0, 0);
-		gpu_set_blendmode(bm_normal);
 		surface_free(temp_surface);
 		surface_reset_target();
 
+		gpu_set_blendmode(bm_normal);
 		surface_set_target(surface);
 	}
 
@@ -642,17 +645,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	#endregion
 
 	#region Divisors management
-	/**
-		@param {Struct} divisor
-	*/
-
-	static __add_divisor = function(divisor)
-	{
-		array_push(divisors, divisor);
-	}
-
-
-
 	/**
 	 *	@param {Real} divisor_count
 	 *	@param {Array<Real>} divisor_amplitudes
