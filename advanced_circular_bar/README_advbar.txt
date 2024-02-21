@@ -1,4 +1,4 @@
-///@ ADVANCED CIRCULAR BAR v1.3.5
+///@ ADVANCED CIRCULAR BAR v1.3.6
 
 /*
 	-----------------------------

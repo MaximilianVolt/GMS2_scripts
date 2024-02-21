@@ -252,7 +252,7 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 		for (var i = 0; i < bar_count; i++)
 		{
-			rotation_positions[@ i] = circular_bar_rotate(bars[@ i], rotation);
+			array_push(rotation_positions, circular_bar_rotate(bars[@ i], rotation));
 			array_push(positions[@ _x], x + shake_positions.x + rotation_positions[@ i].x);
 			array_push(positions[@ _y], y + shake_positions.y + rotation_positions[@ i].y);
 		}

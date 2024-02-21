@@ -171,12 +171,7 @@ function circular_bar_create_divisor(position, amplitude)
 
 function circular_bar_add_divisors(bar, divisors)
 {
-	var divisor_count = array_length(divisors);
-
-	for (var i = 0; i < divisor_count; i++)
-	{
-		bar.__add_divisor(divisors[@ i]);
-	}
+	array_concat(bar.divisors, divisors);
 }
 
 
@@ -451,7 +446,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle 
+	 *	@param {Real} angle
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -491,9 +486,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		if (!surface_exists(mask))
 		{
-			surface_reset_target();
 			__draw_mask(side);
-			surface_set_target(surface);
 		}
 
 		__draw_body();
@@ -515,7 +508,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_mask = function(side)
 	{
-		mask = surface_create(side, side);
+		surface_reset_target();
 		var mask_precision = min(CIRCULAR_BAR_PRECISION_PRESETS.PLUS_ULTRA, precision);
 		var temp_surface = surface_create(side, side);
 		surface_set_target(temp_surface);
@@ -529,19 +522,22 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		if (width < radius)
 		{
 			gpu_set_blendmode(bm_subtract);
-			__draw_progression(mask_precision, 1, radius - width + 1);
+			__draw_progression(mask_precision, 1, radius - width);
 			gpu_set_blendmode(bm_normal);
 		}
 
 		surface_reset_target();
-		surface_set_target(mask);
-
+		mask = surface_create(side, side);
 		gpu_set_blendmode(bm_subtract);
+		surface_set_target(mask);
 		draw_clear(c_black);
+
 		draw_surface(temp_surface, 0, 0);
 		gpu_set_blendmode(bm_normal);
 		surface_free(temp_surface);
 		surface_reset_target();
+
+		surface_set_target(surface);
 	}
 
 
