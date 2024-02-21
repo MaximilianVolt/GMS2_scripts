@@ -32,7 +32,7 @@ bar = circular_bar_create(500, 500, 100, 20);
 Or, alternatively:
 
 ```gml
-circular_bar_create_amplitude(500, 500, 100, 20);
+bar = circular_bar_create_amplitude(500, 500, 100, 20);
 ```
 
 ## The guide is currently being worked on! :O

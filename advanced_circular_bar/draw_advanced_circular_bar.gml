@@ -63,7 +63,9 @@ function advanced_circular_bar_position(animation_bar, strength_or_shake_positio
 
 function advanced_circular_bar_activate(animation_bar)
 {
-	for (var i = 0; i < array_length(animation_bar.bars); i++)
+	var bar_count = array_length(animation_bar.bars);
+
+	for (var i = 0; i < bar_count; i++)
 	{
 		animation_bar.bars[@ i].active = true;
 	}
@@ -78,7 +80,9 @@ function advanced_circular_bar_activate(animation_bar)
 
 function advanced_circular_bar_deactivate(animation_bar)
 {
-	for (var i = 0; i < array_length(animation_bar.bars); i++)
+	var bar_count = array_length(animation_bar.bars);
+
+	for (var i = 0; i < bar_count; i++)
 	{
 		animation_bar.bars[@ i].active = false;
 	}
@@ -146,8 +150,8 @@ function circular_bar_flash(bar, start_color, end_color, color_pulse_duration, s
 
 function wave(from, to, duration, offset = 0)
 {
-	var halfWave = (to - from) / 2;
-	return from + halfWave + sin((current_time / 1000 + duration * offset) / duration * pi * 2) * halfWave;
+	var half_wave = (to - from) / 2;
+	return from + half_wave + sin((current_time / 1000 + duration * offset) / duration * pi * 2) * half_wave;
 }
 
 
@@ -210,9 +214,13 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 	static __draw = function(x = [self.x], y = [self.y], refresh_mask = false)
 	{
-		for (var i = 0; i < array_length(bars); i++)
+		var bar_count = array_length(bars);
+		var xcoord_count = array_length(x);
+		var ycoord_count = array_length(y);
+
+		for (var i = 0; i < bar_count; i++)
 		{
-			bars[@ i].__draw(x[@ i % array_length(x)], y[@ i % array_length(y)], refresh_mask);
+			bars[@ i].__draw(x[@ i % xcoord_count], y[@ i % ycoord_count], refresh_mask);
 		}
 	}
 
@@ -239,9 +247,10 @@ function Advanced_circular_bar(x, y, bars) constructor
 	{
 		var positions = [[], []], _x = 0, _y = 1;
 		var shake_positions = is_struct(strength_or_shake_positions) ? strength_or_shake_positions : shake(strength_or_shake_positions);
+		var bar_count = array_length(bars);
 		var rotation_positions = [];
 
-		for (var i = 0; i < array_length(bars); i++)
+		for (var i = 0; i < bar_count; i++)
 		{
 			rotation_positions[@ i] = circular_bar_rotate(bars[@ i], rotation);
 			array_push(positions[@ _x], x + shake_positions.x + rotation_positions[@ i].x);

@@ -10,7 +10,7 @@
  *	@param {Real} [value] The value represented by the bar (0 <= x <= 1).
  *	@param {Real} [precision] The number of sectors used to draw the bar. IMPACTS ON PERFORMANCE.
  *	@param {Array<Constant.Color>} [colors] The colors from 0% to 100% of the value.
- *	@param {Real} [alpha] The bar's opacity.
+ *	@param {Array<Real>} [alphas] The opacities from 0% to 100% of the value.
  *	@param {Real} [edge_type_start] The edge drawn at the bar's 0% angle.
  *	@param {Real} [edge_type_final] The edge drawn at the bar's val% angle.
  *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_auto_set_divisors()).
@@ -18,7 +18,7 @@
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
 
-function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end_angle = 450, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end_angle = 450, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_white, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
 {
 	return new Circular_bar(x, y, radius, width, start_angle, end_angle, value, precision, colors, alphas, edge_type_start, edge_type_final, divisors, edges, activation_override);
 }
@@ -32,12 +32,12 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  *	@param {Real} y The y position.
  *	@param {Real} radius The bar's radius.
  *	@param {Real} [width] The bar's width.
- *	@param {Real} [center_angle] The bar's angle at 50%.
+ *	@param {Real} [center_angle] The bar's middle angle (50%).
  *	@param {Real} [amplitude] The bar's total amplitude.
  *	@param {Real} [value] The value represented by the bar (0 <= x <= 1).
  *	@param {Real} [precision] The number of sectors used to draw the bar. IMPACTS ON PERFORMANCE.
  *	@param {Array<Constant.Color>} [colors] The colors from 0% to 100% of the value.
- *	@param {Real} [alpha] The bar's opacity.
+ *	@param {Array<Real>} [alphas] The colors from 0% to 100% of the value.
  *	@param {Real} [edge_type_start] The edge drawn at the bar's 0% angle.
  *	@param {Real} [edge_type_final] The edge drawn at the bar's val% angle.
  *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_auto_set_divisors()).
@@ -45,7 +45,7 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
 
-function circular_bar_create_amplitude(x, y, radius, width = radius, center_angle = 270, amplitude = 360, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_black, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+function circular_bar_create_amplitude(x, y, radius, width = radius, center_angle = 270, amplitude = 360, value = 1, precision = CIRCULAR_BAR_QUALITY.MEDIUM, colors = [c_white, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
 {
 	var half_amplitude = amplitude / 2;
 	return new Circular_bar(x, y, radius, width, center_angle - half_amplitude, center_angle + half_amplitude, value, precision, colors, alphas, edge_type_start, edge_type_final, divisors, edges, activation_override);
@@ -73,11 +73,13 @@ function draw_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false)
  *	@return {Struct.Circular_bar}
  *	@param {Struct.Circular_bar} bar The bar to copy.
  *	@param {Real} [precision] The number of segments of the new bar.
+ *	@param {Array<Constant.Color>} [colors] The colors of the new bar.
+ *	@param {Array<Real>} [alphas] The new opacities of the new bar.
 */
 
-function circular_bar_copy(bar, precision = bar.precision)
+function circular_bar_copy(bar, precision = bar.precision, colors = bar.colors, alphas = bar.alphas)
 {
-	return bar.__copy(precision);
+	return bar.__copy(precision, colors, alphas);
 }
 
 
@@ -169,7 +171,9 @@ function circular_bar_create_divisor(position, amplitude)
 
 function circular_bar_add_divisors(bar, divisors)
 {
-	for (var i = 0; i < array_length(divisors); i++)
+	var divisor_count = array_length(divisors);
+
+	for (var i = 0; i < divisor_count; i++)
 	{
 		bar.__add_divisor(divisors[@ i]);
 	}
@@ -193,15 +197,18 @@ function circular_bar_auto_set_divisors(bar, divisor_count, divisor_amplitudes, 
 
 
 /**
- *	Adapts a bar to the shape of its target.
- *	@param {Struct.Circular_bar} border_bar The bar to adapt as border.
+ *	Creates a bar adapted to the shape of its target given a border width.
+ *	@returns {Struct.Circular_bar}
  *	@param {Struct.Circular_bar} target_bar The bar to adapt the border to.
  *	@param {Real} border_width The width of the border.
+ *	@param {Real} [precision] The precision to apply to the border bar.
+ *	@param {Array<Constant.Color>} [colors] The colors of the border bar.
+ *	@param {Array<Real>} [alphas] The opacities of the border bar.
 */
 
-function circular_bar_make_border(border_bar, target_bar, border_width)
+function circular_bar_create_border(target_bar, border_width, precision = target_bar.precision, colors = target_bar.colors, alphas = target_bar.alphas)
 {
-	border_bar.__make_border_of(target_bar, border_width);
+	return target_bar.__copy(precision, colors, alphas).__border(target_bar, border_width);
 }
 
 
@@ -218,7 +225,7 @@ enum CIRCULAR_BAR_EDGE_POSITIONS
 	BOTTOM = 2
 }
 
-enum CIRCULAR_BAR_QUALITY
+enum CIRCULAR_BAR_PRECISION_PRESETS
 {
 	LOW = 18,
 	MEDIUM = 36,
@@ -257,6 +264,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	self.colors = colors;
 	self.color = merge_color(colors[@ 0], colors[@ 1], value);
 	self.alphas = alphas;
+	self.alpha = (alphas[@ 1] - alphas[@ 0]) * value + alphas[@ 0];
 	self.start_angle = start_angle;
 	self.end_angle = end_angle;
 	self.radius = radius;
@@ -306,11 +314,14 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} [precision_override]
 	*/
 
-	static __copy = function(precision_override = self.precision)
+	static __copy = function(precision_override = self.precision, colors = self.colors, alphas = self.alphas)
 	{
 		var bar_copy = json_parse(json_stringify(self));
 		static_set(bar_copy, static_get(Circular_bar));
 		bar_copy.precision = precision_override;
+		bar_copy.colors = colors;
+		bar_copy.alphas = alphas;
+
 		return bar_copy;
 	}
 
@@ -324,7 +335,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	static __update = function(refresh_mask = false, active = self.active)
 	{
 		redraw = active;
-		if (refresh_mask && surface_exists(mask)) {surface_free(mask);}
+
+		if (refresh_mask && surface_exists(mask))
+		{
+			surface_free(mask);
+		}
 	}
 
 
@@ -358,8 +373,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __set_colors = function(color_start, color_end)
 	{
-		colors = [color_start, color_end];
 		color = merge_color(color_start, color_end, value);
+		colors = [color_start, color_end];
 	}
 
 
@@ -369,7 +384,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} border_width
 	*/
 
-	static __make_border_of = function(bar, border_width)
+	static __border = function(bar, border_width)
 	{
 		radius = bar.radius + border_width;
 		width = bar.width + border_width + min(border_width * (bar.width < bar.radius), bar.radius - bar.width);
@@ -382,28 +397,33 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		end_angle = _end_angle + dir * border_angle * edge_requires_change[@ edge_type_final] * is_not_explementary;
 
 		divisors = json_parse(json_stringify(bar.divisors));
-		var edge_placements = __get_placement_values();
 		edges = bar.edges;
 
+		var edge_placements = __get_placement_values();
+		var divisor_count = array_length(divisors);
+		var edges_count = array_length(edges);
+		var edge_angles_count = 2;
+
 		// I hate this
-		for (var i = 0; i < array_length(divisors); i++)
+		for (var i = 0; i < divisor_count; i++)
 		{
 			with (divisors[i])
 			{
 				var edge = 0;
 
-				for (var j = 0; j < array_length(edge_angles); j++)
+				for (var j = 0; j < edge_angles_count; j++)
 				{
-					edge = other.edges[@ array_get_index(edge_placements, other.__angle_to_placement_percentage(edge_angles[@ j])) % array_length(other.edges)];
+					edge = other.edges[@ array_get_index(edge_placements, other.__angle_to_placement_percentage(edge_angles[@ j])) % edges_count];
 					edge_angles[@ j] += border_angle * sign(position - edge_angles[@ j]) * other.edge_requires_change[@ edge];
 				}
 
-				position = mean(edge_angles[@ 0], edge_angles[@ 1]);
 				amplitude = abs(edge_angles[@ 0] - edge_angles[@ 1]);
+				position = mean(edge_angles[@ 0], edge_angles[@ 1]);
 			}
 		}
 
 		__update(true);
+		return self;
 	}
 
 
@@ -416,8 +436,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	{
 		var placement_values = [];
 		var _ = __angle_to_placement_percentage;
+		var divisor_count = array_length(divisors);
 
-		for (var i = 0; i < array_length(divisors); i++)
+		for (var i = 0; i < divisor_count; i++)
 		{
 			array_push(placement_values, _(divisors[@ i].edge_angles[@ 0]), _(divisors[@ i].edge_angles[@ 1]));
 		}
@@ -430,7 +451,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle 
+	 *	@param {Real} angle
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -448,7 +469,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw = function(x = self.x, y = self.y, refresh_mask = false)
 	{
-		if (__get_sector() < 1 || __get_alpha() <= 0) {exit;}
+		if (__get_sector() < 1 || alpha <= 0) {exit;}
 
 		var side = radius * 2 + 1;
 
@@ -457,8 +478,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			surface = surface_create(side, side);
 		}
 
-		surface_set_target(surface);
 		__update(refresh_mask);
+		surface_set_target(surface);
 
 		if (!redraw)
 		{
@@ -470,12 +491,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		if (!surface_exists(mask))
 		{
-			mask = surface_create(side, side);
+			surface_reset_target();
 			__draw_mask(side);
+			surface_set_target(surface);
 		}
 
-		surface_reset_target();
-		surface_set_target(surface);
 		__draw_body();
 
 		gpu_set_blendmode(bm_subtract);
@@ -484,6 +504,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		__finalise_surface(x, y);
 
 		color = merge_color(colors[@ 0], colors[@ 1], value);
+		alpha = __get_alpha();
 	}
 
 
@@ -494,10 +515,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_mask = function(side)
 	{
-		var mask_precision = min(CIRCULAR_BAR_QUALITY.PLUS_ULTRA, precision);
+		mask = surface_create(side, side);
+		var mask_precision = min(CIRCULAR_BAR_PRECISION_PRESETS.PLUS_ULTRA, precision);
 		var temp_surface = surface_create(side, side);
-		surface_reset_target();
-
 		surface_set_target(temp_surface);
 		__draw_body(mask_precision, 1);
 
@@ -510,9 +530,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		{
 			gpu_set_blendmode(bm_subtract);
 			__draw_progression(mask_precision, 1, radius - width + 1);
+			gpu_set_blendmode(bm_normal);
 		}
 
-		gpu_set_blendmode(bm_normal);
 		surface_reset_target();
 		surface_set_target(mask);
 
@@ -521,6 +541,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		draw_surface(temp_surface, 0, 0);
 		gpu_set_blendmode(bm_normal);
 		surface_free(temp_surface);
+		surface_reset_target();
 	}
 
 
@@ -545,17 +566,15 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_progression = function(precision_override, value_override, radius = self.radius)
 	{
+		var center = self.radius, _cos, _sin;
+		var angle_diff = end_angle - start_angle;
+		var rotation_increment = sign(angle_diff);
+		var calibrated_start_angle = start_angle - 180;
+		var sector_size = abs(angle_diff) / precision_override;
 		var sector_count = __get_sector(value_override), angle = start_angle;
-		var center = self.radius;
 
 		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(center, center);
-
-		var angle_diff = end_angle - start_angle;
-		var rotation_increment = sign(angle_diff);
-		var sector_size = abs(angle_diff) / precision_override;
-		var calibrated_start_angle = start_angle - 180;
-		var _cos, _sin;
 
 		for (var i = 0; abs(i) < sector_count; i += rotation_increment)
 		{
@@ -585,18 +604,18 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	static __calculate_variable_radius = function(value = self.value, radius = self.radius)
 	{
 		// Too much trigonometry, Maximilian out.
-		var sector_count = __get_sector(value) - (value < 1);
 		var angle_diff = end_angle - start_angle;
 		var rotation_increment = sign(angle_diff);
-		var sector_amplitude = abs(angle_diff) / precision;
-		var outer_angle = (180 - sector_amplitude) / 2;
-		var calibrated_start_angle = start_angle - 180;
 		var angle = angle_diff * value + start_angle;
+		var sector_amplitude = abs(angle_diff) / precision;
+		var sector_count = __get_sector(value) - (value < 1);
+		var outer_angle = (180 - sector_amplitude) / 2;
 		var anchored_angle = start_angle + sector_amplitude * rotation_increment * sector_count;
 		var sector_angle_diff = abs(angle - anchored_angle) % sector_amplitude;
 		var inner_angle = 180 - outer_angle - sector_angle_diff;
 		var variable_radius = radius * dsin(outer_angle) / dsin(inner_angle);
 		var snap_dir_angle = anchored_angle + sector_amplitude / 2 * sign(angle_diff);
+
 		return {variable_radius, snap_dir_angle, sector_angle_diff};
 	}
 
@@ -621,7 +640,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	static __finalise_surface = function(x = self.x, y = self.y)
 	{
 		surface_reset_target();
-		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, __get_alpha());
+		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, alpha);
 		draw_set_color(c_white);
 		draw_set_alpha(1);
 	}
@@ -676,9 +695,18 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		return {position, amplitude, edge_angles: [position - half_amplitude, position + half_amplitude]};
 	}
 
+
+
+	/**
+	 *
+	*/
+
 	static __draw_divisors = function()
 	{
-		for (var i = 0; i < array_length(divisors); i++)
+		gpu_set_blendmode(bm_subtract);
+		var divisor_count = array_length(divisors);
+
+		for (var i = 0; i < divisor_count; i++)
 		{
 			__draw_divisor(divisors[@ i]);
 		}
@@ -713,7 +741,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var tmx2 = center + lengthdir_x(len, position + variation);
 		var tmy2 = center + lengthdir_y(len, position + variation);
 
-		gpu_set_blendmode(bm_subtract);
 		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(center, center);
 		draw_vertex(t1x1, t1y1);
@@ -733,15 +760,17 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_edges = function(edges_to_draw = edges, placement_values = __get_placement_values())
 	{
+		var placements_count = array_length(placement_values);
+		var edges_count = array_length(edges_to_draw);
 		var angle_diff = end_angle - start_angle;
 		var dir = sign(angle_diff) * 90;
 		var direction_values = [dir, -dir];
 
-		for (var i = 0; i < array_length(placement_values); i++)
+		for (var i = 0; i < placements_count; i++)
 		{
-			var edge = edges_to_draw[@ i % array_length(edges_to_draw)];
+			var edge = edges_to_draw[@ i % edges_count];
+			var edge_direction = direction_values[@ i % 2];
 			var placement_angle = placement_values[@ i] * angle_diff + start_angle;
-			var edge_direction = direction_values[@ i % array_length(direction_values)];
 			__draw_edge(edge, placement_angle, __calculate_variable_radius(placement_values[@ i]), edge_direction);
 		}
 	}
@@ -764,35 +793,39 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var h_sector_size = abs(end_angle - start_angle) / precision / 2;
 		var width = self.width * radius / self.radius;
 		var center = self.radius - 1;
+		var center_x = center;
+		var center_y = center;
 		dir += angle;
 
 		var edge_selector =
 		[
-			function(center, radius, width, angle) {__round_edge(center, radius, width, angle)},
-			function(center, radius, width, angle, dir, ext) {__chevron_edge(center, radius, width, angle, dir, ext)},
-			function(center, radius, width, angle, dir, ext) {__rectangle_edge(center, radius, width, angle, dir, ext)},
-			function(center, radius, width, angle) {__bubbly_edge(center, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center, radius, width, angle) {__bubbly_edge(center, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center, radius, width, angle) {__bubbly_edge(center, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center, radius, width, angle, dir, ext) {__dart_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center, radius, width, angle, dir, ext) {__dart_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center, radius, width, angle, dir, ext) {__dart_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center, radius, width, angle, dir, ext) {__diamond_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center, radius, width, angle, dir, ext) {__diamond_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center, radius, width, angle, dir, ext) {__diamond_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center, radius, width, angle, dir, ext) {__triangle_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center, radius, width, angle, dir, ext) {__triangle_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center, radius, width, angle, dir, ext) {__triangle_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center, radius, width, angle, dir, ext) {__trapezoid_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center, radius, width, angle, dir, ext) {__trapezoid_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center, radius, width, angle, dir, ext) {__trapezoid_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center, radius, width, angle, dir, ext) {__rounded_diamond_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center, radius, width, angle, dir, ext) {__rounded_diamond_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center, radius, width, angle, dir, ext) {__rounded_diamond_edge(center, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)}
+			function(center_x, center_y, radius, width, angle) {__round_edge(center_x, center_y, radius, width, angle)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__chevron_edge(center_x, center_y, radius, width, angle, dir, ext)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rectangle_edge(center_x, center_y, radius, width, angle, dir, ext)},
+			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)}
 		];
 
-		if (edge < 1 || edge > array_length(edge_selector)) {return;}
-		edge_selector[@ edge - 1](center, radius, width, placement, dir, ext);
+		if (edge > 0 && edge <= array_length(edge_selector))
+		{
+			edge_selector[@ edge - 1](center_x, center_y, radius, width, placement, dir, ext);
+		}
 	}
 	#endregion
 
@@ -804,11 +837,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} angle
 	*/
 
-	static __round_edge = function(center, radius, width, angle)
+	static __round_edge = function(center_x, center_y, radius, width, angle)
 	{
 		var hw = width / 2, mid_point = radius - hw;
-		var cx = center + lengthdir_x(mid_point, angle);
-		var cy = center + lengthdir_y(mid_point, angle);
+		var cx = center_x + lengthdir_x(mid_point, angle);
+		var cy = center_y + lengthdir_y(mid_point, angle);
 
 		draw_circle(cx, cy, hw, false);
 	}
@@ -825,13 +858,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} position
 	*/
 
-	static __triangle_edge = function(center, radius, width, angle, dir, ext, position)
+	static __triangle_edge = function(center_x, center_y, radius, width, angle, dir, ext, position)
 	{
 		var in = radius - width, hw = width / 2, ew = ext * hw;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 		var mpx = mean(p1x, p2x);
 		var mpy = mean(p1y, p2y);
 
@@ -855,13 +888,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} position
 	*/
 
-	static __trapezoid_edge = function(center, radius, width, angle, dir, ext, position)
+	static __trapezoid_edge = function(center_x, center_y, radius, width, angle, dir, ext, position)
 	{
 		var in = radius - width, ew = ext * width / 2;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
@@ -924,13 +957,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} ext
 	*/
 
-	static __chevron_edge = function(center, radius, width, angle, dir, ext)
+	static __chevron_edge = function(center_x, center_y, radius, width, angle, dir, ext)
 	{
 		var in = radius - width, ew = ext * width / 2;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 		var e1x = p1x + lengthdir_x(ew, dir);
 		var e1y = p1y + lengthdir_y(ew, dir);
 		var e2x = p2x + lengthdir_x(ew, dir);
@@ -955,13 +988,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} position
 	*/
 
-	static __bubbly_edge = function(center, radius, width, angle, position)
+	static __bubbly_edge = function(center_x, center_y, radius, width, angle, position)
 	{
 		var in = radius - width, qw = width / 4;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
@@ -1007,13 +1040,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} ext
 	*/
 
-	static __rectangle_edge = function(center, radius, width, angle, dir, ext)
+	static __rectangle_edge = function(center_x, center_y, radius, width, angle, dir, ext)
 	{
 		var in = radius - width, ew = ext * width / 2;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 		var p3x = p1x + lengthdir_x(ew, dir);
 		var p3y = p1y + lengthdir_y(ew, dir);
 		var p4x = p2x + lengthdir_x(ew, dir);
@@ -1035,7 +1068,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} position
 	*/
 
-	static __rounded_diamond_edge = function(center, radius, width, angle, dir, ext, position)
+	static __rounded_diamond_edge = function(center_x, center_y, radius, width, angle, dir, ext, position)
 	{
 		// As of now circles can't be stretched
 		// If you come up with a solution to make circles (ellipses, basically) stretch
@@ -1043,10 +1076,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		ext = 1;
 
 		var in = radius - width, hw = width / 2, qw = hw / 2, qw3 = qw * 3, ew = ext * qw;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
@@ -1115,13 +1148,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} position
 	*/
 
-	static __diamond_edge = function(center, radius, width, angle, dir, ext, position)
+	static __diamond_edge = function(center_x, center_y, radius, width, angle, dir, ext, position)
 	{
 		var in = radius - width, ew = ext * width / 4;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
@@ -1152,13 +1185,13 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} position
 	*/
 
-	static __dart_edge = function(center, radius, width, angle, dir, ext, position)
+	static __dart_edge = function(center_x, center_y, radius, width, angle, dir, ext, position)
 	{
 		var in = radius - width, ew = ext * width / 4;
-		var p1x = center + lengthdir_x(in, angle);
-		var p1y = center + lengthdir_y(in, angle);
-		var p2x = center + lengthdir_x(radius, angle);
-		var p2y = center + lengthdir_y(radius, angle);
+		var p1x = center_x + lengthdir_x(in, angle);
+		var p1y = center_y + lengthdir_y(in, angle);
+		var p2x = center_x + lengthdir_x(radius, angle);
+		var p2y = center_y + lengthdir_y(radius, angle);
 
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;

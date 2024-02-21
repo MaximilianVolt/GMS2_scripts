@@ -1,4 +1,4 @@
-///@ CIRCULAR BAR v2.2.2 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
+///@ CIRCULAR BAR v2.2.3 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
 
 /*
 	--------------------
@@ -8,7 +8,7 @@
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/8/2022
-	Last updated on [DMY]: 19/01/2024
+	Last updated on [DMY]: 21/02/2024
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
@@ -18,7 +18,7 @@
 	> CONSIDER USING draw_set_circle_precision() TO CHANGE THE BAR'S INNER SMOOTHNESS
 
 	> MAXIMUM PRECISION SUPPORTED: 999. IT IS RECOMMENDED TO USE THE DEFAULT VALUES DEFINED IN
-	* CIRCULAR_BAR_QUALITY
+	* CIRCULAR_BAR_PRECISION_PRESETS
 
 	> refresh_mask IS A HEAVY PARAMETER TO PASS AS true, YOU SHOULD RESET IT TO false AS SOON AS
 	* YOU'RE DONE MAKING THE GRAPHICAL CHANGES TO THE BAR MASK
