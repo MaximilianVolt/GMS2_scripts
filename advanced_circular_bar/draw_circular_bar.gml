@@ -451,7 +451,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle
+	 *	@param {Real} angle 
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -723,23 +723,23 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_divisor = function(divisor)
 	{
-		var variation = (divisor.amplitude >= 180) * 90;
-		var angles = divisor.edge_angles;
-		var position = divisor.position;
-		var len = radius * 1.5;
 		var center = radius;
+		var len = radius * 1.5;
+		var position = divisor.position;
+		var angles = divisor.edge_angles;
+		var variation = (divisor.amplitude >= 180) * 90;
 
 		var t1x1 = center + lengthdir_x(len, angles[@ 0]);
 		var t1y1 = center + lengthdir_y(len, angles[@ 0]);
 		var t2x1 = center + lengthdir_x(len, angles[@ 1]);
 		var t2y1 = center + lengthdir_y(len, angles[@ 1]);
 
-		var tmx3 = center + lengthdir_x(len, position);
-		var tmy3 = center + lengthdir_y(len, position);
 		var tmx1 = center + lengthdir_x(len, position - variation);
 		var tmy1 = center + lengthdir_y(len, position - variation);
 		var tmx2 = center + lengthdir_x(len, position + variation);
 		var tmy2 = center + lengthdir_y(len, position + variation);
+		var tmx3 = center + lengthdir_x(len, position);
+		var tmy3 = center + lengthdir_y(len, position);
 
 		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(center, center);
