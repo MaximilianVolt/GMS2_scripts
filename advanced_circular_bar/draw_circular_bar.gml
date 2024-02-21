@@ -451,7 +451,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle
+	 *	@param {Real} angle 
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -896,49 +896,23 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var p2x = center_x + lengthdir_x(radius, angle);
 		var p2y = center_y + lengthdir_y(radius, angle);
 
+		var _x = 0, _y = 1;
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
-		var m1x = p1x + xlen / 4;
-		var m1y = p1y + ylen / 4;
-		var m2x = p2x - xlen / 4;
-		var m2y = p2y - ylen / 4;
-		var p3x = m1x, p3y = m1y;
-		var p4x = m2x, p4y = m2y;
-
-		switch (position)
-		{
-			default:
-			break;
-
-			case CIRCULAR_BAR_EDGE_POSITIONS.TOP:
-				m1x = p2x - xlen / 2;
-				m1y = p2y - ylen / 2;
-				m2x = p2x - xlen / 4;
-				m2y = p2y - ylen / 4;
-				p3x = p1x + lengthdir_x(ew, dir);
-				p3y = p1y + lengthdir_y(ew, dir);
-				p4x = m2x + lengthdir_x(ew, dir);
-				p4y = m2y + lengthdir_y(ew, dir);
-			break;
-
-			case CIRCULAR_BAR_EDGE_POSITIONS.CENTER:
-				p3x = m1x + lengthdir_x(ew, dir);
-				p3y = m1y + lengthdir_y(ew, dir);
-				p4x = m2x + lengthdir_x(ew, dir);
-				p4y = m2y + lengthdir_y(ew, dir);
-			break;
-
-			case CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM:
-				m1x = p1x + xlen / 2;
-				m1y = p1y + ylen / 2;
-				m2x = p1x + xlen / 4;
-				m2y = p1y + ylen / 4;
-				p3x = m2x + lengthdir_x(ew, dir);
-				p3y = m2y + lengthdir_y(ew, dir);
-				p4x = p2x + lengthdir_x(ew, dir);
-				p4y = p2y + lengthdir_y(ew, dir);
-			break;
-		}
+		var m14x = p1x + xlen / 4;
+		var m14y = p1y + ylen / 4;
+		var m34x = p2x - xlen / 4;
+		var m34y = p2y - ylen / 4;
+		var m1_base_positions = [[p1x, m14x, m14x], [p1y, m14y, m14y]];
+		var m2_base_positions = [[m34x, m34x, p2x], [m34y, m34y, p2y]];
+		var m1x = m1_base_positions[@ _x][@ position];
+		var m1y = m1_base_positions[@ _y][@ position];
+		var m2x = m2_base_positions[@ _x][@ position];
+		var m2y = m2_base_positions[@ _y][@ position];
+		var p3x = m1x + lengthdir_x(ew, dir);
+		var p3y = m1y + lengthdir_y(ew, dir);
+		var p4x = m2x + lengthdir_x(ew, dir);
+		var p4y = m2y + lengthdir_y(ew, dir);
 
 		draw_triangle(p1x, p1y, m1x, m1y, p3x, p3y, false);
 		draw_triangle(m1x, m1y, p3x, p3y, p4x, p4y, false);
@@ -1081,55 +1055,36 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var p2x = center_x + lengthdir_x(radius, angle);
 		var p2y = center_y + lengthdir_y(radius, angle);
 
+		var _x = 0, _y = 1;
 		var xlen = p2x - p1x;
 		var ylen = p2y - p1y;
-		var bx = mean(p1x, p2x);
-		var by = mean(p1y, p2y);
-		var v1x = bx, v1y = by;
-		var v2x = bx, v2y = by;
+		var m14x = p1x + xlen / 4;
+		var m14y = p1y + ylen / 4;
+		var mx = p1x + xlen / 2;
+		var my = p1y + ylen / 2;
+		var m34x = p2x - xlen / 4;
+		var m34y = p2y - ylen / 4;
+
 		var _dir = sign(dir - angle) * 90;
-		var base_dir = angle + _dir;
-		var angle_diff = 0;
+		var base_direction = angle + _dir;
+		var as12 = darcsin(.5) * sign(_dir);
+		var as13 = darcsin(1 / 3) * sign(_dir);
+		var angle_differences = [as13, as12, as13];
+		var angle_diff = angle_differences[@ position];
+		var base_positions = [[m34x, mx, m14x], [m34y, my, m14y]];
+		var bx = base_positions[@ _x][@ position];
+		var by = base_positions[@ _y][@ position];
 
-		switch (position)
-		{
-			default:
-			break;
-
-			case CIRCULAR_BAR_EDGE_POSITIONS.TOP:
-				p2x -= xlen / 4;
-				p2y -= ylen / 4;
-				bx = p2x;
-				by = p2y;
-
-				angle_diff = darcsin(qw / qw3) * sign(_dir);
-				v1x = bx + lengthdir_x(ew, base_dir + angle_diff);
-				v1y = by + lengthdir_y(ew, base_dir + angle_diff);
-				v2x = bx;
-				v2y = by;
-			break;
-
-			case CIRCULAR_BAR_EDGE_POSITIONS.CENTER:
-				angle_diff = darcsin(qw / hw) * sign(_dir);
-				v1x = bx + lengthdir_x(ew, base_dir + angle_diff);
-				v1y = by + lengthdir_y(ew, base_dir + angle_diff);
-				v2x = bx + lengthdir_x(ew, base_dir - angle_diff);
-				v2y = by + lengthdir_y(ew, base_dir - angle_diff);
-			break;
-
-			case CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM:
-				p1x += xlen / 4;
-				p1y += ylen / 4;
-				bx = p1x;
-				by = p1y;
-
-				angle_diff = darcsin(qw / qw3) * sign(_dir);
-				v2x = bx + lengthdir_x(ew, base_dir - angle_diff);
-				v2y = by + lengthdir_y(ew, base_dir - angle_diff);
-				v1x = bx;
-				v1y = by;
-			break;
-		}
+		var b1xlx = bx + lengthdir_x(ew, base_direction + angle_diff);
+		var b1yly = by + lengthdir_y(ew, base_direction + angle_diff);
+		var b2xlx = bx + lengthdir_x(ew, base_direction - angle_diff);
+		var b2yly = by + lengthdir_y(ew, base_direction - angle_diff);
+		var v1_positions = [[b1xlx, b1xlx, bx], [b1yly, b1yly, by]];
+		var v2_positions = [[bx, b2xlx, b2xlx], [by, b2yly, b2yly]];
+		var v1x = v1_positions[@ _x][@ position];
+		var v1y = v1_positions[@ _y][@ position];
+		var v2x = v2_positions[@ _x][@ position];
+		var v2y = v2_positions[@ _y][@ position];
 
 		draw_triangle(p1x, p1y, bx, by, v1x, v1y, false);
 		draw_triangle(p2x, p2y, bx, by, v2x, v2y, false);
