@@ -451,7 +451,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle 
+	 *	@param {Real} angle
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -1049,7 +1049,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		// correctly in all angles please do contact me on Discord: maximilian.volt
 		ext = 1;
 
-		var in = radius - width, hw = width / 2, qw = hw / 2, qw3 = qw * 3, ew = ext * qw;
+		var in = radius - width, qw = width / 4, ew = ext * qw;
 		var p1x = center_x + lengthdir_x(in, angle);
 		var p1y = center_y + lengthdir_y(in, angle);
 		var p2x = center_x + lengthdir_x(radius, angle);
