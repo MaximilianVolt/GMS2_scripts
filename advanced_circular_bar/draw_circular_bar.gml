@@ -59,11 +59,13 @@ function circular_bar_create_amplitude(x, y, radius, width = radius, center_angl
  *	@param {Real} [x] Override x position to draw the bar.
  *	@param {Real} [y] Override y position to draw the bar.
  *	@param {Bool} [refresh_mask] Updates the bar's mask.
+ *	@param {Constant.BlendMode} [blendmode] The blendmode to apply to draw the bar.
+ *	@param {Asset.GMShader} [shader] The shader to apply to draw the bar.
 */
 
-function draw_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false)
+function draw_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false, blendmode = bm_normal, shader = undefined)
 {
-	bar.__draw(x, y, refresh_mask);
+	bar.__draw_master(x, y, refresh_mask, blendmode, shader);
 }
 
 
@@ -446,7 +448,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 *	@returns {Real}
-	 *	@param {Real} angle
+	 *	@param {Real} angle 
 	*/
 
 	static __angle_to_placement_percentage = function(angle)
@@ -457,18 +459,42 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	#region Main
 	/**
-	 *	@param {Real} [x]
-	 *	@param {Real} [y]
-	 *	@param {Bool} [refresh_mask]
+	 *	@param {Real} x
+	 *	@param {Real} y
+	 *	@param {Bool} refresh_mask
+	 *	@param {Constant.BlendMode} blendmode
+	 *	@param {Asset.GMShader} shader
 	*/
 
-	static __draw = function(x = self.x, y = self.y, refresh_mask = false)
+	static __draw_master = function(x, y, refresh_mask, blendmode, shader)
 	{
 		if (__get_sector() < 1 || alpha <= 0)
 		{
 			exit;
 		}
 
+		__draw(x, y, refresh_mask);
+
+		gpu_set_blendmode(blendmode);
+
+		if (shader != undefined)
+		{
+			shader_set(shader);
+		}
+
+		__finalise_surface(x, y);
+	}
+
+
+
+	/**
+	 *	@param {Real} x
+	 *	@param {Real} y
+	 *	@param {Bool} refresh_mask
+	*/
+
+	static __draw = function(x, y, refresh_mask)
+	{
 		var side = radius * 2 + 1;
 
 		if (!surface_exists(surface))
@@ -481,8 +507,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		if (!redraw)
 		{
-			__finalise_surface(x, y);
-			exit;
+			return;
 		}
 
 		draw_clear_alpha(c_black, 0);
@@ -496,8 +521,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		gpu_set_blendmode(bm_subtract);
 		draw_surface(mask, 0, 0);
-		gpu_set_blendmode(bm_normal);
-		__finalise_surface(x, y);
 
 		color = merge_color(colors[@ 0], colors[@ 1], value);
 		alpha = __get_alpha();
@@ -639,8 +662,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	{
 		surface_reset_target();
 		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, alpha);
+		gpu_set_blendmode(bm_normal);
 		draw_set_color(c_white);
 		draw_set_alpha(1);
+		shader_reset();
 	}
 	#endregion
 

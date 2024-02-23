@@ -18,11 +18,13 @@ function advanced_circular_bar_create(x, y, bars)
 	@param {Array<Real>} [x] The x positions to draw the bars.
 	@param {Array<Real>} [y] The y positions to draw the bars.
 	@param {Bool} [refresh_mask] Updates the bars' masks.
+	@param {Array<Constant.BlendMode>} [blendmodes] The blendmodes to draw the bars.
+	@param {Array<Asset.GMShader>} [shaders] The shaders to draw the bars.
 */
 
-function draw_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [animation_bar.y], refresh_mask = false)
+function draw_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [animation_bar.y], refresh_mask = false, blendmodes = [bm_normal], shaders = [undefined])
 {
-	animation_bar.__draw(x, y, refresh_mask);
+	animation_bar.__draw(x, y, refresh_mask, blendmodes, shaders);
 }
 
 
@@ -34,9 +36,9 @@ function draw_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [a
 	@param {Bool} [refresh_mask] Updates the bars' masks.
 */
 
-function draw_advanced_circular_bar_positioned(animation_bar, position_array, refresh_mask = false)
+function draw_advanced_circular_bar_positioned(animation_bar, position_array, refresh_mask = false, blendmodes = [bm_normal], shaders = [undefined])
 {
-	animation_bar.__draw_positioned(position_array, refresh_mask);
+	animation_bar.__draw_positioned(position_array, refresh_mask, blendmodes, shaders);
 }
 
 
@@ -207,20 +209,24 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 
 	/**
-	 *	@param {Array<Real>} [x]
-	 *	@param {Array<Real>} [y]
-	 *	@param {Bool} [refresh_mask]
+	 *	@param {Array<Real>} x
+	 *	@param {Array<Real>} y
+	 *	@param {Bool} refresh_mask
+	 *	@param {Array<Constant.BlendMode>} blendmodes
+	 *	@param {Array<Asset.GMShader>} shaders
 	*/
 
-	static __draw = function(x = [self.x], y = [self.y], refresh_mask = false)
+	static __draw = function(x, y, refresh_mask, blendmodes, shaders)
 	{
 		var bar_count = array_length(bars);
 		var xcoord_count = array_length(x);
 		var ycoord_count = array_length(y);
+		var shader_count = array_length(shaders);
+		var blendmode_count = array_length(blendmodes);
 
 		for (var i = 0; i < bar_count; i++)
 		{
-			bars[@ i].__draw(x[@ i % xcoord_count], y[@ i % ycoord_count], refresh_mask);
+			bars[@ i].__draw_master(x[@ i % xcoord_count], y[@ i % ycoord_count], refresh_mask, blendmodes[@ i % blendmode_count], shaders[@ i % shader_count]);
 		}
 	}
 
@@ -229,11 +235,13 @@ function Advanced_circular_bar(x, y, bars) constructor
 	/**
 	 *	@param {Array<Array<Real>>} position_array
 	 *	@param {Bool} refresh_mask
+	 *	@param {Array<Constant.BlendMode>} blendmodes
+	 *	@param {Array<Asset.GMShader>} shaders
 	*/
 
-	static __draw_positioned = function(position_array, refresh_mask)
+	static __draw_positioned = function(position_array, refresh_mask, blendmodes, shaders)
 	{
-		__draw(position_array[@ 0], position_array[@ 1], refresh_mask);
+		__draw(position_array[@ 0], position_array[@ 1], refresh_mask, blendmodes, shaders);
 	}
 
 
