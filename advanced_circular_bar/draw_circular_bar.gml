@@ -755,12 +755,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		for (var i = 0; i < placements_count; i++)
 		{
 			var edge = edges_to_draw[@ i % edges_count];
-
-			if (!edge)
-			{
-				continue;
-			}
-
 			var edge_direction = direction_values[@ i % 2];
 			var placement_angle = placement_values[@ i] * angle_diff + start_angle;
 			__draw_edge(edge, placement_angle, __calculate_variable_radius(placement_values[@ i]), edge_direction);
@@ -814,7 +808,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)}
 		];
 
-		edge_selector[@ edge - 1](center_x, center_y, radius, width, placement, dir, ext);
+		if (edge)
+		{
+			edge_selector[@ edge - 1](center_x, center_y, radius, width, placement, dir, ext);
+		}
 	}
 	#endregion
 
