@@ -483,6 +483,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		}
 
 		__finalise_surface(x, y);
+		color = merge_color(colors[@ 0], colors[@ 1], value);
+		alpha = __get_alpha();
 	}
 
 
@@ -521,9 +523,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		gpu_set_blendmode(bm_subtract);
 		draw_surface(mask, 0, 0);
-
-		color = merge_color(colors[@ 0], colors[@ 1], value);
-		alpha = __get_alpha();
 	}
 
 
