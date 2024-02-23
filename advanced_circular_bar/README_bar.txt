@@ -1,4 +1,4 @@
-///@ CIRCULAR BAR v2.2.5 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
+///@ CIRCULAR BAR v2.2.6 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
 
 /*
 	--------------------
@@ -7,8 +7,8 @@
 
 	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
-	Created on [DMY]: 24/8/2022
-	Last updated on [DMY]: 21/02/2024
+	Created on [DMY]: 24/08/2022
+	Last updated on [DMY]: 23/02/2024
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
