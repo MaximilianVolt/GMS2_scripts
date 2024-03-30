@@ -1,14 +1,14 @@
-///@ CIRCULAR BAR v2.2.7 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
+///@ CIRCULAR BAR v2.3.0 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
 
 /*
 	--------------------
 	draw_circular_bar();
 	--------------------
 
-	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolted (whole script)
+	Author:         [Maximilian Volt.][IT] --> https://github.com/MaximilianVolt (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/08/2022
-	Last updated on [DMY]: 23/02/2024
+	Last updated on [DMY]: 30/03/2024
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
@@ -27,10 +27,10 @@
 	* ARE ARRAYS, AND ARE ALL MARKED WITH PLURAL NAMES.
   *
 	* E.G:
-	* * circular_bar_auto_set_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
-  * *                                                               ARRAY ^        ARRAY ^
+	* * circular_bar_divisors_autoset(bar, divisor_count, divisor_amplitudes, divisor_edges)
+  * *                                                              ARRAY ^        ARRAY ^
 	* *
-	* * circular_bar_auto_set_divisors(myBar, 3, [15], [1]);
+	* * circular_bar_divisors_autoset(myBar, 3, [15], [1]);
 
 	> IT IS NOT RECOMMENDED TO EDIT NOR CALL ANY OF THE METHODS DIRECTLY.
 */
