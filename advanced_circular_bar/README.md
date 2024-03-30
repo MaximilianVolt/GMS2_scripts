@@ -3,6 +3,14 @@
 Thanks for checking out this guide!
 In this file are described some cases of how to use the circular bar, but for any doubt or question, don't hesitate to contact me on Discord: **maximilian.volt**!
 
+## v2.3.0 - WHAT'S NEW
+> Version 2.3.0 finally arrives with the improved border function! Say goodbye to those old angle calculations!
+> New utility function `circular_bar_get_anchor_point()` added! You can now retrieve the relative x and y coordinates of a bar with value and anchor overrides! This can be useful when adding elements on top of the bar, like an icon or a sprite!
+> Improved from the older patches a new way to specify blendmodes and shaders to make your UI stand out with your own custom effects!
+> Added varying transparency! Just like the colors, specify and array of 2 values that go from 0 to 1.
+> Consolidated the nomenclature! Try typing `circular_bar_*`, I dare you.
+> Performance micro-optimazions! I tried to save that CPU where possible!
+
 ## Create a circular bar
 
 ### Pie bar
