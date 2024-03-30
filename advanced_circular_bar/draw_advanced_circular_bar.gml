@@ -136,7 +136,7 @@ function approach(value, target, amount)
 function circular_bar_flash(bar, start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration)
 {
 	bar.color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
-	bar.transparency = wave(start_aplha, end_alhpa, alpha_pulse_duration);
+	bar.alpha = wave(start_aplha, end_alhpa, alpha_pulse_duration);
 }
 
 
