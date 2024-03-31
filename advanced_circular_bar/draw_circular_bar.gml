@@ -143,10 +143,10 @@ function circular_bar_get_sector(bar, value = bar.value)
  *	@returns {Struct}
  *	@param {Struct.Circular_bar} bar The bar to get the coordinates from.
  *	@param {Real} [value] The bar value to retrieve the coordinates from.
- *	@param {Constant.CIRCULAR_BAR_EDGE_POSITIONS} [anchor] The anchor setting of the edge.
+ *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
 */
 
-function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR_BAR_EDGE_POSITIONS.CENTER)
+function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
 {
 	return bar.__get_anchor(value, anchor);
 }
@@ -243,7 +243,7 @@ function circular_bar_create_border(target_bar, border_width, precision = target
 
 
 #region Source code
-enum CIRCULAR_BAR_EDGE_POSITIONS
+enum CIRCULAR_BAR_ANCHORS
 {
 	TOP = 0,
 	CENTER = 1,
@@ -405,6 +405,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		var _x = 0, _y = 1;
 		var positions = [[p2x, mpx, p1x], [p2y, mpy, p1y]];
+
 		return {x: positions[@ _x][@ anchor], y: positions[@ _y][@ anchor]};
 	}
 
@@ -709,6 +710,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __auto_generate_divisors = function(divisor_count, divisor_amplitudes, divisor_edges)
 	{
+		var amplitudes_count = array_length(divisor_amplitudes);
 		var angle_diff = end_angle - start_angle;
 		var start_index = (angle_diff % 360 != 0);
 		divisor_count += start_index;
@@ -718,7 +720,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		for (var i = start_index; i < divisor_count; i++)
 		{
 			var position = angle_diff * i / divisor_count + start_angle;
-			var amplitude = divisor_amplitudes[@ (i - start_index) % array_length(divisor_amplitudes)];
+			var amplitude = divisor_amplitudes[@ (i - start_index) % amplitudes_count];
 			array_push(divisors, __create_divisor(position, amplitude));
 		}
 
@@ -840,24 +842,24 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			function(center_x, center_y, radius, width, angle) {__round_edge(center_x, center_y, radius, width, angle)},
 			function(center_x, center_y, radius, width, angle, dir, ext) {__chevron_edge(center_x, center_y, radius, width, angle, dir, ext)},
 			function(center_x, center_y, radius, width, angle, dir, ext) {__rectangle_edge(center_x, center_y, radius, width, angle, dir, ext)},
-			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.TOP)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.CENTER)},
-			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_EDGE_POSITIONS.BOTTOM)}
+			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_ANCHORS.TOP)},
+			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_ANCHORS.CENTER)},
+			function(center_x, center_y, radius, width, angle) {__bubbly_edge(center_x, center_y, radius, width, angle, CIRCULAR_BAR_ANCHORS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__dart_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__triangle_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__trapezoid_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.BOTTOM)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.TOP)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.CENTER)},
+			function(center_x, center_y, radius, width, angle, dir, ext) {__rounded_diamond_edge(center_x, center_y, radius, width, angle, dir, ext, CIRCULAR_BAR_ANCHORS.BOTTOM)}
 		];
 
 		if (border)
@@ -907,13 +909,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __round_edge = function(center_x, center_y, radius, width, angle)
 	{
-		center_x -= 1;
-		center_y -= 1;
 		var hw = width / 2, mid_point = radius - hw;
 		var cx = center_x + lengthdir_x(mid_point, angle);
 		var cy = center_y + lengthdir_y(mid_point, angle);
 
-		draw_circle(cx, cy, hw, false);
+		draw_circle(cx - 1, cy - 1, hw, false);
 	}
 
 

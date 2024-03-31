@@ -100,9 +100,9 @@ function advanced_circular_bar_deactivate(animation_bar)
 	@param {Real} [smoothness] The amount to approach the target value with, using interpolation.
 */
 
-function smoothen(value, target, smoothness = ADVANCED_CIRCULAR_BAR_SMOOTHNESS)
+function smoothen(value, target, smoothness = 10)
 {
-	return lerp(value, target, smoothness);
+	return (target - value) / smoothness + value;
 }
 
 
@@ -190,7 +190,6 @@ function circular_bar_rotate(bar, rotation_variation)
 
 
 #region Source code
-#macro ADVANCED_CIRCULAR_BAR_SMOOTHNESS 0.0825
 
 
 
