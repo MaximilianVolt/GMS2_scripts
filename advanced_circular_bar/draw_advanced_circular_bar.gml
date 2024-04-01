@@ -1,8 +1,45 @@
 /**
-	Returns a new instance of Advanced_circular_bar.
-	@param {Real} x
-	@param {Real} y
-	@param {Array<Struct.Circular_bar>} bars
+ *	Draws a specific advanced circular bar.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to draw.
+ *	@param {Array<Real>} [x] The x positions to draw the bars.
+ *	@param {Array<Real>} [y] The y positions to draw the bars.
+ *	@param {Array<Real>} [xscales] The x scales of the bars.
+ *	@param {Array<Real>} [yscales] The y scales of the bars.
+ *	@param {Bool} [refresh_mask] Updates the bars' masks.
+ *	@param {Array<Constant.BlendMode>} [blendmodes] The blendmodes to draw the bars.
+ *	@param {Array<Asset.GMShader>} [shaders] The shaders to draw the bars.
+*/
+
+function draw_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [animation_bar.y], xscales = [1], yscales = [1], refresh_mask = false, blendmodes = [bm_normal], shaders = [undefined])
+{
+	animation_bar.__draw(x, y, xscales, yscales, refresh_mask, blendmodes, shaders);
+}
+
+
+
+/**
+ *	Draws a specific advanced circular bar.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to draw.
+ *	@param {Array<Array<Real>>} position_array The x and y positions to draw the bars.
+ *	@param {Array<Real>} [xscales] The x scales of the bars.
+ *	@param {Array<Real>} [yscales] The y scales of the bars.
+ *	@param {Bool} [refresh_mask] Updates the bars' masks.
+ *	@param {Array<Constant.BlendMode>} [blendmodes] The blendmodes to draw the bars.
+ *	@param {Array<Asset.GMShader>} [shaders] The shaders to draw the bars.
+*/
+
+function draw_advanced_circular_bar_positioned(animation_bar, position_array, xscales = [1], yscales = [1], refresh_mask = false, blendmodes = [bm_normal], shaders = [undefined])
+{
+	animation_bar.__draw_positioned(position_array, xscales, yscales, refresh_mask, blendmodes, shaders);
+}
+
+
+
+/**
+ *	Returns a new instance of Advanced_circular_bar.
+ *	@param {Real} x
+ *	@param {Real} y
+ *	@param {Array<Struct.Circular_bar>} bars
 */
 
 function advanced_circular_bar_create(x, y, bars)
@@ -13,42 +50,193 @@ function advanced_circular_bar_create(x, y, bars)
 
 
 /**
-	Draws a specific advanced circular bar.
-	@param {Struct.Advanced_circular_bar} animation_bar The bar to draw.
-	@param {Array<Real>} [x] The x positions to draw the bars.
-	@param {Array<Real>} [y] The y positions to draw the bars.
-	@param {Bool} [refresh_mask] Updates the bars' masks.
-	@param {Array<Constant.BlendMode>} [blendmodes] The blendmodes to draw the bars.
-	@param {Array<Asset.GMShader>} [shaders] The shaders to draw the bars.
+ *	Returns a new instance of Advanced_circular_bar with the copied data.
+ *	@return {Struct.Advanced_circular_bar}
 */
 
-function draw_advanced_circular_bar(animation_bar, x = [animation_bar.x], y = [animation_bar.y], refresh_mask = false, blendmodes = [bm_normal], shaders = [undefined])
+function advanced_circular_bar_get_copy(animation_bar)
 {
-	animation_bar.__draw(x, y, refresh_mask, blendmodes, shaders);
+	return animation_bar.__copy();
 }
 
 
 
 /**
-	Draws a specific advanced circular bar.
-	@param {Struct.Advanced_circular_bar} animation_bar The bar to draw.
-	@param {Array<Array<Real>>} position_array The x and y positions to draw the bars.
-	@param {Bool} [refresh_mask] Updates the bars' masks.
+ *	Returns the coordinates of a bar.
+ *	@returns {Struct}
+ *	@param {Struct.Advanced_circular_bar} bar The bar to get the coordinates from.
 */
 
-function draw_advanced_circular_bar_positioned(animation_bar, position_array, refresh_mask = false, blendmodes = [bm_normal], shaders = [undefined])
+function advanced_circular_bar_get_coordinates(animation_bar)
 {
-	animation_bar.__draw_positioned(position_array, refresh_mask, blendmodes, shaders);
+	return {x: animation_bar.x, y: animation_bar.y};
 }
 
 
 
 /**
-	Returns an array of the calculated coordinates with applied shaking and/or rotation.
-	@returns {Array<Array<Real>>}
-	@param {Struct.Advanced_circular_bar} animation_bar The bar to position.
-	@param {Real | Struct} strength_or_shake_positions The strength value or result to use for the positioning.
-	@param rotation The rotation to use for the positioning.
+ *	Returns the x coordinate of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Advanced_circular_bar} bar The bar to get the x coordinate from.
+*/
+
+function advanced_circular_bar_get_x(animation_bar)
+{
+	return animation_bar.x;
+}
+
+
+
+/**
+ *	Returns the y coordinate of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Advanced_circular_bar} bar The bar to get the y coordinate from.
+*/
+
+function advanced_circular_bar_get_y(animation_bar)
+{
+	return animation_bar.y;
+}
+
+
+
+/**
+ *	Returns the bars of a bar.
+ *	@returns {Array<Struct.Circular_bar>}
+ *	@param {Struct.Advanced_circular_bar} bar The bar to get the bars from.
+*/
+
+function advanced_circular_bar_get_bars(animation_bar)
+{
+	return animation_bar.bars;
+}
+
+
+
+/**
+ *	Returns the copy of the bars of a bar.
+ *	@returns {Array<Struct.Circular_bar>}
+ *	@param {Struct.Advanced_circular_bar} bar The bar to copy the bars from.
+*/
+
+function advanced_circular_bar_get_bars_copy(animation_bar)
+{
+	var bars = animation_bar.bars;
+	var bar_count = array_length(bars);
+
+	for (var i = 0; i < bar_count; i++)
+	{
+		array_push(bars, bars[@ i].__copy());
+	}
+
+	return bars;
+}
+
+
+
+/**
+ *	Set a bar's coordinates.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Struct} coordinates The bar's new coordinates.
+*/
+
+function advanced_circular_bar_set_coordinates(animation_bar, coordinates)
+{
+	animation_bar.x = coordinates.x;
+	animation_bar.y = coordinates.y;
+}
+
+
+
+/**
+ *	Set a bar's x coordinate.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new x coordinate.
+*/
+
+function advanced_circular_bar_set_x(animation_bar, x)
+{
+	animation_bar.x = x;
+}
+
+
+
+/**
+ *	Set a bar's y coordinate.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new y coordinate.
+*/
+
+function advanced_circular_bar_set_y(animation_bar, y)
+{
+	animation_bar.y = y;
+}
+
+
+
+/**
+ *	Set a bar's bars.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Array<Struct.Circular_bar>} The bar's new bars.
+*/
+
+function advanced_circular_bar_set_bars(animation_bar, bars)
+{
+	animation_bar.bars = bars;
+}
+
+
+
+/**
+ *	Set a bar's bars.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Array<Struct.Circular_bar>} The bar's new bars.
+*/
+
+function advanced_circular_bar_set_bars_copy(animation_bar, bars)
+{
+	var bar_count = array_length(bars);
+
+	for (var i = 0; i < bar_count; i++)
+	{
+		bars[@ i] = bars[@ i].__copy();
+	}
+
+	animation_bar.bars = bars;
+}
+
+
+
+/**
+ *	Unfreezes an advanced circular bar's body.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to activate.
+*/
+
+function advanced_circular_bar_activate(animation_bar)
+{
+	animation_bar.__set_status(true);
+}
+
+
+
+/**
+ *	Freezes an advanced circular bar's body.
+ *	@param {Struct.Advanced_circular_bar} bar The bar to deactivate.
+*/
+
+function advanced_circular_bar_deactivate(animation_bar)
+{
+	animation_bar.__set_status(false);
+}
+
+
+
+/**
+ *	Returns an array of the calculated coordinates with applied shaking and/or rotation.
+ *	@returns {Array<Array<Real>>}
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to position.
+ *	@param {Real | Struct} strength_or_shake_positions The strength value or result to use for the positioning.
+ *	@param rotation The rotation to use for the positioning.
 */
 
 function advanced_circular_bar_position(animation_bar, strength_or_shake_positions, rotation)
@@ -59,45 +247,11 @@ function advanced_circular_bar_position(animation_bar, strength_or_shake_positio
 
 
 /**
-	Unfreezes an advanced circular bar's body.
-	@param {Struct.Advanced_circular_bar} bar The bar to activate.
-*/
-
-function advanced_circular_bar_activate(animation_bar)
-{
-	var bar_count = array_length(animation_bar.bars);
-
-	for (var i = 0; i < bar_count; i++)
-	{
-		animation_bar.bars[@ i].active = true;
-	}
-}
-
-
-
-/**
-	Freezes an advanced circular bar's body.
-	@param {Struct.Advanced_circular_bar} bar The bar to deactivate.
-*/
-
-function advanced_circular_bar_deactivate(animation_bar)
-{
-	var bar_count = array_length(animation_bar.bars);
-
-	for (var i = 0; i < bar_count; i++)
-	{
-		animation_bar.bars[@ i].active = false;
-	}
-}
-
-
-
-/**
-	Gradually makes a value approach to another.
-	@returns {Real}
-	@param {Real} value The starting value.
-	@param {Real} target The value to approach to.
-	@param {Real} [smoothness] The amount to approach the target value with, using interpolation.
+ *	Gradually makes a value approach to another.
+ *	@returns {Real}
+ *	@param {Real} value The starting value.
+ *	@param {Real} target The value to approach to.
+ *	@param {Real} [smoothness] The amount to approach the target value with, using interpolation.
 */
 
 function smoothen(value, target, smoothness = 10)
@@ -108,11 +262,11 @@ function smoothen(value, target, smoothness = 10)
 
 
 /**
-	Makes a value approach to another.
-	@returns {Real}
-	@param {Real} value The starting value.
-	@param {Real} target The value to approach to.
-	@param {Real} amount The amount to approach the target value with.
+ *	Makes a value approach to another.
+ *	@returns {Real}
+ *	@param {Real} value The starting value.
+ *	@param {Real} target The value to approach to.
+ *	@param {Real} amount The amount to approach the target value with.
 */
 
 function approach(value, target, amount)
@@ -122,32 +276,14 @@ function approach(value, target, amount)
 
 
 
-/**
-	Dinamically temporarily changes a bar's color and transparency.
-	@param {Struct.Circular_bar} bar The bar to edit.
-	@param {Constant.Color} start_color The color at the beginning of the pulse period.
-	@param {Constant.Color} end_color The color at the end of the pulse period.
-	@param {Real} color_pulse_duration The duration of the color pulse period.
-	@param {Real} start_alpha The transparency at the beginning of the pulse period.
-	@param {Real} end_alpha The transparency at the end of the pulse period.
-	@param {Real} alpha_pulse_duration The duration of the transparency pulse period.
-*/
-
-function circular_bar_flash(bar, start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration)
-{
-	bar.color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
-	bar.alpha = wave(start_aplha, end_alhpa, alpha_pulse_duration);
-}
-
-
 
 /**
-	Sets a value following a corresponding sinusoidal function.
-	@returns {Real}
-	@param {Real} from The starting value.
-	@param {Real} to The ending value.
-	@param {Real} duration The duration of the period.
-	@param {Real} [offset] The offset of the period.
+ *	Sets a value following a corresponding sinusoidal function.
+ *	@returns {Real}
+ *	@param {Real} from The starting value.
+ *	@param {Real} to The ending value.
+ *	@param {Real} duration The duration of the period.
+ *	@param {Real} [offset] The offset of the period.
 */
 
 function wave(from, to, duration, offset = 0)
@@ -159,28 +295,13 @@ function wave(from, to, duration, offset = 0)
 
 
 /**
-	Returns a struct with random positions.
-	@param {Real} strength The strength in pixels of the shaking effect.
+ *	Returns a struct with random positions.
+ *	@param {Real} strength The strength in pixels of the shaking effect.
 */
 
 function shake(strength)
 {
 	return {x: choose(-strength, strength), y: choose(-strength, strength)};
-}
-
-
-
-/**
-	Returns a struct with random positions and the direction of the origin point from the bar's center.
-	@param {Struct.Circular_bar} bar The bar to rotate.
-	@param {Real} rotation_variation The angle to rotate the bar with.
-*/
-
-function circular_bar_rotate(bar, rotation_variation)
-{
-	bar.rotation = (bar.rotation + rotation_variation) % 360;
-	var r = bar.radius, r2 = r * sqrt(2), angle = (bar.rotation + 135) % 360;
-	return {x: r + lengthdir_x(r2, angle), y: r + lengthdir_y(r2, angle), dir: angle};
 }
 
 
@@ -208,24 +329,56 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 
 	/**
+	 *	@returns {Struct.Advanced_circular_bar}
+	*/
+
+	static __copy = function()
+	{
+		var bar_copy = json_parse(json_stringify(self));
+		static_set(bar_copy, static_get(Advanced_circular_bar));
+
+		return bar_copy;
+	}
+
+
+	/**
+	 *	@param {Bool} status
+	*/
+
+	static __set_status = function(status)
+	{
+		var bar_count = array_length(bars);
+
+		for (var i = 0; i < bar_count; i++)
+		{
+			bars[@ i].active = status;
+		}
+	}
+
+
+	/**
 	 *	@param {Array<Real>} x
 	 *	@param {Array<Real>} y
+	 *	@param {Array<Real>} xscales
+	 *	@param {Array<Real>} yscales
 	 *	@param {Bool} refresh_mask
 	 *	@param {Array<Constant.BlendMode>} blendmodes
 	 *	@param {Array<Asset.GMShader>} shaders
 	*/
 
-	static __draw = function(x, y, refresh_mask, blendmodes, shaders)
+	static __draw = function(x, y, xscales, yscales, refresh_mask, blendmodes, shaders)
 	{
 		var bar_count = array_length(bars);
 		var xcoord_count = array_length(x);
 		var ycoord_count = array_length(y);
+		var xscale_count = array_length(xscales);
+		var yscale_count = array_length(yscales);
 		var shader_count = array_length(shaders);
 		var blendmode_count = array_length(blendmodes);
 
 		for (var i = 0; i < bar_count; i++)
 		{
-			bars[@ i].__draw_master(x[@ i % xcoord_count], y[@ i % ycoord_count], refresh_mask, blendmodes[@ i % blendmode_count], shaders[@ i % shader_count]);
+			bars[@ i].__draw_master(x[@ i % xcoord_count], y[@ i % ycoord_count], xscales[@ i % xscale_count], yscales[@ i % yscale_count], refresh_mask, blendmodes[@ i % blendmode_count], shaders[@ i % shader_count]);
 		}
 	}
 
@@ -233,14 +386,16 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 	/**
 	 *	@param {Array<Array<Real>>} position_array
+	 *	@param {Array<Real>} xscales
+	 *	@param {Array<Real>} yscales
 	 *	@param {Bool} refresh_mask
 	 *	@param {Array<Constant.BlendMode>} blendmodes
 	 *	@param {Array<Asset.GMShader>} shaders
 	*/
 
-	static __draw_positioned = function(position_array, refresh_mask, blendmodes, shaders)
+	static __draw_positioned = function(position_array, xscales, yscales, refresh_mask, blendmodes, shaders)
 	{
-		__draw(position_array[@ 0], position_array[@ 1], refresh_mask, blendmodes, shaders);
+		__draw(position_array[@ 0], position_array[@ 1], xscales, yscales, refresh_mask, blendmodes, shaders);
 	}
 
 

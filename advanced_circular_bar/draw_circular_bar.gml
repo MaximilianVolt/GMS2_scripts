@@ -1,4 +1,23 @@
 /**
+ *	Draws a specific circular bar.
+ *	@param {Struct.Circular_bar} bar The bar to draw.
+ *	@param {Real} [x] Override x position to draw the bar.
+ *	@param {Real} [y] Override y position to draw the bar.
+ *	@param {Real} [xscale] The x scale of the bar surface.
+ *	@param {Real} [yscale] The y scale of the bar surface.
+ *	@param {Bool} [refresh_mask] Updates the bar's mask.
+ *	@param {Constant.BlendMode} [blendmode] The blendmode to apply to draw the bar.
+ *	@param {Asset.GMShader} [shader] The shader to apply to draw the bar.
+*/
+
+function draw_circular_bar(bar, x = bar.x, y = bar.y, xscale = 1, yscale = 1, refresh_mask = false, blendmode = bm_normal, shader = undefined)
+{
+	bar.__draw_master(x, y, xscale, yscale, refresh_mask, blendmode, shader);
+}
+
+
+
+/**
  *	Returns a new instance of Circular_bar.
  *	@returns {Struct.Circular_bar}
  *	@param {Real} x The x position.
@@ -45,7 +64,7 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
 
-function circular_bar_create_amplitude(x, y, radius, width = radius, center_angle = 270, amplitude = 360, value = 1, precision = CIRCULAR_BAR_PRECISION_PRESETS.MEDIUM, colors = [c_white, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
+function circular_bar_create_from_center(x, y, radius, width = radius, center_angle = 270, amplitude = 360, value = 1, precision = CIRCULAR_BAR_PRECISION_PRESETS.MEDIUM, colors = [c_white, c_white], alphas = [1, 1], edge_type_start = 0, edge_type_final = 0, divisors = [], edges = [0], activation_override = true)
 {
 	var half_amplitude = amplitude / 2;
 	return new Circular_bar(x, y, radius, width, center_angle - half_amplitude, center_angle + half_amplitude, value, precision, colors, alphas, edge_type_start, edge_type_final, divisors, edges, activation_override);
@@ -54,18 +73,31 @@ function circular_bar_create_amplitude(x, y, radius, width = radius, center_angl
 
 
 /**
- *	Draws a specific circular bar.
- *	@param {Struct.Circular_bar} bar The bar to draw.
- *	@param {Real} [x] Override x position to draw the bar.
- *	@param {Real} [y] Override y position to draw the bar.
- *	@param {Bool} [refresh_mask] Updates the bar's mask.
- *	@param {Constant.BlendMode} [blendmode] The blendmode to apply to draw the bar.
- *	@param {Asset.GMShader} [shader] The shader to apply to draw the bar.
+ *	Creates a bar adapted to the shape of its target given a border width.
+ *	@returns {Struct.Circular_bar}
+ *	@param {Struct.Circular_bar} target_bar The bar to adapt the border to.
+ *	@param {Real} border_width The width of the border.
+ *	@param {Real} [precision] The precision to apply to the border bar.
+ *	@param {Array<Constant.Color>} [colors] The colors of the border bar.
+ *	@param {Array<Real>} [alphas] The opacities of the border bar.
 */
 
-function draw_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false, blendmode = bm_normal, shader = undefined)
+function circular_bar_create_border_bar(target_bar, border_width, precision = target_bar.precision, colors = target_bar.colors, alphas = target_bar.alphas)
 {
-	bar.__draw_master(x, y, refresh_mask, blendmode, shader);
+	return target_bar.__copy(precision, colors, alphas).__border(target_bar, border_width);
+}
+
+
+
+/**
+ *	Creates a bar's divisor.
+ *	@param {Real} position The absolute angle of the divisor's bisector.
+ *	@param {Real} amplitude The amplitude of the divisor.
+*/
+
+function circular_bar_create_divisor(position, amplitude)
+{
+	return Circular_bar.__create_divisor(position, amplitude);
 }
 
 
@@ -79,7 +111,7 @@ function draw_circular_bar(bar, x = bar.x, y = bar.y, refresh_mask = false, blen
  *	@param {Array<Real>} [alphas] The new opacities of the new bar.
 */
 
-function circular_bar_copy(bar, precision = bar.precision, colors = bar.colors, alphas = bar.alphas)
+function circular_bar_get_copy(bar, precision = bar.precision, colors = bar.colors, alphas = bar.alphas)
 {
 	return bar.__copy(precision, colors, alphas);
 }
@@ -87,15 +119,663 @@ function circular_bar_copy(bar, precision = bar.precision, colors = bar.colors, 
 
 
 /**
- *	Refreshes the bar's surfaces.
- *	@param {Struct.Circular_bar} bar The bar to update.
- *	@param {Bool} [refresh_mask] Defines whether the bar mask has to be updated as well.
- *	@param {Bool} [keep_active] Defines whether the bar's body should be frozen.
+ *	Returns the coordinates of a bar.
+ *	@returns {Struct}
+ *	@param {Struct.Circular_bar} bar The bar to get the coordinates from.
 */
 
-function circular_bar_update(bar, refresh_mask = false, keep_active = true)
+function circular_bar_get_coordinates(bar)
 {
-	bar.__update(refresh_mask, keep_active);
+	return {x: bar.x, y: bar.y};
+}
+
+
+
+/**
+ *	Returns the x coordinate of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the x coordinate from.
+*/
+
+function circular_bar_get_x(bar)
+{
+	return bar.x;
+}
+
+
+
+/**
+ *	Returns the y coordinate of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the y coordinate from.
+*/
+
+function circular_bar_get_y(bar)
+{
+	return bar.y;
+}
+
+
+
+/**
+ *	Returns the radius in pixels of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the radius from.
+*/
+
+function circular_bar_get_radius(bar)
+{
+	return bar.radius;
+}
+
+
+
+/**
+ *	Returns the width in pixels of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the width from.
+*/
+
+function circular_bar_get_width(bar)
+{
+	return bar.width;
+}
+
+
+
+/**
+ *	Returns the start angle of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the start angle from.
+*/
+
+function circular_bar_get_start_angle(bar)
+{
+	return bar.start_angle;
+}
+
+
+
+/**
+ *	Returns the end angle of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the end angle from.
+*/
+
+function circular_bar_get_end_angle(bar)
+{
+	return bar.end_angle;
+}
+
+
+
+/**
+ *	Returns the center angle of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the center angle from.
+*/
+
+function circular_bar_get_center_angle(bar)
+{
+	return circular_bar_get_angle_at(bar, .5);
+}
+
+
+
+/**
+ *	Returns the value of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the value from.
+*/
+
+function circular_bar_get_value(bar)
+{
+	return bar.value;
+}
+
+
+
+/**
+ *	Returns the precision of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the precision from.
+*/
+
+function circular_bar_get_precision(bar)
+{
+	return bar.precision;
+}
+
+
+
+/**
+ *	Returns the colors of a bar.
+ *	@returns {Array<Constant.Color>}
+ *	@param {Struct.Circular_bar} bar The bar to get the colors from.
+*/
+
+function circular_bar_get_colors(bar)
+{
+	return bar.colors;
+}
+
+
+
+/**
+ *	Returns the color of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the color from.
+*/
+
+function circular_bar_get_color(bar)
+{
+	return bar.color;
+}
+
+
+
+/**
+ *	Returns the alphas of a bar.
+ *	@returns {Array<Real>}
+ *	@param {Struct.Circular_bar} bar The bar to get the alphas from.
+*/
+
+function circular_bar_get_alphas(bar)
+{
+	return bar.alphas;
+}
+
+
+
+/**
+ *	Returns the alpha of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the alpha from.
+*/
+
+function circular_bar_get_alpha(bar)
+{
+	return bar.alpha;
+}
+
+
+
+/**
+ *	Returns the edge type start of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the edge type start from.
+*/
+
+function circular_bar_get_edge_type_start(bar)
+{
+	return bar.edge_type_start;
+}
+
+
+
+/**
+ *	Returns the edge type final of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the edge type final from.
+*/
+
+function circular_bar_get_edge_type_final(bar)
+{
+	return bar.edge_type_final;
+}
+
+
+
+/**
+ *	Returns the divisors of a bar.
+ *	@returns {Array<Struct>}
+ *	@param {Struct.Circular_bar} bar The bar to get the divisors from.
+*/
+
+function circular_bar_get_divisors(bar)
+{
+	return bar.divisors;
+}
+
+
+/**
+ *	Returns the copy of the divisors of a bar.
+ *	@returns {Array<Struct>}
+ *	@param {Struct.Circular_bar} bar The bar to copy the divisors from.
+*/
+
+function circular_bar_get_divisors_copy(bar)
+{
+	return json_parse(json_stringify(bar.divisors));
+}
+
+
+
+/**
+ *	Returns the edges of a bar.
+ *	@returns {Array<Real>}
+ *	@param {Struct.Circular_bar} bar The bar to get the edges from.
+*/
+
+function circular_bar_get_edges(bar)
+{
+	return bar.edges;
+}
+
+
+
+/**
+ *	Returns the copy of the edges of a bar.
+ *	@returns {Array<Real>}
+ *	@param {Struct.Circular_bar} bar The bar to copy the edges from.
+*/
+
+function circular_bar_get_edges_copy(bar)
+{
+	return json_parse(json_stringify(bar.edges));
+}
+
+
+
+/**
+ *	Returns the rotation of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the rotation from.
+*/
+
+function circular_bar_get_rotation(bar)
+{
+	return bar.rotation;
+}
+
+
+
+/**
+ *	Returns the border width of a bar.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the border width from.
+*/
+
+function circular_bar_get_border_width(bar)
+{
+	return bar.border_width;
+}
+
+
+
+/**
+ *	Returns the number of sectors currently drawn by the bar to represent its value.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the sector from.
+ *	@param {Real} [value] The bar value to retrieve the number of sectors drawn.
+*/
+
+function circular_bar_get_sector(bar, value = bar.value)
+{
+	return bar.__get_sector(value);
+}
+
+
+
+/**
+ *	Returns the relative x and y coordinates of a bar's value's edge given an anchor setting.
+ *	@returns {Struct}
+ *	@param {Struct.Circular_bar} bar The bar to get the coordinates from.
+ *	@param {Real} [value] The bar value to retrieve the coordinates from.
+ *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
+*/
+
+function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
+{
+	return bar.__get_anchor(circular_bar_get_angle_at(bar, value), anchor);
+}
+
+
+
+/**
+ *	Returns the relative x and y coordinates of a bar's angle's edge given an anchor setting.
+ *	@returns {Struct}
+ *	@param {Struct.Circular_bar} bar The bar to get the coordinates from.
+ *	@param {Real} [angle] The bar value to retrieve the coordinates from.
+ *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
+*/
+
+function circular_bar_get_angle_anchor_point(bar, angle = 0, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
+{
+	return bar.__get_anchor(angle, anchor);
+}
+
+
+
+/**
+ *	Returns the angle of a bar at a specific value.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the angle from.
+ *	@param {Real} [value] The value of the angle to retrieve.
+*/
+
+function circular_bar_get_angle_at_value(bar, value = bar.value)
+{
+	return (bar.end_angle - bar.start_angle) * value + bar.start_angle;
+}
+
+
+
+/**
+ *	Returns the angle of a bar at a specific value.
+ *	@returns {Real}
+ *	@param {Struct.Circular_bar} bar The bar to get the value from.
+ *	@param {Real} [angle] The angle of the value to retrieve.
+*/
+
+function circular_bar_get_value_at_angle(bar, angle = circular_bar_get_angle_at_value(bar, bar.value))
+{
+	return bar.__angle_to_placement_percentage(angle);
+}
+
+
+
+/**
+ *	Set a bar's coordinates.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Struct} coordinates The bar's new coordinates.
+*/
+
+function circular_bar_set_coordinates(bar, coordinates)
+{
+	bar.x = coordinates.x;
+	bar.y = coordinates.y;
+}
+
+
+
+/**
+ *	Set a bar's x coordinate.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new x coordinate.
+*/
+
+function circular_bar_set_x(bar, x)
+{
+	bar.x = x;
+}
+
+
+
+/**
+ *	Set a bar's y coordinate.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new y coordinate.
+*/
+
+function circular_bar_set_y(bar, y)
+{
+	bar.y = y;
+}
+
+
+
+/**
+ *	Set a bar's radius.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new radius.
+*/
+
+function circular_bar_set_radius(bar, radius)
+{
+	bar.radius = radius;
+}
+
+
+
+/**
+ *	Set a bar's width.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new width.
+*/
+
+function circular_bar_set_width(bar, width)
+{
+	bar.width = width;
+}
+
+
+
+/**
+ *	Set a bar's start angle.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new start angle.
+*/
+
+function circular_bar_set_start_angle(bar, start_angle)
+{
+	bar.start_angle = start_angle;
+}
+
+
+
+/**
+ *	Set a bar's end angle.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new end angle.
+*/
+
+function circular_bar_set_end_angle(bar, end_angle)
+{
+	bar.end_angle = end_angle;
+}
+
+
+
+/**
+ *	Set a bar's value.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new value.
+*/
+
+function circular_bar_set_value(bar, value)
+{
+	bar.value = value;
+}
+
+
+
+/**
+ *	Set a bar's precision.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new precision.
+*/
+
+function circular_bar_set_precision(bar, precision)
+{
+	bar.precision = precision;
+}
+
+
+
+/**
+ *	Set a bar's color.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Constant.Color} The bar's new color.
+*/
+
+function circular_bar_set_color(bar, color)
+{
+	bar.color = color;
+}
+
+
+
+/**
+ *	Set a bar's alpha.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new alpha.
+*/
+
+function circular_bar_set_alpha(bar, alpha)
+{
+	bar.alpha = alpha;
+}
+
+
+
+/**
+ *	Set a bar's edge type start.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new edge type start.
+*/
+
+function circular_bar_set_edge_type_start(bar, edge_type_start)
+{
+	bar.edge_type_start = edge_type_start;
+}
+
+
+
+/**
+ *	Set a bar's edge type final.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new edge type final.
+*/
+
+function circular_bar_set_edge_type_final(bar, edge_type_final)
+{
+	bar.edge_type_final = edge_type_final;
+}
+
+
+
+/**
+ *	Set a bar's divisors.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Array<Struct>} The bar's new divisors.
+*/
+
+function circular_bar_set_divisors(bar, divisors)
+{
+	bar.divisors = divisors;
+}
+
+
+
+/**
+ *	Set a bar's divisors.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Array<Struct>} The bar's new divisors.
+*/
+
+function circular_bar_set_divisors_copy(bar, divisors)
+{
+	bar.divisors = json_parse(json_stringify(divisors));
+}
+
+
+
+/**
+ *	Set a bar's edges.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Array<Real>} The bar's new edges.
+*/
+
+function circular_bar_set_edges(bar, edges)
+{
+	bar.edges = edges;
+}
+
+
+
+/**
+ *	Set a bar's edges.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Array<Real>} The bar's new edges.
+*/
+
+function circular_bar_set_edges_copy(bar, edges)
+{
+	bar.edges = json_parse(json_stringify(edges));
+}
+
+
+
+/**
+ *	Set a bar's rotation.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new rotation.
+*/
+
+function circular_bar_set_rotation(bar, rotation)
+{
+	bar.rotation = rotation;
+}
+
+
+
+/**
+ *	Set a bar's border width.
+ *	@param {Struct.Circular_bar} bar The bar to change.
+ *	@param {Real} The bar's new border width.
+*/
+
+function circular_bar_set_border_width(bar, border_width)
+{
+	bar.border_width = border_width;
+}
+
+
+
+/**
+ *	Sets the colors of a circular bar.
+ *	@param {Struct.Circular_bar} bar The bar to edit.
+ *	@param {Constant.Color} color_start The color of the bar at 0% of its value.
+ *	@param {Constant.Color} color_end The color of the bar at 100% of its value.
+*/
+
+function circular_bar_set_colors(bar, color_start, color_end)
+{
+	bar.__set_colors(color_start, color_end);
+}
+
+
+
+/**
+ *	Sets the alphas of a circular bar.
+ *	@param {Struct.Circular_bar} bar The bar to edit.
+ *	@param {Constant.Color} alpha_start The alpha of the bar at 0% of its value.
+ *	@param {Constant.Color} alpha_end The alpha of the bar at 100% of its value.
+*/
+
+function circular_bar_set_alphas(bar, alpha_start, alpha_end)
+{
+	bar.alphas = [alpha_start, alpha_end];
+	bar.alpha = bar.__get_alpha();
+}
+
+
+
+/**
+ *	Adds divisors to a bar.
+ *	@param {Struct.Circular_bar} bar The bar to edit.
+ *	@param {Array<Struct>} divisors The divisors to add.
+*/
+
+function circular_bar_divisors_add(bar, divisors)
+{
+	array_concat(bar.divisors, divisors);
+}
+
+
+
+/**
+ *	Automatically adds centered divisors to the bar's arc.
+ *	@param {Struct.Circular_bar} bar The bar to edit.
+ *	@param {Real} divisor_count The number of divisors to set.
+ *	@param {Real} divisor_amplitudes The angles of the divisors (following progression).
+ *	@param {Real} divisor_edges The edges to apply to the divisors (following progression).
+*/
+
+function circular_bar_divisors_autoset(bar, divisor_count, divisor_amplitudes, divisor_edges)
+{
+	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
 }
 
 
@@ -125,115 +805,49 @@ function circular_bar_deactivate(bar)
 
 
 /**
- *	Returns the number of sectors currently drawn by the bar to represent its value.
- *	@returns {Real}
- *	@param {Struct.Circular_bar} bar The bar to get the sector from.
- *	@param {Real} [value] The bar value to retrieve the number of sectors drawn.
+ *	Refreshes the bar's surfaces.
+ *	@param {Struct.Circular_bar} bar The bar to update.
+ *	@param {Bool} [refresh_mask] Defines whether the bar mask has to be updated as well.
+ *	@param {Bool} [keep_active] Defines whether the bar's body should be frozen.
 */
 
-function circular_bar_get_sector(bar, value = bar.value)
+function circular_bar_update(bar, refresh_mask = false, keep_active = true)
 {
-	return bar.__get_sector(value);
+	bar.__update(refresh_mask, keep_active);
 }
 
 
 
 /**
- *	Returns the relative x and y coordinates of the bar's current value's edge given an anchor setting.
- *	@returns {Struct}
- *	@param {Struct.Circular_bar} bar The bar to get the coordinates from.
- *	@param {Real} [value] The bar value to retrieve the coordinates from.
- *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
+	Dinamically temporarily changes a bar's color and transparency.
+	@param {Struct.Circular_bar} bar The bar to edit.
+	@param {Constant.Color} start_color The color at the beginning of the pulse period.
+	@param {Constant.Color} end_color The color at the end of the pulse period.
+	@param {Real} color_pulse_duration The duration of the color pulse period.
+	@param {Real} start_alpha The transparency at the beginning of the pulse period.
+	@param {Real} end_alpha The transparency at the end of the pulse period.
+	@param {Real} alpha_pulse_duration The duration of the transparency pulse period.
 */
 
-function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
+function circular_bar_flash(bar, start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration)
 {
-	return bar.__get_anchor(value, anchor);
+	bar.color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
+	bar.alpha = wave(start_aplha, end_alhpa, alpha_pulse_duration);
 }
 
 
 
 /**
- *	Sets the colors of a circular bar.
- *	@param {Struct.Circular_bar} bar The bar to edit.
- *	@param {Constant.Color} color_start The color of the bar at 0% of its value.
- *	@param {Constant.Color} color_end The color of the bar at 100% of its value.
+	Returns a struct with random positions and the direction of the origin point from the bar's center.
+	@param {Struct.Circular_bar} bar The bar to rotate.
+	@param {Real} rotation_variation The angle to rotate the bar with.
 */
 
-function circular_bar_set_colors(bar, color_start, color_end)
+function circular_bar_rotate(bar, rotation_variation)
 {
-	bar.__set_colors(color_start, color_end);
-}
-
-
-
-/**
- *	Creates a bar's divisor.
- *	@param {Real} position The absolute angle of the divisor's bisector.
- *	@param {Real} amplitude The amplitude of the divisor.
-*/
-
-function circular_bar_divisor_create(position, amplitude)
-{
-	return Circular_bar.__create_divisor(position, amplitude);
-}
-
-
-
-/**
- *	Adds divisors to a bar.
- *	@param {Struct.Circular_bar} bar The bar to edit.
- *	@param {Array<Struct>} divisors The divisors to add.
-*/
-
-function circular_bar_divisors_add(bar, divisors)
-{
-	array_concat(bar.divisors, divisors);
-}
-
-
-
-/**
- *	Sets the bar's divisors.
- *	@param {Struct.Circular_bar} bar The bar to edit.
- *	@param {Array<Struct>} divisors The divisors to set.
-*/
-
-function circular_bar_divisors_set(bar, divisors)
-{
-	bar.divisors = json_parse(json_stringify(divisors));
-}
-
-
-
-/**
- *	Automatically adds centered divisors to the bar's arc.
- *	@param {Struct.Circular_bar} bar The bar to edit.
- *	@param {Real} divisor_count The number of divisors to set.
- *	@param {Real} divisor_amplitudes The angles of the divisors (following progression).
- *	@param {Real} divisor_edges The edges to apply to the divisors (following progression).
-*/
-
-function circular_bar_divisors_autoset(bar, divisor_count, divisor_amplitudes, divisor_edges)
-{
-	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
-}
-
-
-
-/**
- *	Creates a bar adapted to the shape of its target given a border width.
- *	@returns {Struct.Circular_bar}
- *	@param {Struct.Circular_bar} target_bar The bar to adapt the border to.
- *	@param {Real} border_width The width of the border.
- *	@param {Real} [precision] The precision to apply to the border bar.
- *	@param {Array<Constant.Color>} [colors] The colors of the border bar.
- *	@param {Array<Real>} [alphas] The opacities of the border bar.
-*/
-
-function circular_bar_create_border(target_bar, border_width, precision = target_bar.precision, colors = target_bar.colors, alphas = target_bar.alphas)
-{
-	return target_bar.__copy(precision, colors, alphas).__border(target_bar, border_width);
+	bar.rotation = (bar.rotation + rotation_variation) % 360;
+	var r = bar.radius, r2 = r * sqrt(2), angle = (bar.rotation + 135) % 360;
+	return {x: r + lengthdir_x(r2, angle), y: r + lengthdir_y(r2, angle), dir: angle};
 }
 
 
@@ -388,9 +1002,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Real} anchor
 	*/
 
-	static __get_anchor = function(value, anchor)
+	static __get_anchor = function(angle, anchor)
 	{
-		var angle = (end_angle - start_angle) * value + start_angle;
 		var radius = __calculate_variable_radius(value).variable_radius;
 		var width = self.width * radius / self.radius;
 		var inner = radius - width;
@@ -494,12 +1107,14 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	/**
 	 *	@param {Real} x
 	 *	@param {Real} y
+	 *	@param {Real} xscale
+	 *	@param {Real} yscale
 	 *	@param {Bool} refresh_mask
 	 *	@param {Constant.BlendMode} blendmode
 	 *	@param {Asset.GMShader} shader
 	*/
 
-	static __draw_master = function(x, y, refresh_mask, blendmode, shader)
+	static __draw_master = function(x, y, xscale, yscale, refresh_mask, blendmode, shader)
 	{
 		if (__get_sector() < 1 || alpha <= 0)
 		{
@@ -515,7 +1130,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			shader_set(shader);
 		}
 
-		__finalise_surface(x, y);
+		__finalise_surface(x, y, xscale, yscale);
 		color = merge_color(colors[@ 0], colors[@ 1], value);
 		alpha = __get_alpha();
 	}
@@ -688,12 +1303,14 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	/**
 	 *	@param {Real} x
 	 *	@param {Real} y
+	 *	@param {Real} xscale
+	 *	@param {Real} yscale
 	*/
 
-	static __finalise_surface = function(x = self.x, y = self.y)
+	static __finalise_surface = function(x, y, xscale, yscale)
 	{
 		surface_reset_target();
-		draw_surface_ext(surface, x - radius, y - radius, 1, 1, rotation, color, alpha);
+		draw_surface_ext(surface, x - radius, y - radius, xscale, yscale, rotation, color, alpha);
 		gpu_set_blendmode(bm_normal);
 		draw_set_color(c_white);
 		draw_set_alpha(1);

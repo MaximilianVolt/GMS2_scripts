@@ -5,18 +5,29 @@ In this file are described some cases of how to use the circular bar, but for an
 
 ## RECENT UPDATES
 
-### ADVANCED CIRCULAR BAR v1.4.2
+### ADVANCED CIRCULAR BAR v1.5.0 - WHAT'S NEW
+
+> Version 1.5.0 has new utility functions ready to be used!
+
+- Added several utility functions!
+- Added option to set surface scalng to the drawing functions!
+- Moved the flash and rotattion functions from this script file!
+
+### ADVANCED CIRCULAR BAR v1.4.0
 
 - Improved the `smoothen()` function!
 
-### CIRCULAR BAR v2.3.1
+### CIRCULAR BAR v2.4.0 - WHAT'S NEW
 
-- Small micro-optimizations and variable naming!
+> Version 2.4.0 brings tons of new utility functions! This will definitely make your life easier!
 
-### CIRCULAR BAR v2.3.0 - WHAT'S NEW
+- Added several utility functions!
+- Added option to set surface scaling to the drawing function!
+- Moved the flash and rotattion functions in this script file!
 
-> Version 2.3.0 finally arrives with the improved border function! Say goodbye to those old angle calculations!
+### CIRCULAR BAR v2.3.0
 
+- Improved border function! Say goodbye to those old angle calculations!
 - New utility function `circular_bar_get_anchor_point()` added! You can now retrieve the relative x and y coordinates of a bar with value and anchor overrides! This can be useful when adding elements on top of the bar, like an icon or a sprite!
 - Improved from the older patches a new way to specify blendmodes and shaders to make your UI stand out with your own custom effects!
 - Added varying transparency! Just like the colors, specify and array of 2 values that go from 0 to 1.
