@@ -37,9 +37,9 @@ function draw_advanced_circular_bar_positioned(animation_bar, position_array, xs
 
 /**
  *	Returns a new instance of Advanced_circular_bar.
- *	@param {Real} x
- *	@param {Real} y
- *	@param {Array<Struct.Circular_bar>} bars
+ *	@param {Real} x The x coordinate of the bar.
+ *	@param {Real} y The y coordinate of the bar.
+ *	@param {Array<Struct.Circular_bar>} bars The set of bars that build up the advanced one.
 */
 
 function advanced_circular_bar_create(x, y, bars)
@@ -51,7 +51,8 @@ function advanced_circular_bar_create(x, y, bars)
 
 /**
  *	Returns a new instance of Advanced_circular_bar with the copied data.
- *	@return {Struct.Advanced_circular_bar}
+ *	@returns {Struct.Advanced_circular_bar}
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to copy.
 */
 
 function advanced_circular_bar_get_copy(animation_bar)
@@ -64,7 +65,7 @@ function advanced_circular_bar_get_copy(animation_bar)
 /**
  *	Returns the coordinates of a bar.
  *	@returns {Struct}
- *	@param {Struct.Advanced_circular_bar} bar The bar to get the coordinates from.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to get the coordinates from.
 */
 
 function advanced_circular_bar_get_coordinates(animation_bar)
@@ -77,7 +78,7 @@ function advanced_circular_bar_get_coordinates(animation_bar)
 /**
  *	Returns the x coordinate of a bar.
  *	@returns {Real}
- *	@param {Struct.Advanced_circular_bar} bar The bar to get the x coordinate from.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to get the x coordinate from.
 */
 
 function advanced_circular_bar_get_x(animation_bar)
@@ -90,7 +91,7 @@ function advanced_circular_bar_get_x(animation_bar)
 /**
  *	Returns the y coordinate of a bar.
  *	@returns {Real}
- *	@param {Struct.Advanced_circular_bar} bar The bar to get the y coordinate from.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to get the y coordinate from.
 */
 
 function advanced_circular_bar_get_y(animation_bar)
@@ -103,7 +104,7 @@ function advanced_circular_bar_get_y(animation_bar)
 /**
  *	Returns the bars of a bar.
  *	@returns {Array<Struct.Circular_bar>}
- *	@param {Struct.Advanced_circular_bar} bar The bar to get the bars from.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to get the bars from.
 */
 
 function advanced_circular_bar_get_bars(animation_bar)
@@ -116,7 +117,7 @@ function advanced_circular_bar_get_bars(animation_bar)
 /**
  *	Returns the copy of the bars of a bar.
  *	@returns {Array<Struct.Circular_bar>}
- *	@param {Struct.Advanced_circular_bar} bar The bar to copy the bars from.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to copy the bars from.
 */
 
 function advanced_circular_bar_get_bars_copy(animation_bar)
@@ -126,7 +127,7 @@ function advanced_circular_bar_get_bars_copy(animation_bar)
 
 	for (var i = 0; i < bar_count; i++)
 	{
-		array_push(bars, bars[@ i].__copy());
+		bars[@ i] = bars[@ i].__copy();
 	}
 
 	return bars;
@@ -136,7 +137,7 @@ function advanced_circular_bar_get_bars_copy(animation_bar)
 
 /**
  *	Set a bar's coordinates.
- *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Struct} coordinates The bar's new coordinates.
 */
 
@@ -150,7 +151,7 @@ function advanced_circular_bar_set_coordinates(animation_bar, coordinates)
 
 /**
  *	Set a bar's x coordinate.
- *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Real} The bar's new x coordinate.
 */
 
@@ -163,7 +164,7 @@ function advanced_circular_bar_set_x(animation_bar, x)
 
 /**
  *	Set a bar's y coordinate.
- *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Real} The bar's new y coordinate.
 */
 
@@ -176,7 +177,7 @@ function advanced_circular_bar_set_y(animation_bar, y)
 
 /**
  *	Set a bar's bars.
- *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Array<Struct.Circular_bar>} The bar's new bars.
 */
 
@@ -189,7 +190,7 @@ function advanced_circular_bar_set_bars(animation_bar, bars)
 
 /**
  *	Set a bar's bars.
- *	@param {Struct.Advanced_circular_bar} bar The bar to change.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Array<Struct.Circular_bar>} The bar's new bars.
 */
 
@@ -209,7 +210,7 @@ function advanced_circular_bar_set_bars_copy(animation_bar, bars)
 
 /**
  *	Unfreezes an advanced circular bar's body.
- *	@param {Struct.Advanced_circular_bar} bar The bar to activate.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to activate.
 */
 
 function advanced_circular_bar_activate(animation_bar)
@@ -221,7 +222,7 @@ function advanced_circular_bar_activate(animation_bar)
 
 /**
  *	Freezes an advanced circular bar's body.
- *	@param {Struct.Advanced_circular_bar} bar The bar to deactivate.
+ *	@param {Struct.Advanced_circular_bar} animation_bar The bar to deactivate.
 */
 
 function advanced_circular_bar_deactivate(animation_bar)
