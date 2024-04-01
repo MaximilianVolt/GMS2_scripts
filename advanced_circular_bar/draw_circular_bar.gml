@@ -217,7 +217,7 @@ function circular_bar_get_end_angle(bar)
 
 function circular_bar_get_center_angle(bar)
 {
-	return circular_bar_get_angle_at(bar, .5);
+	return circular_bar_get_angle_at_value(bar, .5);
 }
 
 
@@ -440,7 +440,7 @@ function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR
  *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
 */
 
-function circular_bar_get_angle_anchor_point(bar, angle = 0, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
+function circular_bar_get_angle_anchor_point(bar, angle = circular_bar_get_angle_at_value(bar, bar.value), anchor = CIRCULAR_BAR_ANCHORS.CENTER)
 {
 	return bar.__get_anchor(angle, anchor);
 }
