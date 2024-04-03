@@ -1117,7 +1117,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_master = function(x, y, xscale, yscale, refresh_mask, blendmode, shader)
 	{
-		if (__get_sector() < 1 || alpha <= 0)
+		if (value <= 0 || alpha <= 0)
 		{
 			exit;
 		}
