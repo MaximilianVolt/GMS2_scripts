@@ -426,7 +426,7 @@ function circular_bar_get_sector(bar, value = bar.value)
  *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
 */
 
-function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
+function circular_bar_get_anchor_point_from_value(bar, value = bar.value, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
 {
 	return bar.__get_anchor(circular_bar_get_angle_at(bar, value), anchor);
 }
@@ -441,7 +441,7 @@ function circular_bar_get_anchor_point(bar, value = bar.value, anchor = CIRCULAR
  *	@param {Constant.CIRCULAR_BAR_ANCHORS} [anchor] The anchor setting of the edge.
 */
 
-function circular_bar_get_angle_anchor_point(bar, angle = circular_bar_get_angle_at_value(bar, bar.value), anchor = CIRCULAR_BAR_ANCHORS.CENTER)
+function circular_bar_get_anchor_point_from_angle(bar, angle = circular_bar_get_angle_at_value(bar, bar.value), anchor = CIRCULAR_BAR_ANCHORS.CENTER)
 {
 	return bar.__get_anchor(angle, anchor);
 }
@@ -759,7 +759,7 @@ function circular_bar_set_alphas(bar, alpha_start, alpha_end)
  *	@param {Array<Struct>} divisors The divisors to add.
 */
 
-function circular_bar_divisors_add(bar, divisors)
+function circular_bar_add_divisors(bar, divisors)
 {
 	array_concat(bar.divisors, divisors);
 }
@@ -774,7 +774,7 @@ function circular_bar_divisors_add(bar, divisors)
  *	@param {Real} divisor_edges The edges to apply to the divisors (following progression).
 */
 
-function circular_bar_divisors_autoset(bar, divisor_count, divisor_amplitudes, divisor_edges)
+function circular_bar_generate_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
 {
 	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
 }
