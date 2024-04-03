@@ -277,7 +277,6 @@ function approach(value, target, amount)
 
 
 
-
 /**
  *	Sets a value following a corresponding sinusoidal function.
  *	@returns {Real}
@@ -312,9 +311,6 @@ function shake(strength)
 
 
 #region Source code
-
-
-
 /**
  *	@param {Real} x
  *	@param {Real} y
@@ -342,6 +338,7 @@ function Advanced_circular_bar(x, y, bars) constructor
 	}
 
 
+
 	/**
 	 *	@param {Bool} status
 	*/
@@ -355,6 +352,7 @@ function Advanced_circular_bar(x, y, bars) constructor
 			bars[@ i].active = status;
 		}
 	}
+
 
 
 	/**

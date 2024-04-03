@@ -338,6 +338,7 @@ function circular_bar_get_divisors(bar)
 }
 
 
+
 /**
  *	Returns the copy of the divisors of a bar.
  *	@returns {Array<Struct>}
