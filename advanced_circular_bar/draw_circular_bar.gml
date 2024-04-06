@@ -463,7 +463,7 @@ function circular_bar_get_angle_at_value(bar, value = bar.value)
 
 
 /**
- *	Returns the angle of a bar at a specific value.
+ *	Returns the value of a bar at a specific angle.
  *	@returns {Real}
  *	@param {Struct.Circular_bar} bar The bar to get the value from.
  *	@param {Real} [angle] The angle of the value to retrieve.
