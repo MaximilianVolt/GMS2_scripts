@@ -1056,11 +1056,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	static __border = function(border_width)
 	{
 		// I no longer hate this :3
+		border = true;
 		self.border_width = border_width;
 		width += border_width * 2;
 		radius += border_width;
 		__update(border);
-		border = true;
 
 		return self;
 	}
