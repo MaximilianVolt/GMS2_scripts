@@ -84,7 +84,7 @@ function circular_bar_create_from_center(x, y, radius, width = radius, center_an
 
 function circular_bar_create_border_bar(target_bar, border_width, precision = target_bar.precision, colors = target_bar.colors, alphas = target_bar.alphas)
 {
-	return target_bar.__copy(precision, colors, alphas).__border(target_bar, border_width);
+	return target_bar.__copy(precision, colors, alphas).__border(border_width);
 }
 
 
@@ -428,7 +428,7 @@ function circular_bar_get_sector(bar, value = bar.value)
 
 function circular_bar_get_anchor_point_from_value(bar, value = bar.value, anchor = CIRCULAR_BAR_ANCHORS.CENTER)
 {
-	return bar.__get_anchor(circular_bar_get_angle_at(bar, value), anchor);
+	return bar.__get_anchor(circular_bar_get_angle_at_value(bar, value), anchor);
 }
 
 
@@ -1050,22 +1050,17 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 
 	/**
-	 *	@param {Struct.Circular_bar} bar
 	 *	@param {Real} border_width
 	*/
 
-	static __border = function(bar, border_width)
+	static __border = function(border_width)
 	{
 		// I no longer hate this :3
-		border = true;
 		self.border_width = border_width;
-		radius = bar.radius + border_width;
-		width = bar.width + border_width + min(border_width * (bar.width < bar.radius), bar.radius - bar.width);
-		divisors = json_parse(json_stringify(bar.divisors));
-		edges = json_parse(json_stringify(bar.edges));
-		start_angle = bar.start_angle;
-		end_angle = bar.end_angle;
+		width += border_width * 2;
+		radius += border_width;
 		__update(border);
+		border = true;
 
 		return self;
 	}
