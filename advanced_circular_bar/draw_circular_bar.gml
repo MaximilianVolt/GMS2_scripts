@@ -477,7 +477,7 @@ function circular_bar_get_value_at_angle(bar, angle = circular_bar_get_angle_at_
 
 
 /**
- *	Set a bar's coordinates.
+ *	Sets a bar's coordinates.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Struct} coordinates The bar's new coordinates.
 */
@@ -491,7 +491,7 @@ function circular_bar_set_coordinates(bar, coordinates)
 
 
 /**
- *	Set a bar's x coordinate.
+ *	Sets a bar's x coordinate.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new x coordinate.
 */
@@ -504,7 +504,7 @@ function circular_bar_set_x(bar, x)
 
 
 /**
- *	Set a bar's y coordinate.
+ *	Sets a bar's y coordinate.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new y coordinate.
 */
@@ -517,7 +517,7 @@ function circular_bar_set_y(bar, y)
 
 
 /**
- *	Set a bar's radius.
+ *	Sets a bar's radius.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new radius.
 */
@@ -530,7 +530,7 @@ function circular_bar_set_radius(bar, radius)
 
 
 /**
- *	Set a bar's width.
+ *	Sets a bar's width.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new width.
 */
@@ -543,7 +543,7 @@ function circular_bar_set_width(bar, width)
 
 
 /**
- *	Set a bar's start angle.
+ *	Sets a bar's start angle.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new start angle.
 */
@@ -556,7 +556,7 @@ function circular_bar_set_start_angle(bar, start_angle)
 
 
 /**
- *	Set a bar's end angle.
+ *	Sets a bar's end angle.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new end angle.
 */
@@ -569,7 +569,7 @@ function circular_bar_set_end_angle(bar, end_angle)
 
 
 /**
- *	Set a bar's value.
+ *	Sets a bar's value.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new value.
 */
@@ -582,7 +582,7 @@ function circular_bar_set_value(bar, value)
 
 
 /**
- *	Set a bar's precision.
+ *	Sets a bar's precision.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new precision.
 */
@@ -595,7 +595,7 @@ function circular_bar_set_precision(bar, precision)
 
 
 /**
- *	Set a bar's color.
+ *	Sets a bar's color.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Constant.Color} The bar's new color.
 */
@@ -608,7 +608,7 @@ function circular_bar_set_color(bar, color)
 
 
 /**
- *	Set a bar's alpha.
+ *	Sets a bar's alpha.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new alpha.
 */
@@ -621,7 +621,7 @@ function circular_bar_set_alpha(bar, alpha)
 
 
 /**
- *	Set a bar's edge type start.
+ *	Sets a bar's edge type start.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new edge type start.
 */
@@ -634,7 +634,7 @@ function circular_bar_set_edge_type_start(bar, edge_type_start)
 
 
 /**
- *	Set a bar's edge type final.
+ *	Sets a bar's edge type final.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new edge type final.
 */
@@ -647,7 +647,7 @@ function circular_bar_set_edge_type_final(bar, edge_type_final)
 
 
 /**
- *	Set a bar's divisors.
+ *	Sets a bar's divisors.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Array<Struct>} The bar's new divisors.
 */
@@ -660,7 +660,7 @@ function circular_bar_set_divisors(bar, divisors)
 
 
 /**
- *	Set a bar's divisors.
+ *	Sets a bar's divisors.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Array<Struct>} The bar's new divisors.
 */
@@ -673,7 +673,7 @@ function circular_bar_set_divisors_copy(bar, divisors)
 
 
 /**
- *	Set a bar's edges.
+ *	Sets a bar's edges.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Array<Real>} The bar's new edges.
 */
@@ -686,7 +686,7 @@ function circular_bar_set_edges(bar, edges)
 
 
 /**
- *	Set a bar's edges.
+ *	Sets a bar's edges.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Array<Real>} The bar's new edges.
 */
@@ -699,7 +699,7 @@ function circular_bar_set_edges_copy(bar, edges)
 
 
 /**
- *	Set a bar's rotation.
+ *	Sets a bar's rotation.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new rotation.
 */
@@ -712,7 +712,7 @@ function circular_bar_set_rotation(bar, rotation)
 
 
 /**
- *	Set a bar's border width.
+ *	Sets a bar's border width.
  *	@param {Struct.Circular_bar} bar The bar to change.
  *	@param {Real} The bar's new border width.
 */

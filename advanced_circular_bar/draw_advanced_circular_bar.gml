@@ -237,7 +237,7 @@ function advanced_circular_bar_deactivate(animation_bar)
  *	@returns {Array<Array<Real>>}
  *	@param {Struct.Advanced_circular_bar} animation_bar The bar to position.
  *	@param {Real | Struct} strength_or_shake_positions The strength value or result to use for the positioning.
- *	@param rotation The rotation to use for the positioning.
+ *	@param {Real} rotation The rotation to use for the positioning.
 */
 
 function advanced_circular_bar_position(animation_bar, strength_or_shake_positions, rotation)
