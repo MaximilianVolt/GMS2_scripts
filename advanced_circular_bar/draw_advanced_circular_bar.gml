@@ -150,7 +150,7 @@ function advanced_circular_bar_set_coordinates(animation_bar, coordinates)
 
 
 /**
- *	Set a bar's x coordinate.
+ *	Sets a bar's x coordinate.
  *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Real} The bar's new x coordinate.
 */
@@ -163,7 +163,7 @@ function advanced_circular_bar_set_x(animation_bar, x)
 
 
 /**
- *	Set a bar's y coordinate.
+ *	Sets a bar's y coordinate.
  *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Real} The bar's new y coordinate.
 */
@@ -176,7 +176,7 @@ function advanced_circular_bar_set_y(animation_bar, y)
 
 
 /**
- *	Set a bar's bars.
+ *	Sets a bar's bars.
  *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Array<Struct.Circular_bar>} The bar's new bars.
 */
@@ -189,7 +189,7 @@ function advanced_circular_bar_set_bars(animation_bar, bars)
 
 
 /**
- *	Set a bar's bars.
+ *	Sets a bar's bars.
  *	@param {Struct.Advanced_circular_bar} animation_bar The bar to change.
  *	@param {Array<Struct.Circular_bar>} The bar's new bars.
 */
