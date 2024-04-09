@@ -770,8 +770,8 @@ function circular_bar_add_divisors(bar, divisors)
  *	Automatically adds centered divisors to the bar's arc.
  *	@param {Struct.Circular_bar} bar The bar to edit.
  *	@param {Real} divisor_count The number of divisors to set.
- *	@param {Real} divisor_amplitudes The angles of the divisors (following progression).
- *	@param {Real} divisor_edges The edges to apply to the divisors (following progression).
+ *	@param {Array<Real>} divisor_amplitudes The angles of the divisors (following progression).
+ *	@param {Array<Real>} divisor_edges The edges to apply to the divisors (following progression).
 */
 
 function circular_bar_generate_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
@@ -883,10 +883,10 @@ enum CIRCULAR_BAR_PRECISION_PRESETS
  *	@param {Real} width
  *	@param {Real} start_angle
  *	@param {Real} end_angle
- *	@param {Array<Constant.Color>} colors
- *	@param {Real} transparency
- *	@param {Real} value
+  *	@param {Real} value
  *	@param {Real} precision
+ *	@param {Array<Constant.Color>} colors
+ *	@param {Array<Real>} alphas
  *	@param {Real} edge_type_start
  *	@param {Real} edge_type_final
  *	@param {Array<Struct>} divisors
