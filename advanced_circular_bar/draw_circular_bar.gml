@@ -839,7 +839,7 @@ function circular_bar_flash(bar, start_color, end_color, color_pulse_duration, s
 
 
 /**
-	Returns a struct with random positions and the direction of the origin point from the bar's center.
+	Returns a struct with rotated positions and the direction of the origin point from the bar's center.
 	@param {Struct.Circular_bar} bar The bar to rotate.
 	@param {Real} rotation_variation The angle to rotate the bar with.
 */
@@ -941,9 +941,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		 .5,		// TRIANGLE - TOP
 		 .5,		// TRIANGLE - CENTER
 		 .5,		// TRIANGLE - BOTTOM
-		  0,		// TRAPEZOID - TOP
-		  0,		// TRAPEZOID - CENTER
-		  0,		// TRAPEZOID - BOTTOM
+		 .5,		// TRAPEZOID - TOP
+		 .5,		// TRAPEZOID - CENTER
+		 .5,		// TRAPEZOID - BOTTOM
 		.75,		// ROUNDED DIAMOND - TOP
 		.75,		// ROUNDED DIAMOND - CENTER
 		.75			// ROUNDED DIAMOND - BOTTOM
@@ -1005,7 +1005,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __get_anchor = function(angle, anchor)
 	{
-		var radius = __calculate_variable_radius(value).variable_radius;
+		var radius = __calculate_variable_radius(value);
 		var width = self.width * radius / self.radius;
 		var inner = radius - width;
 		var center = self.radius;
@@ -1248,7 +1248,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			draw_vertex(center - _cos, center - _sin);
 		}
 
-		var variable_radius = __calculate_variable_radius(value_override, radius).variable_radius;
+		var variable_radius = __calculate_variable_radius(value_override, radius);
 		angle = angle_diff * value_override + calibrated_start_angle;
 		_cos = lengthdir_x(variable_radius, angle);
 		_sin = lengthdir_y(variable_radius, angle);
@@ -1275,12 +1275,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var sector_count = __get_sector(value) - (value < 1);
 		var outer_angle = (180 - sector_amplitude) / 2;
 		var anchored_angle = start_angle + sector_amplitude * rotation_increment * sector_count;
+		// var snap_dir_angle = anchored_angle + sector_amplitude / 2 * sign(angle_diff);
 		var sector_angle_diff = abs(angle - anchored_angle) % sector_amplitude;
 		var inner_angle = 180 - outer_angle - sector_angle_diff;
-		var variable_radius = radius * dsin(outer_angle) / dsin(inner_angle);
-		var snap_dir_angle = anchored_angle + sector_amplitude / 2 * sign(angle_diff);
 
-		return {variable_radius, snap_dir_angle, sector_angle_diff};
+		return radius * dsin(outer_angle) / dsin(inner_angle);
 	}
 
 
@@ -1428,7 +1427,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			var edge = edges_to_draw[@ i % edges_count];
 			var edge_direction = direction_values[@ i % 2];
 			var placement_angle = placement_values[@ i] * angle_diff + start_angle;
-			__draw_edge(edge, placement_angle, __calculate_variable_radius(placement_values[@ i]).variable_radius, edge_direction);
+			__draw_edge(edge, placement_angle, __calculate_variable_radius(placement_values[@ i]), edge_direction);
 		}
 	}
 
@@ -1577,7 +1576,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __trapezoid_edge = function(center_x, center_y, radius, width, angle, dir, ext, position)
 	{
-		var inner = radius - width, ew = ext * width / 2;
+		var inner = radius - width, ew = ext * width / 4;
 		var p1x = center_x + lengthdir_x(inner, angle);
 		var p1y = center_y + lengthdir_y(inner, angle);
 		var p2x = center_x + lengthdir_x(radius, angle);
@@ -1604,16 +1603,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var p4y = m2y + ydir;
 
 		draw_vertex(p1x, p1y);
-		draw_vertex(m1x, m1y);
-		draw_vertex(p3x, p3y);
-		draw_vertex(m1x, m1y);
 		draw_vertex(p3x, p3y);
 		draw_vertex(p4x, p4y);
-		draw_vertex(m2x, m2y);
-		draw_vertex(p4x, p4y);
-		draw_vertex(m1x, m1y);
+		draw_vertex(p1x, p1y);
 		draw_vertex(p2x, p2y);
-		draw_vertex(m2x, m2y);
 		draw_vertex(p4x, p4y);
 	}
 
