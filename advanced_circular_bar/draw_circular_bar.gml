@@ -1008,7 +1008,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var radius = __calculate_variable_radius(value);
 		var width = self.width * radius / self.radius;
 		var inner = radius - width;
-		var center = self.radius;
 
 		var p1x = lengthdir_x(inner, angle);
 		var p1y = lengthdir_y(inner, angle);
@@ -1060,7 +1059,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		self.border_width = border_width;
 		width += border_width * 2;
 		radius += border_width;
-		__update(border);
+		__update(true);
 
 		return self;
 	}
@@ -1189,7 +1188,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			__draw_progression(mask_precision, 1, radius - width);
 		}
 
-		if (array_length(divisors) > 0)
+		if (array_length(divisors))
 		{
 			__draw_divisors();
 		}
@@ -1240,9 +1239,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(center, center);
 
-		for (var i = 0; abs(i) < sector_count; i += rotation_increment)
+		for (var i = 0; i < sector_count; i++)
 		{
-			angle = sector_size * i + calibrated_start_angle;
+			angle = sector_size * i * rotation_increment + calibrated_start_angle;
 			_cos = lengthdir_x(radius, angle);
 			_sin = lengthdir_y(radius, angle);
 			draw_vertex(center - _cos, center - _sin);
