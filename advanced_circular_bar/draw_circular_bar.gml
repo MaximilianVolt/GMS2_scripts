@@ -820,25 +820,6 @@ function circular_bar_update(bar, refresh_mask = false, keep_active = true)
 
 
 /**
-	Dinamically temporarily changes a bar's color and transparency.
-	@param {Struct.Circular_bar} bar The bar to edit.
-	@param {Constant.Color} start_color The color at the beginning of the pulse period.
-	@param {Constant.Color} end_color The color at the end of the pulse period.
-	@param {Real} color_pulse_duration The duration of the color pulse period.
-	@param {Real} start_alpha The transparency at the beginning of the pulse period.
-	@param {Real} end_alpha The transparency at the end of the pulse period.
-	@param {Real} alpha_pulse_duration The duration of the transparency pulse period.
-*/
-
-function circular_bar_flash(bar, start_color, end_color, color_pulse_duration, start_aplha, end_alhpa, alpha_pulse_duration)
-{
-	bar.color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
-	bar.alpha = wave(start_aplha, end_alhpa, alpha_pulse_duration);
-}
-
-
-
-/**
 	Returns a struct with rotated positions and the direction of the origin point from the bar's center.
 	@param {Struct.Circular_bar} bar The bar to rotate.
 	@param {Real} rotation_variation The angle to rotate the bar with.
