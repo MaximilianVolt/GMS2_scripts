@@ -6,5 +6,6 @@ I'm currently really busy and won't update things constantly, however if you do 
 
 ## Queue
 
-- Bar and animation tool functions;
-- Radar_chart.
+- Rounded poligons
+- Bar and animation tool functions
+- Radar_chart
