@@ -864,7 +864,7 @@ enum CIRCULAR_BAR_PRECISION_PRESETS
  *	@param {Real} width
  *	@param {Real} start_angle
  *	@param {Real} end_angle
-  *	@param {Real} value
+ *	@param {Real} value
  *	@param {Real} precision
  *	@param {Array<Constant.Color>} colors
  *	@param {Array<Real>} alphas
@@ -896,9 +896,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	self.divisors = divisors;
 	self.edges = edges;
 	self.rotation = 0;
-	self.surface = -1;
+	self.surface = noone;
 	self.redraw = true;
-	self.mask = -1;
+	self.mask = noone;
 	self.border = false;
 	self.border_width = 0;
 	#endregion
@@ -930,7 +930,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		.75			// ROUNDED DIAMOND - BOTTOM
 	];
 
-
+	static constants = {
+		asin1_2: darcsin(.5),
+		asin1_3: darcsin(1 / 3)
+	}
 
 	/**
 	 *	@returns {Struct.Circular_bar}
@@ -1101,7 +1104,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		gpu_set_blendmode(blendmode);
 
-		if (shader != undefined)
+		var has_shader = shader != undefined;
+		var has_blendmode = blendmode != bm_normal;
+
+		if (has_shader)
 		{
 			shader_set(shader);
 		}
@@ -1109,6 +1115,16 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		__finalise_surface(x, y, xscale, yscale);
 		color = merge_color(colors[@ 0], colors[@ 1], value);
 		alpha = __get_alpha();
+
+		if (has_blendmode)
+		{
+			gpu_set_blendmode(bm_normal);
+		}
+
+		if (has_shader)
+		{
+			shader_reset();
+		}
 	}
 
 
@@ -1286,10 +1302,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	{
 		surface_reset_target();
 		draw_surface_ext(surface, x - radius, y - radius, xscale, yscale, rotation, color, alpha);
-		gpu_set_blendmode(bm_normal);
 		draw_set_color(c_white);
 		draw_set_alpha(1);
-		shader_reset();
 	}
 	#endregion
 
@@ -1757,9 +1771,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		var _dir = sign(dir - angle) * 90;
 		var base_direction = angle + _dir;
-		var as1_2 = darcsin(.5) * sign(_dir);
-		var as1_3 = darcsin(1 / 3) * sign(_dir);
-		var angle_differences = [as1_3, as1_2, as1_3];
+		var diff_centered = constants.asin1_2 * sign(_dir);
+		var diff_nocentered = constants.asin1_3 * sign(_dir);
+		var angle_differences = [diff_nocentered, diff_centered, diff_nocentered];
 		var angle_diff = angle_differences[@ position];
 		var base_positions = [[m3_4x, mx, m1_4x], [m3_4y, my, m1_4y]];
 		var bx = base_positions[@ _x][@ position];
