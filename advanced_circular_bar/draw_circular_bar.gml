@@ -1100,7 +1100,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			exit;
 		}
 
-		__draw(x, y, refresh_mask);
+		__draw(refresh_mask);
 
 		gpu_set_blendmode(blendmode);
 
@@ -1135,7 +1135,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	 *	@param {Bool} refresh_mask
 	*/
 
-	static __draw = function(x, y, refresh_mask)
+	static __draw = function(refresh_mask)
 	{
 		var side = radius * 2 + 1;
 
