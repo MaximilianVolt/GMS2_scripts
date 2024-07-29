@@ -32,7 +32,7 @@ function draw_circular_bar(bar, x = bar.x, y = bar.y, xscale = 1, yscale = 1, re
  *	@param {Array<Real>} [alphas] The opacities from 0% to 100% of the value.
  *	@param {Real} [edge_type_start] The edge drawn at the bar's 0% angle.
  *	@param {Real} [edge_type_final] The edge drawn at the bar's val% angle.
- *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_divisors_autoset()).
+ *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_generate_divisors()).
  *	@param {Array<Real>} [edges] The shapes drawn at the divisors' edges in order.
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
@@ -59,7 +59,7 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  *	@param {Array<Real>} [alphas] The colors from 0% to 100% of the value.
  *	@param {Real} [edge_type_start] The edge drawn at the bar's 0% angle.
  *	@param {Real} [edge_type_final] The edge drawn at the bar's val% angle.
- *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_divisors_autoset()).
+ *	@param {Array<Struct>} [divisors] The triangles that cut the bar (use circular_bar_generate_divisors()).
  *	@param {Array<Real>} [edges] The shapes drawn at the divisors' edges in order.
  *	@param {Bool} [activation_override] Freezes the bar's body.
 */
