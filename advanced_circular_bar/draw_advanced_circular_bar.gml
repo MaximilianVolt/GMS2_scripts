@@ -122,15 +122,7 @@ function advanced_circular_bar_get_bars(animation_bar)
 
 function advanced_circular_bar_get_bars_copy(animation_bar)
 {
-	var bars = animation_bar.bars;
-	var bar_count = array_length(bars);
-
-	for (var i = 0; i < bar_count; i++)
-	{
-		bars[@ i] = bars[@ i].__copy();
-	}
-
-	return bars;
+	return variable_clone(animation_bar.bars);
 }
 
 
@@ -196,14 +188,7 @@ function advanced_circular_bar_set_bars(animation_bar, bars)
 
 function advanced_circular_bar_set_bars_copy(animation_bar, bars)
 {
-	var bar_count = array_length(bars);
-
-	for (var i = 0; i < bar_count; i++)
-	{
-		bars[@ i] = bars[@ i].__copy();
-	}
-
-	animation_bar.bars = bars;
+	animation_bar.bars = variable_clone(bars);
 }
 
 
@@ -350,10 +335,7 @@ function Advanced_circular_bar(x, y, bars) constructor
 
 	static __copy = function()
 	{
-		var bar_copy = json_parse(json_stringify(self));
-		static_set(bar_copy, static_get(Advanced_circular_bar));
-
-		return bar_copy;
+		return variable_clone(self);
 	}
 
 

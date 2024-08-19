@@ -347,7 +347,7 @@ function circular_bar_get_divisors(bar)
 
 function circular_bar_get_divisors_copy(bar)
 {
-	return json_parse(json_stringify(bar.divisors));
+	return variable_clone(bar.divisors);
 }
 
 
@@ -373,7 +373,7 @@ function circular_bar_get_edges(bar)
 
 function circular_bar_get_edges_copy(bar)
 {
-	return json_parse(json_stringify(bar.edges));
+	return variable_clone(bar.edges);
 }
 
 
@@ -667,7 +667,7 @@ function circular_bar_set_divisors(bar, divisors)
 
 function circular_bar_set_divisors_copy(bar, divisors)
 {
-	bar.divisors = json_parse(json_stringify(divisors));
+	bar.divisors = variable_clone(divisors);
 }
 
 
@@ -693,7 +693,7 @@ function circular_bar_set_edges(bar, edges)
 
 function circular_bar_set_edges_copy(bar, edges)
 {
-	bar.edges = json_parse(json_stringify(edges));
+	bar.edges = variable_clone(edges);
 }
 
 
@@ -942,13 +942,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __copy = function(precision_override = self.precision, colors = self.colors, alphas = self.alphas)
 	{
-		var bar_copy = json_parse(json_stringify(self));
-		static_set(bar_copy, static_get(Circular_bar));
-		bar_copy.precision = precision_override;
-		bar_copy.colors = colors;
-		bar_copy.alphas = alphas;
-
-		return bar_copy;
+		return variable_clone(self);
 	}
 
 
