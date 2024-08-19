@@ -8,4 +8,4 @@ I'm currently really busy and won't update things constantly, however if you do 
 
 - Rounded polygon
 - Bar and animation tool functions
-- Radar_chart
+- Radar chart

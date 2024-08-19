@@ -1185,9 +1185,11 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			__draw_progression(mask_precision, 1, radius - width);
 		}
 
-		if (array_length(divisors))
+		var divisor_count = array_length(divisors);
+
+		if (divisor_count)
 		{
-			__draw_divisors();
+			__draw_divisors(divisor_count);
 		}
 
 		surface_reset_target();
@@ -1286,7 +1288,9 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __draw_endpoints = function(current_angle)
 	{
+		draw_primitive_begin(pr_trianglelist);
 		__draw_edges([edge_type_final, edge_type_start], [__angle_to_placement_percentage(current_angle + 180), 0]);
+		draw_primitive_end();
 	}
 
 
@@ -1349,20 +1353,25 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 
 	/**
-	 *
+	 * @param {Real} divisor_count
 	*/
 
-	static __draw_divisors = function()
+	static __draw_divisors = function(divisor_count)
 	{
-		var divisor_count = array_length(divisors);
+		draw_primitive_begin(pr_trianglelist);
 
 		for (var i = 0; i < divisor_count; i++)
 		{
 			__draw_divisor(divisors[@ i]);
 		}
 
+		draw_primitive_end();
+
+		draw_primitive_begin(pr_trianglelist);
 		gpu_set_blendmode_ext_sepalpha(bm_one, bm_one, bm_src_alpha, bm_dest_alpha);
 		__draw_edges();
+
+		draw_primitive_end();
 	}
 
 
@@ -1391,14 +1400,15 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var tmx3 = center + lengthdir_x(len, position);
 		var tmy3 = center + lengthdir_y(len, position);
 
-		draw_primitive_begin(pr_trianglefan);
 		draw_vertex(center, center);
 		draw_vertex(t1x1, t1y1);
 		draw_vertex(tmx1, tmy1);
-		draw_vertex(tmx3, tmy3);
+		draw_vertex(tmx1, tmy1);
 		draw_vertex(tmx2, tmy2);
+		draw_vertex(tmx3, tmy3);
 		draw_vertex(t2x1, t2y1);
-		draw_primitive_end();
+		draw_vertex(tmx2, tmy2);
+		draw_vertex(center, center);
 	}
 
 
@@ -1484,12 +1494,12 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 			var p4x = p2x + vect_x;
 			var p4y = p2y + vect_y;
 
-			draw_primitive_begin(pr_trianglefan);
 			draw_vertex(p1x, p1y);
+			draw_vertex(p2x, p2y);
 			draw_vertex(p3x, p3y);
 			draw_vertex(p4x, p4y);
+			draw_vertex(p3x, p3y);
 			draw_vertex(p2x, p2y);
-			draw_primitive_end();
 
 			center_x += vect_x;
 			center_y += vect_y;
@@ -1497,9 +1507,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 		if (edge)
 		{
-			draw_primitive_begin(pr_trianglelist);
 			edge_selector[@ edge - 1](center_x, center_y, radius, width, placement, dir, ext);
-			draw_primitive_end();
 		}
 	}
 	#endregion
