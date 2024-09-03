@@ -77,12 +77,12 @@ function circular_bar_create_from_center(x, y, radius, width = radius, center_an
  *	@returns {Struct.Circular_bar}
  *	@param {Struct.Circular_bar} target_bar The bar to adapt the border to.
  *	@param {Real} border_width The width of the border.
- *	@param {Real} [precision] The precision to apply to the border bar.
  *	@param {Array<Constant.Color>} [colors] The colors of the border bar.
  *	@param {Array<Real>} [alphas] The opacities of the border bar.
+ *	@param {Real} [precision] The precision to apply to the border bar.
 */
 
-function circular_bar_create_border_bar(target_bar, border_width, precision = target_bar.precision, colors = target_bar.colors, alphas = target_bar.alphas)
+function circular_bar_create_border_bar(target_bar, border_width, colors = target_bar.colors, alphas = target_bar.alphas, precision = target_bar.precision)
 {
 	return target_bar.__copy(precision, colors, alphas).__border(border_width);
 }
@@ -106,12 +106,13 @@ function circular_bar_create_divisor(position, amplitude)
  *	Returns a new instance of Circular_bar with the copied data.
  *	@return {Struct.Circular_bar}
  *	@param {Struct.Circular_bar} bar The bar to copy.
- *	@param {Real} [precision] The number of segments of the new bar.
  *	@param {Array<Constant.Color>} [colors] The colors of the new bar.
  *	@param {Array<Real>} [alphas] The new opacities of the new bar.
+ *	@param {Real} [value] The new value of the new bar.
+  *	@param {Real} [precision] The number of segments of the new bar.
 */
 
-function circular_bar_get_copy(bar, precision = bar.precision, colors = bar.colors, alphas = bar.alphas)
+function circular_bar_get_copy(bar, colors = bar.colors, alphas = bar.alphas, value = bar.value, precision = bar.precision)
 {
 	return bar.__copy(precision, colors, alphas);
 }
@@ -761,7 +762,8 @@ function circular_bar_set_alphas(bar, alpha_start, alpha_end)
 
 function circular_bar_add_divisors(bar, divisors)
 {
-	array_concat(bar.divisors, divisors);
+	bar.divisors = array_concat(bar.divisors, divisors);
+	bar.__update(true);
 }
 
 
@@ -829,7 +831,12 @@ function circular_bar_rotate(bar, rotation_variation)
 {
 	bar.rotation = (bar.rotation + rotation_variation) % 360;
 	var r = bar.radius, r2 = r * sqrt(2), angle = (bar.rotation + 135) % 360;
-	return {x: r + lengthdir_x(r2, angle), y: r + lengthdir_y(r2, angle), dir: angle};
+
+	return {
+		x: r + lengthdir_x(r2, angle),
+		y: r + lengthdir_y(r2, angle),
+		dir: angle
+	};
 }
 
 
@@ -935,14 +942,22 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		asin1_3: darcsin(1 / 3)
 	}
 
+
+
 	/**
 	 *	@returns {Struct.Circular_bar}
 	 *	@param {Real} [precision_override]
 	*/
 
-	static __copy = function(precision_override = self.precision, colors = self.colors, alphas = self.alphas)
+	static __copy = function(precision_override = self.precision, colors = self.colors, alphas = self.alphas, value = self.value)
 	{
-		return variable_clone(self);
+		var bar_copy = variable_clone(self);
+		bar_copy.precision = precision_override;
+		bar_copy.colors = colors;
+		bar_copy.alphas = alphas;
+		bar_copy.value = value;
+
+		return bar_copy;
 	}
 
 
