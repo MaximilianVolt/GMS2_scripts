@@ -11,4 +11,4 @@ I'm currently really busy and won't update things constantly, however if you do 
 - Bar and animation tool functions
 - OniCore GMS2 framework (coming soon...)
 
-![Chibi Drenneth, artwork by @FrivoMutt](onicore/drenny.png)
+![Chibi Drenneth, artwork by @FrivoMutt!](onicore/drenny.png)
