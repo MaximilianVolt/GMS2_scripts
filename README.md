@@ -11,4 +11,4 @@ I'm currently really busy and won't update things constantly, however if you do 
 - Radar chart
 - OniCore GMS2 framework (coming soon...)
 
-![Chibi Drenneth, artwork by @FrivoMutt](https://toyhou.se/22788104.drenneth/83432956)
+![Chibi Drenneth, artwork by @FrivoMutt](https://f2.toyhou.se/file/f2-toyhou-se/images/83432956_tPCD175S1KjrH5N.png?1727790142)
