@@ -39,13 +39,13 @@ function draw_advanced_circular_bar_positioned(animation_bar, position_array, xs
  * Returns a new instance of Advanced_circular_bar.
  * @param {Real} x - The x coordinate of the bar.
  * @param {Real} y - The y coordinate of the bar.
- * @param {Array<Struct.Circular_bar>} bars - The set of bars that make the advanced one.
+ * @param {Struct.Circular_bar | Array<Struct.Circular_bar>} bars - The set of bars that make the advanced one.
  * @returns {Struct.Advanced_circular_bar}
 */
 
 function advanced_circular_bar_create(x, y, bars)
 {
-	return new Advanced_circular_bar(x, y, bars);
+	return new Advanced_circular_bar(x, y, is_array(bars) ? bars : [bars]);
 }
 
 
