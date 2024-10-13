@@ -32,7 +32,7 @@ function draw_circular_bar(bar, x = bar.x, y = bar.y, xscale = 1, yscale = 1, re
  * @param {Real} [edge_type_start] - The edge drawn at the bar's 0%'s angle.
  * @param {Real} [edge_type_final] - The edge drawn at the bar's val%'s angle.
  * @param {Array<Struct>} [divisors] - The divisors of the bar.
- * @param {Array<Real>} [edges] - The shapes drawn at the divisors' edges in order.
+ * @param {Real | Array<Real>} [edges] - The shapes drawn at the divisors' edges in order.
  * @param {Bool} [activation_override] - Blocks the updating of the bar.
  * @returns {Struct.Circular_bar}
 */
@@ -59,7 +59,7 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  * @param {Real} [edge_type_start] - The edge drawn at the bar's 0%'s angle.
  * @param {Real} [edge_type_final] - The edge drawn at the bar's val%'s angle.
  * @param {Array<Struct>} [divisors] - The divisors of the bar.
- * @param {Array<Real>} [edges] - The shapes drawn at the divisors' edges in order.
+ * @param {Real | Array<Real>} [edges] - The shapes drawn at the divisors' edges in order.
  * @param {Bool} [activation_override] - Blocks the updating of the bar.
  * @returns {Struct.Circular_bar}
 */
@@ -680,12 +680,12 @@ function circular_bar_set_divisors_copy(bar, divisors)
 /**
  * Sets a bar's edges.
  * @param {Struct.Circular_bar} bar - The bar to edit.
- * @param {Array<Real>} edges - The bar's new edges.
+ * @param {Real | Array<Real>} edges - The bar's new edges.
 */
 
 function circular_bar_set_edges(bar, edges)
 {
-	bar.edges = edges;
+	bar.edges = is_array(edges) ? edges : [edges];
 }
 
 
@@ -693,12 +693,12 @@ function circular_bar_set_edges(bar, edges)
 /**
  * Sets a bar's edges.
  * @param {Struct.Circular_bar} bar - The bar to edit.
- * @param {Array<Real>} edges - The bar's new edges.
+ * @param {Real | Array<Real>} edges - The bar's new edges.
 */
 
 function circular_bar_set_edges_copy(bar, edges)
 {
-	bar.edges = variable_clone(edges);
+	bar.edges = variable_clone(is_array(edges) ? edges : [edges]);
 }
 
 
@@ -884,7 +884,7 @@ enum CIRCULAR_BAR_PRECISION_PRESETS
  * @param {Real} edge_type_start
  * @param {Real} edge_type_final
  * @param {Array<Struct>} divisors
- * @param {Array<Real>} edges
+ * @param {Real | Array<Real>} edges
  * @param {Bool} activation_override
 */
 
@@ -907,7 +907,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	self.edge_type_start = edge_type_start;
 	self.edge_type_final = edge_type_final;
 	self.divisors = divisors;
-	self.edges = edges;
+	self.edges = is_array(edges) ? edges : [edges];
 	self.rotation = 0;
 	self.surface = noone;
 	self.redraw = true;
