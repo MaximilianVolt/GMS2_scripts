@@ -71,7 +71,10 @@ function advanced_circular_bar_clone(animation_bar)
 
 function advanced_circular_bar_get_coordinates(animation_bar)
 {
-	return {x: animation_bar.x, y: animation_bar.y};
+	return {
+		x: animation_bar.x,
+		y: animation_bar.y
+	};
 }
 
 
@@ -234,6 +237,25 @@ function advanced_circular_bar_position(animation_bar, strength_or_shake_positio
 
 
 /**
+ * Dinamically edits a bar's color and transparency.
+ * @param {Struct.Circular_bar} bar - The bar to edit.
+ * @param {Constant.Color | Array<Constant.Color>} [colors] - The colors, in order, during the pulse period.
+ * @param {Real} [color_pulse_duration] - The duration of the color pulse period.
+ * @param {Real | Array<Real>} [alphas] - The transparencies, in order, during the pulse period.
+ * @param {Real} [alpha_pulse_duration] - The duration of the transparency pulse period.
+*/
+
+function circular_bar_flash(bar, colors = bar.colors, color_pulse_duration = 1, alphas = bar.alphas, alpha_pulse_duration = 1)
+{
+	colors = is_array(colors) ? colors : [colors];
+	alphas = is_array(alphas) ? alphas : [alphas];
+	bar.color = bar.__get_color(colors, wave(0, 1, color_pulse_duration));
+	bar.alpha = bar.__get_alpha(alphas, wave(0, 1, alpha_pulse_duration));
+}
+
+
+
+/**
  * Gradually makes a value approach to another.
  * @param {Real} value  - The starting value.
  * @param {Real} target - The value to approach to.
@@ -288,7 +310,10 @@ function wave(from, to, duration, offset = 0)
 
 function shake(strength)
 {
-	return {x: choose(-strength, strength), y: choose(-strength, strength)};
+	return {
+		x: choose(-strength, strength),
+		y: choose(-strength, strength)
+	};
 }
 
 

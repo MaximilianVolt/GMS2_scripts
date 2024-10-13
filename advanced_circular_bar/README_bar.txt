@@ -1,4 +1,4 @@
-///@ CIRCULAR BAR v2.4.5 - IMPROVED PERFORMANCE AND CUSTOMIZATION UPDATE
+///@ CIRCULAR BAR v2.5.0 - COLOR STOPS
 
 /*
 	--------------------
@@ -8,7 +8,7 @@
 	Author: [Maximilian Volt.][IT] --> https://github.com/MaximilianVolt (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/08/2022
-	Last updated on [DMY]: 11/10/2024
+	Last updated on [DMY]: 13/10/2024
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
@@ -22,15 +22,6 @@
 
 	> refresh_mask IS A HEAVY PARAMETER TO PASS AS true, YOU SHOULD RESET IT TO false AS SOON AS
 	* YOU'RE DONE MAKING THE GRAPHICAL CHANGES TO THE BAR MASK
-
-	> WHEN OPERATING WITH THESE SCRIPTS, MAKE SURE TO WATCH OUR FOR THE ARRAY TYPES, ALL OF THEM
-	* ARE ALL MARKED WITH PLURAL NAMES. ALL DATA TYPES ARE HIGHLIGHTED FOR FEATHER.
-  *
-	* E.G:
-	* * circular_bar_divisors_autoset(bar, divisor_count, divisor_amplitudes, divisor_edges)
-  * *                                                              ARRAY ^        ARRAY ^
-	* *
-	* * circular_bar_divisors_autoset(myBar, 3, [15], [1]);
 
 	> IT IS RECOMMENDED TO ONLY USE THE INTERFACING FUNCTIONS.
 */

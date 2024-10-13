@@ -18,25 +18,6 @@ function draw_circular_bar(bar, x = bar.x, y = bar.y, xscale = 1, yscale = 1, re
 
 
 /**
- * Dinamically edits a bar's color and transparency.
- * @param {Struct.Circular_bar} bar - The bar to edit.
- * @param {Constant.Color} [start_color] - The color at the beginning of the pulse period.
- * @param {Constant.Color} [end_color] - The color at the end of the pulse period.
- * @param {Real} [color_pulse_duration] - The duration of the color pulse period.
- * @param {Real} [start_alpha] - The transparency at the beginning of the pulse period.
- * @param {Real} [end_alpha] - The transparency at the end of the pulse period.
- * @param {Real} [alpha_pulse_duration] - The duration of the transparency pulse period.
-*/
-
-function circular_bar_flash(bar, start_color = bar.colors[@ 0], end_color = bar.colors[@ 1], color_pulse_duration = 1, start_aplha = bar.alphas[@ 0], end_alhpa = bar.alphas[@ 1], alpha_pulse_duration = 1)
-{
-	bar.color = merge_color(start_color, end_color, wave(0, 1, color_pulse_duration));
-	bar.alpha = wave(start_aplha, end_alhpa, alpha_pulse_duration);
-}
-
-
-
-/**
  * Returns a new instance of Circular_bar.
  * @param {Real} x - The bar's x position.
  * @param {Real} y - The bar's y position.
@@ -46,8 +27,8 @@ function circular_bar_flash(bar, start_color = bar.colors[@ 0], end_color = bar.
  * @param {Real} [end_angle] - The bar's angle at 100% of the value.
  * @param {Real} [value] - The value represented by the bar (0 <= x <= 1).
  * @param {Real} [precision] - The number of sectors to draw the bar.
- * @param {Array<Constant.Color>} [colors] - The colors from 0% to 100% of the value.
- * @param {Array<Real>} [alphas] - The opacities from 0% to 100% of the value.
+ * @param {Constant.Color | Array<Constant.Color>} [colors] - The colors from 0% to 100% of the value.
+ * @param {Real | Array<Real>} [alphas] - The opacities from 0% to 100% of the value.
  * @param {Real} [edge_type_start] - The edge drawn at the bar's 0%'s angle.
  * @param {Real} [edge_type_final] - The edge drawn at the bar's val%'s angle.
  * @param {Array<Struct>} [divisors] - The divisors of the bar.
@@ -73,8 +54,8 @@ function circular_bar_create(x, y, radius, width = radius, start_angle = 90, end
  * @param {Real} [amplitude] - The bar's amplitude.
  * @param {Real} [value] - The value represented by the bar (0 <= x <= 1).
  * @param {Real} [precision] - The number of sectors to draw the bar.
- * @param {Array<Constant.Color>} [colors] - The colors from 0% to 100% of the value.
- * @param {Array<Real>} [alphas] - The opacities from 0% to 100% of the value.
+ * @param {Constant.Color | Array<Constant.Color>} [colors] - The colors from 0% to 100% of the value.
+ * @param {Real | Array<Real>} [alphas] - The opacities from 0% to 100% of the value.
  * @param {Real} [edge_type_start] - The edge drawn at the bar's 0%'s angle.
  * @param {Real} [edge_type_final] - The edge drawn at the bar's val%'s angle.
  * @param {Array<Struct>} [divisors] - The divisors of the bar.
@@ -95,8 +76,8 @@ function circular_bar_create_from_center(x, y, radius, width = radius, center_an
  * Creates a bar adapted to the shape of its target, given a border width.
  * @param {Struct.Circular_bar} target_bar - The bar to adapt the border to.
  * @param {Real} border_width - The width of the border.
- * @param {Array<Constant.Color>} [colors] - The colors of the border bar.
- * @param {Array<Real>} [alphas] - The opacities of the border bar.
+ * @param {Constant.Color | Array<Constant.Color>} [colors] - The colors of the border bar.
+ * @param {Real | Array<Real>} [alphas] - The opacities of the border bar.
  * @param {Real} [precision] - The precision to apply to the border bar.
  * @returns {Struct.Circular_bar}
 */
@@ -125,8 +106,8 @@ function circular_bar_create_divisor(position, amplitude)
 /**
  * Returns a new instance of Circular_bar with the copied data.
  * @param {Struct.Circular_bar} bar - The bar to copy.
- * @param {Array<Constant.Color>} [colors] - The colors of the new bar.
- * @param {Array<Real>} [alphas] - The opacities of the new bar.
+ * @param {Constant.Color | Array<Constant.Color>} [colors] - The colors of the new bar.
+ * @param {Real | Array<Real>} [alphas] - The opacities of the new bar.
  * @param {Real} [value] - The value of the new bar.
  * @param {Real} [precision] - The number of sectors of the new bar.
  * @returns {Struct.Circular_bar}
@@ -147,7 +128,10 @@ function circular_bar_clone(bar, colors = bar.colors, alphas = bar.alphas, value
 
 function circular_bar_get_coordinates(bar)
 {
-	return {x: bar.x, y: bar.y};
+	return {
+		x: bar.x,
+		y: bar.y
+	};
 }
 
 
@@ -748,13 +732,13 @@ function circular_bar_set_border_width(bar, border_width)
 /**
  * Sets the colors of a circular bar.
  * @param {Struct.Circular_bar} bar - The bar to edit.
- * @param {Constant.Color} color_start - The color of the bar at 0% of its value.
- * @param {Constant.Color} color_end - The color of the bar at 100% of its value.
+ * @param {Constant.Color | Array<Constant.Color>} colors - The colors of the bar, in order from 0% to 100%.
 */
 
-function circular_bar_set_colors(bar, color_start, color_end)
+function circular_bar_set_colors(bar, colors)
 {
-	bar.__set_colors(color_start, color_end);
+	bar.colors = is_array(colors) ? colors : [colors];
+	bar.color = bar.__get_color();
 }
 
 
@@ -762,13 +746,12 @@ function circular_bar_set_colors(bar, color_start, color_end)
 /**
  * Sets the alphas of a circular bar.
  * @param {Struct.Circular_bar} bar - The bar to edit.
- * @param {Real} alpha_start - The alpha of the bar at 0% of its value.
- * @param {Real} alpha_end - The alpha of the bar at 100% of its value.
+ * @param {Real | Array<Real>} alphas - The alphas of the bar, in order from 0% to 100%.
 */
 
-function circular_bar_set_alphas(bar, alpha_start, alpha_end)
+function circular_bar_set_alphas(bar, alphas)
 {
-	bar.alphas = [alpha_start, alpha_end];
+	bar.alphas = is_array(alphas) ? alphas : [alphas];
 	bar.alpha = bar.__get_alpha();
 }
 
@@ -792,12 +775,14 @@ function circular_bar_add_divisors(bar, divisors)
  * Automatically adds centered divisors to the bar's arc.
  * @param {Struct.Circular_bar} bar - The bar to edit.
  * @param {Real} divisor_count - The number of divisors to set.
- * @param {Array<Real>} divisor_amplitudes - The angles (in degrees) of the divisors, following the bar's progression.
- * @param {Array<Real>} divisor_edges - The edges to apply to the divisors, following the bar's progression.
+ * @param {Real | Array<Real>} divisor_amplitudes - The angles (in degrees) of the divisors, following the bar's progression.
+ * @param {Real | Array<Real>} divisor_edges - The edges to apply to the divisors, following the bar's progression.
 */
 
 function circular_bar_generate_divisors(bar, divisor_count, divisor_amplitudes, divisor_edges)
 {
+	divisor_amplitudes = is_array(divisor_amplitudes) ? divisor_amplitudes : [divisor_amplitudes];
+	divisor_edges = is_array(divisor_edges) ? divisor_edges : [divisor_edges];
 	bar.__auto_generate_divisors(divisor_count, divisor_amplitudes, divisor_edges);
 }
 
@@ -894,8 +879,8 @@ enum CIRCULAR_BAR_PRECISION_PRESETS
  * @param {Real} end_angle
  * @param {Real} value
  * @param {Real} precision
- * @param {Array<Constant.Color>} colors
- * @param {Array<Real>} alphas
+ * @param {Constant.Color | Array<Constant.Color>} colors
+ * @param {Real | Array<Real>} alphas
  * @param {Real} edge_type_start
  * @param {Real} edge_type_final
  * @param {Array<Struct>} divisors
@@ -910,10 +895,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	self.y = y;
 	self.value = value;
 	self.precision = precision;
-	self.colors = colors;
-	self.color = merge_color(colors[@ 0], colors[@ 1], value);
-	self.alphas = alphas;
-	self.alpha = (alphas[@ 1] - alphas[@ 0]) * value + alphas[@ 0];
+	self.colors = is_array(colors) ? colors : [colors];
+	self.color = __get_color();
+	self.alphas = is_array(alphas) ? alphas : [alphas];
+	self.alpha = __get_alpha();
 	self.start_angle = start_angle;
 	self.end_angle = end_angle;
 	self.radius = radius;
@@ -967,8 +952,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	/**
 	 * @param {Real} [precision_override]
-	 * @param {Array<Constant.Color>} [colors]
-	 * @param {Array<Real>} [alphas]
+	 * @param {Constant.Color | Array<Constant.Color>} [colors]
+	 * @param {Real | Array<Real>} [alphas]
 	 * @param {Real} [value]
 	 * @returns {Struct.Circular_bar}
 	*/
@@ -977,8 +962,8 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	{
 		var copy = variable_clone(self);
 		copy.precision = precision_override;
-		copy.colors = colors;
-		copy.alphas = alphas;
+		copy.colors = is_array(colors) ? colors : [colors];
+		copy.alphas = is_array(alphas) ? alphas : [alphas];
 		copy.value = value;
 
 		return copy;
@@ -1004,12 +989,49 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 
 	/**
+	 * @param {Array<Any>} array
+	 * @param {Real} percentage
+	 * @returns {Array<Any>}
+	 */
+
+	static __array_range = function(array, percentage)
+	{
+		var array_size = array_length(array) - 1;
+		var index_start = clamp(floor(array_size * percentage), 0, max(array_size - 1, 0));
+		var index_end = min(index_start + 1, array_size);
+		var value = clamp(array_size * percentage - index_start, 0, 1);
+
+		return [index_start, index_end, value];
+	}
+
+
+
+	/**
+	 * @param {Array<Constant.Color>} [colors]
+	 * @param {Real} [value]
+	 * @returns {Constant.Color}
+	 */
+
+	static __get_color = function(colors = self.colors, value = self.value)
+	{
+		var color_values = __array_range(colors, value);
+
+		return merge_color(colors[@ color_values[@ 0]], colors[@ color_values[@ 1]], color_values[@ 2]);
+	}
+
+
+
+	/**
+	 * @param {Array<Real>} [alphas]
+	 * @param {Real} [value]
 	 * @returns {Real}
 	*/
 
-	static __get_alpha = function()
+	static __get_alpha = function(alphas = self.alphas, value = self.value)
 	{
-		return (alphas[@ 1] - alphas[@ 0]) * value + alphas[@ 0];
+		var alpha_values = __array_range(alphas, value);
+
+		return (alphas[@ alpha_values[@ 1]] - alphas[@ alpha_values[@ 0]]) * alpha_values[@ 2] + alphas[@ alpha_values[@ 0]];
 	}
 
 
@@ -1036,7 +1058,10 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		var _x = 0, _y = 1;
 		var positions = [[p2x, mpx, p1x], [p2y, mpy, p1y]];
 
-		return {x: positions[@ _x][@ anchor], y: positions[@ _y][@ anchor]};
+		return {
+			x: positions[@ _x][@ anchor],
+			y: positions[@ _y][@ anchor]
+		};
 	}
 
 
@@ -1049,19 +1074,6 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	static __get_sector = function(value = self.value)
 	{
 		return ceil(value * precision);
-	}
-
-
-
-	/**
-	 * @param {Constant.Color} color_start
-	 * @param {Constant.Color} color_end
-	*/
-
-	static __set_colors = function(color_start, color_end)
-	{
-		color = merge_color(color_start, color_end, value);
-		colors = [color_start, color_end];
 	}
 
 
@@ -1148,7 +1160,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 		}
 
 		__finalise_surface(x, y, xscale, yscale);
-		color = merge_color(colors[@ 0], colors[@ 1], value);
+		color = __get_color();
 		alpha = __get_alpha();
 
 		if (has_blendmode)
@@ -1382,7 +1394,15 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 	static __create_divisor = function(position, amplitude)
 	{
 		var half_amplitude = amplitude / 2;
-		return {position, amplitude, edge_angles: [position - half_amplitude, position + half_amplitude]};
+
+		return {
+			position,
+			amplitude,
+			edge_angles: [
+				position - half_amplitude,
+				position + half_amplitude
+			]
+		};
 	}
 
 
