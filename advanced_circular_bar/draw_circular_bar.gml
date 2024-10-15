@@ -1073,7 +1073,7 @@ function Circular_bar(x, y, radius, width, start_angle, end_angle, value, precis
 
 	static __get_sector = function(value = self.value)
 	{
-		return ceil(value * precision);
+		return min(ceil(value * precision), precision << 1);
 	}
 
 
