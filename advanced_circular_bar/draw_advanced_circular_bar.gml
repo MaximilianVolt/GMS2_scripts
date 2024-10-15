@@ -259,13 +259,18 @@ function circular_bar_flash(bar, colors = bar.colors, color_pulse_duration = 1, 
  * Gradually makes a value approach to another.
  * @param {Real} value  - The starting value.
  * @param {Real} target - The value to approach to.
- * @param {Real} [smoothness] - The amount to approach the target value with, using interpolation.
+ * @param {Real} [smoothness] - The smoothness factor (smoothness >= 1) to approach the target value with.
+ * @param {Real} [treshold] - The minimum difference between the values for which the smoothing is required.
  * @returns {Real}
 */
 
-function smoothen(value, target, smoothness = 10)
+function smoothen(value, target, smoothness = 10, treshold = math_get_epsilon())
 {
-	return (target - value) / smoothness + value;
+  var diff = target - value;
+
+  return (abs(diff) > treshold)
+    ? diff / smoothness + value
+    : target;
 }
 
 
