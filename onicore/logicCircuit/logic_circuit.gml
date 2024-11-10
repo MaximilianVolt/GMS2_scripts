@@ -66,7 +66,7 @@ function LogicCircuit(output_gate) constructor
 
   /**
    * @param {String} string
-   * @returns {LogicCircuit}
+   * @returns {Struct.LogicCircuit}
    */
 
   static __json_parse = function(string)
@@ -126,17 +126,17 @@ function LogicCircuitGate(type, inputs) constructor
     });
 
     var one = self.__one(resolved_inputs, input_count)
-      , every = self.__every(resolved_inputs, input_count)
-      , onlyone = self.__onlyone(resolved_inputs, input_count);
+      , odd = self.__odd(resolved_inputs, input_count)
+      , every = self.__every(resolved_inputs, input_count);
 
     return [
       !resolved_inputs[@ 0],
       every,
       one,
-      onlyone,
+      odd,
       !every,
       !one,
-      !onlyone,
+      !odd,
     ][@ self.type];
   }
 
@@ -184,21 +184,20 @@ function LogicCircuitGate(type, inputs) constructor
    * @returns {Bool}
    */
 
-  static __onlyone = function(inputs, input_count)
+  static __odd = function(inputs, input_count)
   {
     var count = 0;
 
-    for (var i = 0; i < input_count && count <= 1; ++i)
+    for (var i = 0; i < input_count; ++i)
       count += inputs[@ i] & 1;
 
-    return count == 1;
+    return count & 1;
   }
 
 
 
   /**
-   * @param {Struct}
-   * @param {}
+   * @param {Struct} circuit_save_state
    * @returns {String}
    */
 
@@ -244,7 +243,10 @@ function LogicCircuitGate(type, inputs) constructor
 
 
   /**
-   * 
+   * @param {Struct} circuit_data
+   * @param {Struct} circuit_load_state
+   * @param {Real} gate_id
+   * @returns {Struct.LogicCircuitGate}
    */
 
   static __json_parse = function(circuit_data, circuit_load_state, gate_id)
