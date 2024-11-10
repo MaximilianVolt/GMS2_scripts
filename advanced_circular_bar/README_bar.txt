@@ -1,4 +1,4 @@
-///@ CIRCULAR BAR v2.5.0 - COLOR STOPS
+///@ CIRCULAR BAR v2.5.1 - COLOR STOPS
 
 /*
 	--------------------
@@ -8,7 +8,7 @@
 	Author: [Maximilian Volt.][IT] --> https://github.com/MaximilianVolt (whole script)
 	Also thanks to: [Dragon-Developer][BR] --> https://github.com/Dragon-Developer (v1.7.0)
 	Created on [DMY]: 24/08/2022
-	Last updated on [DMY]: 13/10/2024
+	Last updated on [DMY]: 10/11/2024
 	Description: draws a circular bar with advanced customizable aesthetics
 
 	NOTES:
