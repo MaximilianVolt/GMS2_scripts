@@ -1,5 +1,5 @@
 /**
- * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} [components] - The components (gates or literals) of the circuit. 
+ * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} [components] - The components (gates or literals) of the circuit.
  * @returns {Struct.LogicCircuit}
  */
 
@@ -31,12 +31,19 @@ enum LOGIC_GATE {
 
 
 /**
- * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} components - The components of the circuit.
+ * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} components
+ * @returns {Struct.LogicCircuit}
  */
 
 function LogicCircuit(components) constructor
 {
-  self.components = components;
+  self.components = [];
+  self.component_count = 0;
+
+  var component_count = array_length(components);
+
+  for (var i = 0; i < component_count; ++i)
+    __add_component(components[@ i]);
 
 
 
@@ -46,19 +53,25 @@ function LogicCircuit(components) constructor
 
   static __resolve = function()
   {
-    return self.components[@ array_length(self.components) - 1].__evaluate().value;
+    return self.components[@ self.component_count - 1].__evaluate();
   }
 
 
 
   /**
-   * 
+   * @param {Struct.LogicCircuitComponent} component
+   * @returns {Struct.LogicCircuit}
    */
 
   static __add_component = function(component)
   {
-    self.components = array_push(component);
+    self.components = array_concat(self.components, [component]);
+    component.component_id = self.component_count++;
+
+    return self;
   }
+
+
 
   /**
    * @returns {String}
@@ -66,19 +79,33 @@ function LogicCircuit(components) constructor
 
   static __json_stringify = function()
   {
-    var circuit_save_state = {
-      circuit_cache: ds_map_create(),
-      component_count: 0,
-      node_list: []
-    };
+    var circuit_data = [];
+    var component_count = array_length(self.components);
 
-    var output_node_id = self.output_node.__json_stringify(circuit_save_state);
-    var circuit_data = {
-      gate_list: circuit_save_state.node_list,
-      output_node_id
-    };
+    for (var i = 0; i < component_count; ++i)
+    {
+      var component = self.components[@ i];
 
-    ds_map_destroy(circuit_save_state.circuit_cache);
+      var component_save_data = {
+        label: component.label,
+        component_id: int64(component.component_id),
+        type: int64(0)
+      };
+
+      if (is_instanceof(component, LogicCircuitGate))
+      {
+        component_save_data.type = int64(component.operation + 1);
+        struct_set(component_save_data, "inputs",
+          array_map(component.inputs, function(input) {
+            return int64(input.component_id);
+          })
+        );
+      }
+      else if (is_instanceof(component, LogicCircuitLiteral))
+        struct_set(component_save_data, "value", int64(component.value));
+
+      circuit_data[@ i] = component_save_data;
+    }
 
     return json_stringify(circuit_data, true);
   }
@@ -92,31 +119,66 @@ function LogicCircuit(components) constructor
 
   static __json_parse = function(string)
   {
+    var components = [];
     var circuit_data = json_parse(string);
+    var component_count = array_length(circuit_data);
 
-    var circuit_load_state = {
-      circuit_cache: ds_map_create()
-    };
+    for (var i = 0; i < component_count; ++i)
+    {
+      var component = circuit_data[@ i];
 
-    var output_gate = LogicCircuitGate.__json_parse(circuit_data, circuit_load_state, circuit_data.output_gate_id);
+      if (component.type == LOGIC_GATE_INPUTS.LITERAL)
+      {
+        components[@ i] = new LogicCircuitLiteral(component.value, component.label, component.component_id);
+        continue;
+      }
 
-    ds_map_destroy(circuit_load_state.circuit_cache);
+      var inputs = [];
+      var input_count = array_length(circuit_data[@ i].inputs);
 
-    return new LogicCircuit(output_gate);
+      for (var j = 0; j < input_count; ++j)
+        inputs[@ j] = components[@ component.inputs[@ j]];
+
+      components[@ i] = new LogicCircuitGate(component.type - 1, inputs, component.label, component.component_id);
+    }
+
+    return new LogicCircuit(components);
   }
 }
 
 
 
 /**
- * @param {Constant.LOGIC_GATE} type
- * @param {Struct.LogicCircuitLiteral | Struct.LogicCircuitGate | Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} inputs
+ * @param {Real | String} label
+ * @param {Real} component_id
+ * @returns {Struct.LogicCircuitComponent}
  */
 
-function LogicCircuitGate(operation, inputs) constructor
+function LogicCircuitComponent(label, component_id)
+{
+  self.component_id = component_id;
+  self.label = label;
+
+
+
+  /** @abstract */
+
+  static __evaluate = function() {}
+}
+
+
+
+/**
+ * @param {Constant.LOGIC_GATE} operation
+ * @param {Struct.LogicCircuitComponent | Array<Struct.LogicCircuitComponent>} inputs
+ * @param {Real | String} [label]
+ * @param {Real} [component_id]
+ * @returns {Struct.LogicCircuitGate}
+ */
+
+function LogicCircuitGate(operation, inputs, label = undefined, component_id = undefined) : LogicCircuitComponent(label, component_id) constructor
 {
   self.operation = operation;
-  self.gate_id = LogicCircuit.component_count++;
   self.inputs = is_array(inputs) ? inputs : [inputs];
 
 
@@ -139,32 +201,28 @@ function LogicCircuitGate(operation, inputs) constructor
       throw ("Invalid gate input count.");
 
     var resolved_inputs = array_map(self.inputs, function(input) {
-      return is_instanceof(input, LogicCircuitGate)
-        ? input.__evaluate()
-        : input;
+      return input.__evaluate();
     });
 
     var one = self.__one(resolved_inputs, input_count)
       , odd = self.__odd(resolved_inputs, input_count)
       , every = self.__every(resolved_inputs, input_count);
 
-    return {
-			value: [
-	      !resolved_inputs[@ 0],
-	      every,
-	      one,
-	      odd,
-	      !every,
-	      !one,
-	      !odd,
-	    ][@ self.operation]
-		};
+    return [
+      !resolved_inputs[@ 0],
+      every,
+      one,
+      odd,
+      !every,
+      !one,
+      !odd,
+    ][@ self.operation];
   }
 
 
 
   /**
-   * @param {Real | Gate | Array<Real | Gate>} inputs
+   * @param {Array<Bool>} inputs
    * @param {Real} input_count
    * @returns {Bool}
    */
@@ -174,7 +232,7 @@ function LogicCircuitGate(operation, inputs) constructor
     var res = 1;
 
     for (var i = 0; i < input_count && res; ++i)
-      res &= inputs[@ i].value;
+      res &= inputs[@ i];
 
     return res;
   }
@@ -182,7 +240,7 @@ function LogicCircuitGate(operation, inputs) constructor
 
 
   /**
-   * @param {Real | Gate | Array<Real | Gate>} inputs
+   * @param {Array<Bool>} inputs
    * @param {Real} input_count
    * @returns {Bool}
    */
@@ -192,7 +250,7 @@ function LogicCircuitGate(operation, inputs) constructor
     var res = 0;
 
     for (var i = 0; i < input_count && !res; ++i)
-      res |= inputs[@ i].value;
+      res |= inputs[@ i];
 
     return res;
   }
@@ -200,7 +258,7 @@ function LogicCircuitGate(operation, inputs) constructor
 
 
   /**
-   * @param {Real | Gate | Array<Real | Gate>} inputs
+   * @param {Array<Bool>} inputs
    * @param {Real} input_count
    * @returns {Bool}
    */
@@ -210,103 +268,32 @@ function LogicCircuitGate(operation, inputs) constructor
     var res = 0;
 
     for (var i = 0; i < input_count; ++i)
-      res ^= inputs[@ i].value;
+      res ^= inputs[@ i];
 
     return res;
-  }
-
-
-
-  /**
-   * @param {Struct} circuit_save_state
-   * @returns {String}
-   */
-
-  static __json_stringify = function(circuit_save_state)
-  {
-    var node_id = self.gate_id;
-    var gate_operation = self.operation;
-
-    if (ds_map_exists(circuit_save_state.circuit_cache, node_id))
-      return node_id;
-
-    var node_data = {
-      type: gate_operation + 1,
-      node_id
-    };
-
-    var input_count = array_length(self.inputs);
-    var input_types = [
-      LOGIC_GATE_INPUTS.LITERAL,
-      LOGIC_GATE_INPUTS.GATE
-    ];
-
-    for (var i = 0; i < input_count; ++i)
-    {
-      var input = self.inputs[@ i];
-      var is_gate = is_instanceof(input, LogicCircuitGate);
-
-      if (is_gate)
-        struct_set(node_data, "inputs", )
-
-      gate_data.inputs[@ i] = {
-        is_gate: input_types[is_gate],
-        node_data: is_gate
-          ? input.__json_stringify(circuit_save_state)
-          : input
-      };
-    }
-
-    circuit_save_state.gate_list[@ node_id] = node_data;
-    ds_map_add(circuit_save_state.circuit_cache, node_id, node_id);
-
-    return gate_id;
-  }
-
-
-
-  /**
-   * @param {Struct} circuit_data
-   * @param {Struct} circuit_load_state
-   * @param {Real} gate_id
-   * @returns {Struct.LogicCircuitGate}
-   */
-
-  static __json_parse = function(circuit_data, circuit_load_state, gate_id)
-  {
-    if (ds_map_exists(circuit_load_state.circuit_cache, gate_id))
-      return circuit_load_state.circuit_cache[? gate_id];
-
-    var gate_data = circuit_data.gate_list[@ gate_id];
-    var input_count = array_length(gate_data.inputs);
-    var inputs = [];
-
-    for (var i = 0; i < input_count; ++i)
-    {
-      var input = gate_data.inputs[@ i];
-
-      inputs[@ i] = input.is_gate
-        ? LogicCircuitGate.__json_parse(circuit_data, circuit_load_state, input.node_data)
-        : input.node_data;
-    }
-
-    var gate = new LogicCircuitGate(gate_data.operation, inputs);
-    gate.gate_id = gate_id;
-
-    ds_map_add(circuit_load_state.circuit_cache, gate_id, gate.gate_id);
-
-    return gate;
   }
 }
 
 
 
 /**
- * @param {Real} value
+ * @param {Bool} value
+ * @param {Real | String} [label]
+ * @param {Real} [component_id]
  */
 
-function LogicCircuitLiteral(value) constructor
+function LogicCircuitLiteral(value, label = undefined, component_id = undefined) : LogicCircuitComponent(label, component_id) constructor
 {
   self.value = value;
-  self.literal_id = LogicCircuit.component_count++;
+
+
+
+  /**
+   * @returns {Bool}
+   */
+
+  static __evaluate = function()
+  {
+    return self.value;
+  }
 }
