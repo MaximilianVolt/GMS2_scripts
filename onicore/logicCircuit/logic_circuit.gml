@@ -204,13 +204,16 @@ function LogicCircuitGate(type, inputs) constructor
 
   static __json_stringify = function(circuit_save_state)
   {
-    if (ds_map_exists(circuit_save_state.circuit_cache, self.gate_id))
-      return self.gate_id;
+    var gate_id = self.gate_id;
+    var gate_type = self.type;
+
+    if (ds_map_exists(circuit_save_state.circuit_cache, gate_id))
+      return gate_id;
 
     var gate_data = {
-      gate_id: self.gate_id,
-      type: self.type,
-      inputs: []
+      type: gate_type,
+      inputs: [],
+      gate_id
     };
 
     var input_count = array_length(self.inputs);
@@ -232,10 +235,10 @@ function LogicCircuitGate(type, inputs) constructor
       };
     }
 
-    circuit_save_state.gate_list[@ self.gate_id] = gate_data;
-    ds_map_add(circuit_save_state.circuit_cache, self.gate_id, self.gate_id);
+		circuit_save_state.gate_list[@ gate_id] = gate_data;
+    ds_map_add(circuit_save_state.circuit_cache, gate_id, gate_id);
 
-    return self.gate_id;
+    return gate_id;
   }
 
 
@@ -265,7 +268,7 @@ function LogicCircuitGate(type, inputs) constructor
     var gate = new LogicCircuitGate(gate_data.type, inputs);
     gate.gate_id = gate_id;
 
-    ds_map_add(circuit_load_state, gate_id, gate.gate_id);
+    ds_map_add(circuit_load_state.circuit_cache, gate_id, gate.gate_id);
 
     return gate;
   }
