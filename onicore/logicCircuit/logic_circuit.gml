@@ -1,23 +1,200 @@
 /**
- * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} [components] - The components (gates or literals) of the circuit.
+ * Creates a new logic circuit.
+ * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} [components] - The components (gates or literals), in order, of the circuit.
  * @returns {Struct.LogicCircuit}
  */
 
-function logic_circuit_create(components = [new LogicCircuitLiteral(0)])
+function logic_circuit_create(components = [])
 {
   return new LogicCircuit(is_array(components) ? components : [components]);
 }
 
 
 
-enum LOGIC_GATE_INPUTS {
-  LITERAL,
-  GATE
+/**
+ * Adds a series of components, in order, to a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The logic circuit to edit.
+ * @param {Array<Struct.LogicCircuitLiteral | Struct.LogicCircuitGate>} [components] - The components (gates or literals), in order, to add to the circuit.
+ * @returns {Struct.LogicCircuit}
+ */
+
+function logic_circuit_add_components(logic_circuit, components = [])
+{
+  return logic_circuit.__add_components(is_array(components) ? components : [components]);
 }
 
 
 
-enum LOGIC_GATE {
+/**
+ * Returns the value of a circuit, given the previously assigned literals and gates.
+ * @param {Struct.LogicCircuit} logic_circuit - The logic circuit to resolve.
+ * @returns {Bool}
+ */
+
+function logic_circuit_resolve(logic_circuit)
+{
+  return logic_circuit.__resolve();
+}
+
+
+
+/**
+ * Returns the components of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @returns {Array<Struct.LogicCircuitComponent>}
+ */
+
+function logic_circuit_get_components(logic_circuit)
+{
+  return logic_circuit.components;
+}
+
+
+
+/**
+ * Returns the number of components of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @returns {Array<Struct.LogicCircuitComponent>}
+ */
+
+function logic_circuit_get_component_count(logic_circuit)
+{
+  return logic_circuit.component_count;
+}
+
+
+
+/**
+ * Returns the literals of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @returns {Array<Struct.LogicCircuitLiteral>}
+ */
+
+function logic_circuit_get_literals(logic_circuit)
+{
+  return logic_circuit.__get_literals();
+}
+
+
+
+/**
+ * Returns the number of the literals of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @returns {Array<Struct.LogicCircuitLiteral>}
+ */
+
+function logic_circuit_get_literal_count(logic_circuit)
+{
+  return array_length(logic_circuit.__get_literals());
+}
+
+
+
+/**
+ * Returns the gates of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @returns {Array<Struct.LogicCircuitGate>}
+ */
+
+function logic_circuit_get_gates(logic_circuit)
+{
+  return logic_circuit.__get_gates();
+}
+
+
+
+/**
+ * Returns the number of gates of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @param {Bool} [include_variables] - Whether it should add 1 to the size to include the inputted literals.
+ * @returns {Real}
+ */
+
+function logic_circuit_get_gate_count(logic_circuit, include_variables = false)
+{
+  return array_length(logic_circuit.__get_gates());
+}
+
+
+
+/**
+ * Returns the maximum number of gate nesting of a circuit.
+ * @param {Struct.LogicCircuit} logic_circuit - The circuit to analyze.
+ * @param {Bool} [include_variables] - Whether it should add 1 to the size to include the inputted literals.
+ * @returns {Real}
+ */
+
+function logic_circuit_get_size(logic_circuit, include_variables = false)
+{
+  return logic_circuit.__get_size() + include_variables;
+}
+
+
+
+/**
+ * @param {Constant.LOGIC_GATE} operation - The operation of the logic gate.
+ * @param {Array<Struct.LogicCircuitComponent>} inputs - The inputs of the logic gate.
+ * @param {Real | String} [label] - The label of the component.
+ * @param {Real} [component_id] - The id of the component.
+ * @returns {Struct.LogicCircuit}
+ */
+
+function logic_circuit_gate_create(operation, inputs, label = undefined, component_id = undefined)
+{
+  return new LogicCircuitGate(operation, inputs, label, component_id);
+}
+
+
+
+/**
+ * @param {Struct} gate_data - The data of the gate.
+ * @returns {Struct.LogicCircuitGate}
+ */
+
+function logic_circuit_gate_create_from_struct(gate_data)
+{
+  return new LogicCircuitGate(gate_data.operation, gate_data.inputs, gate_data.label, gate_data.component_id);
+}
+
+
+
+/**
+ * @param {Bool} value - The value of the literal.
+ * @param {Real | String} [label] - The label of the component.
+ * @param {Real} [component_id] - The id of the component.
+ * @returns {Struct.LogicCircuit}
+ */
+
+function logic_circuit_literal_create(value, label = undefined, component_id = undefined)
+{
+  return new LogicCircuitLiteral(value, label, component_id);
+}
+
+
+
+/**
+ * @param {Struct} gate_data - The data of the gate.
+ * @returns {Struct.LogicCircuitLiteral}
+ */
+
+function logic_circuit_literal_create_from_struct(literal_data)
+{
+  return new LogicCircuitLiteral(literal_data.value, literal_data.label, literal_data.component_id);
+}
+
+
+
+//---------------------------------------------------------------------------
+
+
+
+#region Source code
+
+#macro LOGIC_CIRCUIT_JSON_INPUTS "inputs"
+#macro LOGIC_CIRCUIT_JSON_VALUE "value"
+
+enum LOGIC_CIRCUIT_GATE {
+  LITERAL,
   NOT,
   AND,
   OR,
@@ -40,11 +217,6 @@ function LogicCircuit(components) constructor
   self.components = [];
   self.component_count = 0;
 
-  var component_count = array_length(components);
-
-  for (var i = 0; i < component_count; ++i)
-    __add_component(components[@ i]);
-
 
 
   /**
@@ -54,6 +226,23 @@ function LogicCircuit(components) constructor
   static __resolve = function()
   {
     return self.components[@ self.component_count - 1].__evaluate();
+  }
+
+
+
+  /**
+   * @param {Array<Struct.LogicCircuitComponent>} components
+   * @returns {Struct.LogicCircuit}
+   */
+
+  static __add_components = function(components)
+  {
+    var component_count = array_length(components);
+
+    for (var i = 0; i < component_count; ++i)
+      __add_component(components[@ i]);
+
+    return self;
   }
 
 
@@ -69,6 +258,64 @@ function LogicCircuit(components) constructor
     component.component_id = self.component_count++;
 
     return self;
+  }
+
+
+
+  /**
+   * @returns {Array<Struct.LogicCircuitLiteral>}
+   */
+
+  static __get_literals = function()
+  {
+    return array_filter(self.components, function(component) {
+      return is_instanceof(component, LogicCircuitLiteral)
+    });
+  }
+
+
+  /**
+   * @returns {Array<Struct.LogicCircuitGate>}
+   */
+
+  static __get_gates = function()
+  {
+    return array_filter(self.components, function(component) {
+      return is_instanceof(component, LogicCircuitGate)
+    });
+  }
+
+
+
+  /**
+   * @returns {Real}
+   */
+
+  static __get_size = function()
+  {
+    var nesting_max = 0;
+    var nesting_current = 0;
+    var gates = __get_gates();
+    var gates_count = array_length(gates);
+
+    for (var i = gates_count - 1; i >= nesting_max; --i)
+    {
+      nesting_current = 0;
+      var input_count = array_length(gates[@ i][$ LOGIC_CIRCUIT_JSON_INPUTS]);
+
+      for (var j = 0; j < input_count; ++j)
+      {
+        var root = gates[@ i][$ LOGIC_CIRCUIT_JSON_INPUTS][@ j];
+
+        for (; is_instanceof(root, LogicCircuitGate); ++nesting_current)
+          root = struct_get(root, LOGIC_CIRCUIT_JSON_INPUTS);
+
+        if (nesting_current > nesting_max)
+          nesting_max = nesting_current;
+      }
+    }
+
+    return nesting_max;
   }
 
 
@@ -94,15 +341,15 @@ function LogicCircuit(components) constructor
 
       if (is_instanceof(component, LogicCircuitGate))
       {
-        component_save_data.type = int64(component.operation + 1);
-        struct_set(component_save_data, "inputs",
+        component_save_data.type = int64(component.operation);
+        struct_set(component_save_data, LOGIC_CIRCUIT_JSON_INPUTS,
           array_map(component.inputs, function(input) {
             return int64(input.component_id);
           })
         );
       }
       else if (is_instanceof(component, LogicCircuitLiteral))
-        struct_set(component_save_data, "value", int64(component.value));
+        struct_set(component_save_data, LOGIC_CIRCUIT_JSON_VALUE, int64(component.value));
 
       circuit_data[@ i] = component_save_data;
     }
@@ -127,7 +374,7 @@ function LogicCircuit(components) constructor
     {
       var component = circuit_data[@ i];
 
-      if (component.type == LOGIC_GATE_INPUTS.LITERAL)
+      if (component.type == LOGIC_CIRCUIT_GATE.LITERAL)
       {
         components[@ i] = new LogicCircuitLiteral(component.value, component.label, component.component_id);
         continue;
@@ -139,11 +386,16 @@ function LogicCircuit(components) constructor
       for (var j = 0; j < input_count; ++j)
         inputs[@ j] = components[@ component.inputs[@ j]];
 
-      components[@ i] = new LogicCircuitGate(component.type - 1, inputs, component.label, component.component_id);
+      components[@ i] = new LogicCircuitGate(component.type, inputs, component.label, component.component_id);
     }
 
     return new LogicCircuit(components);
   }
+
+
+
+  // Feather-friendly method call on constructor
+  __add_components(components);
 }
 
 
@@ -176,7 +428,7 @@ function LogicCircuitComponent(label, component_id)
  * @returns {Struct.LogicCircuitGate}
  */
 
-function LogicCircuitGate(operation, inputs, label = undefined, component_id = undefined) : LogicCircuitComponent(label, component_id) constructor
+function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuitComponent(label, component_id) constructor
 {
   self.operation = operation;
   self.inputs = is_array(inputs) ? inputs : [inputs];
@@ -192,11 +444,11 @@ function LogicCircuitGate(operation, inputs, label = undefined, component_id = u
     var input_count = array_length(self.inputs);
 
     if (!input_count)
-      throw ("Voided-input gate provided.");
+      throw ("Unexpected voided-input.");
 
     if (
-      self.operation == LOGIC_GATE.NOT && input_count != 1
-      || self.operation != LOGIC_GATE.NOT && input_count == 1
+      self.operation == LOGIC_CIRCUIT_GATE.NOT && input_count != 1
+      || self.operation != LOGIC_CIRCUIT_GATE.NOT && input_count == 1
     )
       throw ("Invalid gate input count.");
 
@@ -204,19 +456,25 @@ function LogicCircuitGate(operation, inputs, label = undefined, component_id = u
       return input.__evaluate();
     });
 
-    var one = self.__one(resolved_inputs, input_count)
-      , odd = self.__odd(resolved_inputs, input_count)
-      , every = self.__every(resolved_inputs, input_count);
-
-    return [
-      !resolved_inputs[@ 0],
-      every,
-      one,
-      odd,
-      !every,
-      !one,
-      !odd,
-    ][@ self.operation];
+    switch (self.operation)
+    {
+      case LOGIC_CIRCUIT_GATE.NOT:
+        return !resolved_inputs[@ 0];
+      case LOGIC_CIRCUIT_GATE.AND:
+        return self.__every(resolved_inputs, input_count);
+      case LOGIC_CIRCUIT_GATE.OR:
+        return self.__one(resolved_inputs, input_count);
+      case LOGIC_CIRCUIT_GATE.XOR:
+        return self.__odd(resolved_inputs, input_count);
+      case LOGIC_CIRCUIT_GATE.NAND:
+        return !self.__every(resolved_inputs, input_count);
+      case LOGIC_CIRCUIT_GATE.NOR:
+        return !self.__one(resolved_inputs, input_count);
+      case LOGIC_CIRCUIT_GATE.XNOR:
+        return !self.__odd(resolved_inputs, input_count);
+      default:
+        throw ("Invalid operation type");
+    }
   }
 
 
@@ -282,7 +540,7 @@ function LogicCircuitGate(operation, inputs, label = undefined, component_id = u
  * @param {Real} [component_id]
  */
 
-function LogicCircuitLiteral(value, label = undefined, component_id = undefined) : LogicCircuitComponent(label, component_id) constructor
+function LogicCircuitLiteral(value, label, component_id) : LogicCircuitComponent(label, component_id) constructor
 {
   self.value = value;
 
@@ -297,3 +555,5 @@ function LogicCircuitLiteral(value, label = undefined, component_id = undefined)
     return self.value;
   }
 }
+
+#endregion
