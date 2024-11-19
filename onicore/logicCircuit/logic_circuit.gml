@@ -141,7 +141,7 @@ function logic_circuit_get_size(logic_circuit, include_variables = false)
 
 function logic_circuit_gate_create(operation, inputs, label = undefined, component_id = undefined)
 {
-  return new LogicCircuitGate(operation, inputs, label, component_id);
+  return new LogicCircuitGate(operation, is_array(inputs) ? inputs : [inputs], label, component_id);
 }
 
 
@@ -266,9 +266,9 @@ function LogicCircuit(components) constructor
    * @returns {Array<Struct.LogicCircuitLiteral>}
    */
 
-  static __get_literals = function()
+  static __get_literals = function(components = self.components)
   {
-    return array_filter(self.components, function(component) {
+    return array_filter(components, function(component) {
       return is_instanceof(component, LogicCircuitLiteral)
     });
   }
@@ -278,9 +278,9 @@ function LogicCircuit(components) constructor
    * @returns {Array<Struct.LogicCircuitGate>}
    */
 
-  static __get_gates = function()
+  static __get_gates = function(components = self.components)
   {
-    return array_filter(self.components, function(component) {
+    return array_filter(components, function(component) {
       return is_instanceof(component, LogicCircuitGate)
     });
   }
@@ -431,7 +431,10 @@ function LogicCircuitComponent(label, component_id)
 function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuitComponent(label, component_id) constructor
 {
   self.operation = operation;
-  self.inputs = is_array(inputs) ? inputs : [inputs];
+  self.inputs = array_concat(
+    LogicCircuit.__get_literals(inputs), 
+    LogicCircuit.__get_gates(inputs)
+  );
 
 
 
@@ -452,26 +455,22 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
     )
       throw ("Invalid gate input count.");
 
-    var resolved_inputs = array_map(self.inputs, function(input) {
-      return input.__evaluate();
-    });
-
     switch (self.operation)
     {
       case LOGIC_CIRCUIT_GATE.NOT:
         return !resolved_inputs[@ 0];
       case LOGIC_CIRCUIT_GATE.AND:
-        return self.__every(resolved_inputs, input_count);
+        return self.__all(self.inputs);
       case LOGIC_CIRCUIT_GATE.OR:
-        return self.__one(resolved_inputs, input_count);
+        return self.__one(self.inputs);
       case LOGIC_CIRCUIT_GATE.XOR:
-        return self.__odd(resolved_inputs, input_count);
+        return self.__odd(self.inputs);
       case LOGIC_CIRCUIT_GATE.NAND:
-        return !self.__every(resolved_inputs, input_count);
+        return !self.__all(self.inputs);
       case LOGIC_CIRCUIT_GATE.NOR:
-        return !self.__one(resolved_inputs, input_count);
+        return !self.__one(self.inputs);
       case LOGIC_CIRCUIT_GATE.XNOR:
-        return !self.__odd(resolved_inputs, input_count);
+        return !self.__odd(self.inputs);
       default:
         throw ("Invalid operation type");
     }
@@ -485,12 +484,12 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
    * @returns {Bool}
    */
 
-  static __every = function(inputs, input_count)
+  static __all = function(inputs, input_count)
   {
     var res = 1;
 
     for (var i = 0; i < input_count && res; ++i)
-      res &= inputs[@ i];
+      res &= inputs[@ i].__evaluate();
 
     return res;
   }
@@ -508,7 +507,7 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
     var res = 0;
 
     for (var i = 0; i < input_count && !res; ++i)
-      res |= inputs[@ i];
+      res |= inputs[@ i].__evaluate();
 
     return res;
   }
@@ -526,7 +525,7 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
     var res = 0;
 
     for (var i = 0; i < input_count; ++i)
-      res ^= inputs[@ i];
+      res ^= inputs[@ i].__evaluate();
 
     return res;
   }
