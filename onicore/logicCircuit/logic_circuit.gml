@@ -460,17 +460,17 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
       case LOGIC_CIRCUIT_GATE.NOT:
         return !resolved_inputs[@ 0];
       case LOGIC_CIRCUIT_GATE.AND:
-        return self.__all(self.inputs);
+        return self.__all(self.inputs, input_count);
       case LOGIC_CIRCUIT_GATE.OR:
-        return self.__one(self.inputs);
+        return self.__one(self.inputs, input_count);
       case LOGIC_CIRCUIT_GATE.XOR:
-        return self.__odd(self.inputs);
+        return self.__odd(self.inputs, input_count);
       case LOGIC_CIRCUIT_GATE.NAND:
-        return !self.__all(self.inputs);
+        return !self.__all(self.inputs, input_count);
       case LOGIC_CIRCUIT_GATE.NOR:
-        return !self.__one(self.inputs);
+        return !self.__one(self.inputs, input_count);
       case LOGIC_CIRCUIT_GATE.XNOR:
-        return !self.__odd(self.inputs);
+        return !self.__odd(self.inputs, input_count);
       default:
         throw ("Invalid operation type");
     }
