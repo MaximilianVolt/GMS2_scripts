@@ -447,13 +447,13 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
     var input_count = array_length(self.inputs);
 
     if (!input_count)
-      throw ("Unexpected voided-input.");
+      throw "Unexpected voided-input.";
 
     if (
       self.operation == LOGIC_CIRCUIT_GATE.NOT && input_count != 1
       || self.operation != LOGIC_CIRCUIT_GATE.NOT && input_count == 1
     )
-      throw ("Invalid gate input count.");
+      throw "Invalid gate input count.";
 
     switch (self.operation)
     {
@@ -472,7 +472,7 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
       case LOGIC_CIRCUIT_GATE.XNOR:
         return !self.__odd(self.inputs, input_count);
       default:
-        throw ("Invalid operation type");
+        throw "Invalid operation type";
     }
   }
 
@@ -488,7 +488,7 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
   {
     var res = 1;
 
-    for (var i = 0; i < input_count && res; ++i)
+    for (var i = 0; (i < input_count) & res; ++i)
       res &= inputs[@ i].__evaluate();
 
     return res;
@@ -506,7 +506,7 @@ function LogicCircuitGate(operation, inputs, label, component_id) : LogicCircuit
   {
     var res = 0;
 
-    for (var i = 0; i < input_count && !res; ++i)
+    for (var i = 0; (i < input_count) & !res; ++i)
       res |= inputs[@ i].__evaluate();
 
     return res;
