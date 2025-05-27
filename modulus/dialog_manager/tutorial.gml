@@ -3,32 +3,32 @@
 /// ------------------------------------------------------------------
 
 // 1. Creates an empty dialog manager.
-//    Stored in the global scope by default.
-global.dialog_manager = dialog_manager_create();
+//    A reference is also stored in the global scope by default.
+dialog_manager = dialog_manager_create();
 
 
 
 // 2. Parses a JSON string passed as the first argument.
 //    Ideal when you already loaded / composed the data elsewhere.
-global.dialog_manager = dialog_manager_create("[]");
+dialog_manager = dialog_manager_create("[]");
 
 
 
 // 3a. Same as above but passing the filename directly.
 //     The dialog manager will open, parse and close the file for you.
-global.dialog_manager = dialog_manager_create("dialogs.json", true);
+dialog_manager = dialog_manager_create("dialogs.json", true);
 
 // 3b. Parses the contents of a file handle.
 //    You are responsible for opening & closing the file.
 var file = file_text_open_read("dialogs.json");
-global.dialog_manager = dialog_manager_create(file, /* is_file = */ true);
+dialog_manager = dialog_manager_create(file, /* is_file = */ true);
 file_text_close(file);
 
 
 
 // 4. Bind the manager to the calling object instead of global.
 //    Useful to delegate the dialog manager to other objects.
-var dialog_manager = dialog_manager_create(undefined, undefined, object_index);
+dialog_manager = dialog_manager_create(undefined, undefined, object_index);
 
 
 
@@ -124,8 +124,6 @@ dialog_manager_add(global.dialog_manager, scene_intro);
 var json_pretty = dialog_manager_serialize(global.dialog_manager, true);
 
 show_debug_message(json_pretty);
-
-
 
 
 

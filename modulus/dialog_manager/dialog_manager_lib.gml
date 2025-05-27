@@ -16,7 +16,7 @@ function dialog_manager_create(data_string = "", is_file = false, contractor = g
 /**
  * @desc Evaluates the `DialogLinkable` components' type and appends them after the last type's instance in a dialog manager.
  * @param {Struct.DialogManager} dialog_manager The dialog manager where to add the data.
- * @param {Struct.DialogLinkable | Array<Struct.DialogLinkable>} [dialog_linkable] The `DialogLinkable` components to add.
+ * @param {Struct.DialogLinkable | Array<Struct.DialogLinkable>} [dialog_linkable] The `DialogLinkable` components of the SAME TYPE to add.
  * @returns {Struct.DialogManager}
  */
 
@@ -24,14 +24,16 @@ function dialog_manager_add(dialog_manager, dialog_linkable = [])
 {
   dialog_linkable = is_array(dialog_linkable) ? dialog_linkable : [dialog_linkable];
 
-  if (is_instanceof(dialog_linkable, DialogScene))
+  if (is_instanceof(dialog_linkable[0], DialogScene))
     return dialog_manager.__add_scenes(dialog_linkable);
 
-  if (is_instanceof(dialog_linkable, DialogSequence))
+  if (is_instanceof(dialog_linkable[0], DialogSequence))
     return dialog_manager.__add_sequences(dialog_linkable);
 
-  if (is_instanceof(dialog_linkable, Dialog))
+  if (is_instanceof(dialog_linkable[0], Dialog))
     return dialog_manager.__add_dialogs(dialog_linkable);
+
+  return dialog_manager;
 }
 
 
@@ -53,12 +55,13 @@ function dialog_manager_serialize(dialog_manager, prettify = false)
 /**
  * Transforms a string in a `DialogManager` instance.
  * @param {String} data_string - The data to deserialize.
+ * @param {Bool} [is_file] - Specifies whether the data string is a file name to read from (`true`) or not (`false`). Defaults to `false`.
  * @returns {Struct.DialogManager}
  */
 
-function dialog_manager_deserialize(data_string)
+function dialog_manager_deserialize(data_string, is_file = false)
 {
-  return DialogManager.__deserialize(data_string);
+  return DialogManager.__deserialize(data_string, is_file);
 }
 
 
