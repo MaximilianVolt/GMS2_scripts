@@ -1,7 +1,7 @@
 /**
  * @desc Dialog management system.
  * @author @MaximilianVolt
- * @version 0.6.1
+ * @version 0.7
  */
 
 
@@ -96,6 +96,27 @@ enum DIALOG
   __BITMASK_POSITION_SCENE_SHIFT = DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT + DIALOG.__BITMASK_POSITION_SEQUENCE_BITS,
   __BITMASK_POSITION_SCENE_BITS = 10,
   __BITMASK_POSITION_SCENE_MASK = ((1 << DIALOG.__BITMASK_POSITION_SCENE_BITS) - 1) << DIALOG.__BITMASK_POSITION_SCENE_SHIFT,
+  FLAG_STATUS_FIRST_DIALOG = 0,
+  FLAG_STATUS_FIRST_SEQUENCE,
+  FLAG_STATUS_FIRST_SCENE,
+  FLAG_STATUS_FIRST_OF_SEQUENCE,
+  FLAG_STATUS_FIRST_OF_SCENE,
+  FLAG_STATUS_LAST_DIALOG,
+  FLAG_STATUS_LAST_SEQUENCE,
+  FLAG_STATUS_LAST_SCENE,
+  FLAG_STATUS_LAST_OF_SEQUENCE,
+  FLAG_STATUS_LAST_OF_SCENE,
+  __BITMASK_STATUS_NO_AUTORESET_COUNT,
+  FLAG_STATUS_ADVANCED_DIALOG = DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  FLAG_STATUS_ADVANCED_SEQUENCE,
+  FLAG_STATUS_ADVANCED_SCENE,
+  FLAG_STATUS_EXECUTED_JUMP,
+  FLAG_STATUS_EXECUTED_FALLBACK,
+  FLAG_STATUS_COUNT,
+  __BITMASK_STATUS_AUTORESET_COUNT = DIALOG.FLAG_STATUS_COUNT - DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
+  __BITMASK_STATUS_AUTORESET_MASK = ((1 << DIALOG.__BITMASK_STATUS_AUTORESET_COUNT) - 1) << DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_STATUS_MASK = (1 << DIALOG.FLAG_STATUS_COUNT) - 1,
 }
 
 
@@ -135,6 +156,8 @@ enum DIALOG_FX
   // Fallback FX conditions
   FALLBACK_CONDITION_FALSE = 0,
   FALLBACK_CONDITION_TRUE,
+    // ...
+  FALLBACK_CONDITION_COUNT,
 
   // FX arg positions
   ARG_JUMP_DESTINATION = 0,
@@ -206,10 +229,17 @@ function DialogManager(data_string, is_file, contractor) constructor
   static __fx_fallback = function(argv)
   {
     with (global.dialog_manager)
-      return condition_map[argv[DIALOG_FX.ARG_JUMP_CONDITION]](argv)
-        ? __get_dialog_position(__resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]))
-        : __get_dialog()
-      ;
+    {
+      var position = self.position;
+
+      if (condition_map[argv[DIALOG_FX.ARG_JUMP_CONDITION]](argv))
+      {
+        self.status |= 1 << DIALOG.FLAG_STATUS_EXECUTED_FALLBACK;
+        position = __resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]);
+      }
+
+      return __get_dialog_position(position);
+    }
   }
 
 
@@ -355,7 +385,7 @@ function DialogManager(data_string, is_file, contractor) constructor
 
     array_push(self.scenes, scene);
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -376,7 +406,7 @@ function DialogManager(data_string, is_file, contractor) constructor
     self.scenes = array_concat(self.scenes, scenes);
     self.scene_count += new_scene_count;
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -398,7 +428,7 @@ function DialogManager(data_string, is_file, contractor) constructor
 
     array_insert(self.scenes, index, scene);
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -422,7 +452,7 @@ function DialogManager(data_string, is_file, contractor) constructor
 
     self.scene_count += new_scene_count;
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -434,11 +464,11 @@ function DialogManager(data_string, is_file, contractor) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static __add_sequence = function(sequence, scene_idx = __get_scene_idx(self.position))
+  static __add_sequence = function(sequence, scene_idx = __decode_scene_idx(self.position))
   {
     __get_scene(scene_idx).__add_sequence(sequence);
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -450,11 +480,11 @@ function DialogManager(data_string, is_file, contractor) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static __add_sequences = function(sequences, scene_idx = __get_scene_idx(self.position))
+  static __add_sequences = function(sequences, scene_idx = __decode_scene_idx(self.position))
   {
     __get_scene(scene_idx).__add_sequences(sequences);
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -467,11 +497,11 @@ function DialogManager(data_string, is_file, contractor) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static __add_dialog = function(dialog, sequence_idx = __get_sequence_idx(self.position), scene_idx = __get_scene_idx(self.position))
+  static __add_dialog = function(dialog, sequence_idx = __decode_sequence_idx(self.position), scene_idx = __decode_scene_idx(self.position))
   {
     __get_sequence(scene_idx, sequence_idx).__add_dialog(dialog);
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -484,11 +514,11 @@ function DialogManager(data_string, is_file, contractor) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static __add_dialogs = function(dialogs, sequence_idx = __get_sequence_idx(self.position), scene_idx = __get_scene_idx(self.position))
+  static __add_dialogs = function(dialogs, sequence_idx = __decode_sequence_idx(self.position), scene_idx = __decode_scene_idx(self.position))
   {
     __get_sequence(scene_idx, sequence_idx).__add_dialogs(dialogs);
 
-    return self;
+    return __advance(0, false);
   }
 
 
@@ -719,40 +749,111 @@ function DialogManager(data_string, is_file, contractor) constructor
 
 
   /**
-   * @desc Makes the dialog manager advance a given number of dialogs.
-   * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
+   * @desc Performs a jump to a certain dialog given its position as argument.
+   * @param {Real} [position] The position where to jump. Default to current position.
    * @returns {Struct.Dialog}
    */
 
-  static __next = function(idx_shift = 1)
+  static __next = function(position = self.position)
   {
     var jump_fx = __get_dialog().__get_jump();
 
     if (jump_fx)
-      return __jump(__resolve_position(jump_fx.argv[DIALOG_FX.ARG_JUMP_DESTINATION]));
+    {
+      position = __resolve_position(jump_fx.argv[DIALOG_FX.ARG_JUMP_DESTINATION]);
+      self.status |= 1 << DIALOG.FLAG_STATUS_EXECUTED_JUMP;
+    }
 
-    var current_scene = __get_scene();
-    var current_sequence = __get_sequence();
-    var scene_count = array_length(self.scenes);
-    var sequence_count = array_length(current_scene.sequences);
-    var dialog_count = array_length(current_sequence.dialogs);
+    return __jump(position);
+  }
 
-    var next_dialog_idx = __decode_dialog_idx(self.position) + idx_shift
-      , next_sequence_idx = __decode_sequence_idx(self.position)
-      , next_scene_idx = __decode_scene_idx(self.position)
+
+
+  /**
+   * @desc Makes the dialog manager advance a given number of dialogs.
+   * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
+   * @param {Bool} [already_initialized] Whether the dialog manager is already initialized (`true`) or not (`false`).
+   * @returns {Struct.DialogManager}
+   */
+
+  static __advance = function(idx_shift = 1, already_initialized = true)
+  {
+    self.status &= ~(
+      idx_shift
+        ? DIALOG.__BITMASK_STATUS_MASK
+        : DIALOG.__BITMASK_STATUS_AUTORESET_MASK
+    );
+
+    if (
+      !idx_shift && already_initialized
+      || !self.scene_count
+    )
+      return self;
+
+    var scene_idx = __decode_scene_idx()
+      , sequence_count = array_length(__get_scene(scene_idx).sequences)
     ;
 
-    var reset_dialog = next_dialog_idx < dialog_count;
-    next_dialog_idx *= reset_dialog;
-    next_sequence_idx += !reset_dialog;
+    if (!sequence_count)
+      return self;
 
-    var reset_sequence = next_sequence_idx < sequence_count;
-    next_sequence_idx *= reset_sequence;
-    next_scene_idx += !reset_sequence;
+    var sequence_idx = __decode_sequence_idx()
+      , dialog_count = array_length(__get_sequence(sequence_idx).dialogs)
+    ;
 
-    next_scene_idx *= next_scene_idx < scene_count;
+    if (!dialog_count)
+      return self;
 
-    return __jump(__encode_position(next_scene_idx, next_sequence_idx, next_dialog_idx));
+    var dialog_idx = __decode_dialog_idx()
+      , next_dialog_idx = dialog_idx + idx_shift
+      , next_sequence_idx = sequence_idx
+      , next_scene_idx = scene_idx
+    ;
+
+    var should_advance_sequence = next_dialog_idx >= dialog_count;
+    next_dialog_idx *= !should_advance_sequence;
+    next_sequence_idx += should_advance_sequence;
+
+    var should_advance_scene = next_sequence_idx >= sequence_count;
+    next_sequence_idx *= !should_advance_scene;
+    next_scene_idx += should_advance_scene;
+    next_scene_idx *= next_scene_idx < self.scene_count;
+
+    var position = __encode_position(next_scene_idx, next_sequence_idx, next_dialog_idx)
+      , target_position = __next(position).__get_position()
+      , target_scene_idx = __decode_scene_idx(target_position)
+      , target_sequence_idx = __decode_sequence_idx(target_position)
+      , target_dialog_idx = __decode_dialog_idx(target_position)
+    ;
+
+    if (target_scene_idx != scene_idx)
+      sequence_count = array_length(__get_scene(target_scene_idx).sequences);
+
+    if (target_sequence_idx != sequence_idx)
+      dialog_count = array_length(__get_sequence(target_sequence_idx).dialogs);
+
+    var is_last_scene = target_scene_idx == self.scene_count - 1
+      , is_last_sequence_rel = target_sequence_idx == sequence_count - 1
+      , is_last_dialog_rel = target_dialog_idx == dialog_count - 1
+      , is_last_sequence = is_last_scene && is_last_sequence_rel
+    ;
+
+    self.status |= (target_position == 0) << DIALOG.FLAG_STATUS_FIRST_DIALOG
+      | (target_position < 1 << DIALOG.__BITMASK_POSITION_DIALOG_BITS) << DIALOG.FLAG_STATUS_FIRST_SEQUENCE
+      | (target_scene_idx == 0) << DIALOG.FLAG_STATUS_FIRST_SCENE
+      | (target_dialog_idx == 0) << DIALOG.FLAG_STATUS_FIRST_OF_SEQUENCE
+      | (target_sequence_idx == 0) << DIALOG.FLAG_STATUS_FIRST_OF_SCENE
+      | (is_last_sequence && is_last_dialog_rel) << DIALOG.FLAG_STATUS_LAST_DIALOG
+      | is_last_sequence << DIALOG.FLAG_STATUS_LAST_SEQUENCE
+      | is_last_scene << DIALOG.FLAG_STATUS_LAST_SCENE
+      | is_last_dialog_rel << DIALOG.FLAG_STATUS_LAST_OF_SEQUENCE
+      | is_last_sequence_rel << DIALOG.FLAG_STATUS_LAST_OF_SCENE
+      | (idx_shift > 0) << DIALOG.FLAG_STATUS_ADVANCED_DIALOG
+      | should_advance_sequence << DIALOG.FLAG_STATUS_ADVANCED_SEQUENCE
+      | should_advance_scene << DIALOG.FLAG_STATUS_ADVANCED_SCENE
+    ;
+
+    return self;
   }
 
 
@@ -806,13 +907,67 @@ function DialogManager(data_string, is_file, contractor) constructor
     if (data_string == "")
       return self;
 
-    var data = json_parse(data_string);
+    return __parse(json_parse(data_string)).__advance(0, false);
+  }
 
-    self.scenes = array_map(data, function(scene) {
+
+
+  /**
+   * @desc Converts an array of raw data into an array of `DialogScene` objects.
+   * @param {Array<Struct>} scenes The parsed scenes to convert and add.
+   * @returns {Struct.DialogManager}
+   */
+
+  static __parse = function(scenes)
+  {
+    self.scenes = array_map(scenes, function(scene) {
       return DialogScene.__DIALOG_MANAGER_DECODING_METHOD__(scene);
     });
 
+    return __update_scenes();
+  }
+
+
+
+  /**
+   * @desc Updates the scene indeces.
+   * @returns {Struct.DialogManager}
+   */
+
+  static __update_scenes = function()
+  {
+    self.scene_count = array_length(self.scenes);
+
+    for (var i = self.scene_count - 1; i; --i)
+      self.scenes[i].scene_idx = i;
+
     return self;
+  }
+
+
+
+  /**
+   * @desc Checks if a status flag is active.
+   * @param {Real} flag The flag to check.
+   * @returns {Bool | Real}
+   */
+
+  static __check_status_flag = function(flag)
+  {
+    return self.status >> flag & 1;
+  }
+
+
+
+  /**
+   * @desc Checks is a combination of status flags is active.
+   * @param {Real} mask The mask to check.
+   * @returns {Bool | Real}
+   */
+
+  static __check_status_mask = function(mask)
+  {
+    return (self.status & mask) == mask;
   }
 
 
@@ -830,6 +985,7 @@ function DialogManager(data_string, is_file, contractor) constructor
     DialogSequence.sequence_id = 0;
 
     self.position = 0;
+    self.status = 0;
 
     return self;
   }
@@ -856,7 +1012,7 @@ function DialogManager(data_string, is_file, contractor) constructor
   self.scene_count = 0;
   self.scenes = [];
 
-  __deserialize(data_string, is_file);
+  __deserialize(data_string, is_file).__advance(0, false);
 
   global.dialog_manager = self;
   contractor.dialog_speakers = array_create(DIALOG.SPEAKER_COUNT);
@@ -1809,18 +1965,39 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
 
   /**
+   * @desc Retrieves all dialog FX which match a filter.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+   * @param {Array} [argv] The arguments to pass to the effects.
+   * @returns {Array<Struct.DialogFX>}
+   */
+
+  static __fx_get_all_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
+  {
+    var filtered = [];
+    var fx_count = array_length(self.fx_map);
+
+    for (var i = 0; i < fx_count; ++i)
+      if (filter_fn(fx_map[i], argv))
+        array_push(filtered, fx_map[i]);
+
+    return filtered;
+  }
+
+
+
+  /**
    * @desc Executes all dialog FX which match a filter.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to "always true".
-   * @param {Array} [argv] The arguments to pass to the effect.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+   * @param {Array} [argv] The arguments to pass to the effects.
    * @returns {Struct.Dialog}
    */
 
-  static __fx_execute_all_of = function(filter_fn = function(fx) { return true; }, argv = undefined)
+  static __fx_execute_all_of = function(filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
     var fx_count = array_length(self.fx_map);
 
     for (var i = 0; i < fx_count; ++i)
-      if (filter_fn(fx_map[i]))
+      if (filter_fn(fx_map[i], argv))
         fx_map[i].__exec(argv);
 
     return self;

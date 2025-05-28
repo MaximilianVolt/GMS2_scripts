@@ -15,8 +15,8 @@ function dialog_manager_create(data_string = "", is_file = false, contractor = g
 
 /**
  * @desc Evaluates the `DialogLinkable` components' type and appends them after the last type's instance in a dialog manager.
- * @param {Struct.DialogManager} dialog_manager The dialog manager where to add the data.
  * @param {Struct.DialogLinkable | Array<Struct.DialogLinkable>} [dialog_linkable] The `DialogLinkable` components of the SAME TYPE to add.
+ * @param {Struct.DialogManager} dialog_manager The dialog manager where to add the data.
  * @returns {Struct.DialogManager}
  */
 
@@ -39,7 +39,22 @@ function dialog_manager_add(dialog_manager, dialog_linkable = [])
 
 
 /**
- * Transforms a `DialogManager` instance in a string.
+ * @desc Makes the dialog manager advance a given number of dialogs.
+ * @param {Struct.DialogManager} dialog_manager The dialog manager to cycle through.
+ * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
+ * @param {Bool} [already_initialized] Whether the dialog manager is already initialized (`true`) or not (`false`).
+ * @returns {Struct.DialogManager}
+ */
+
+function dialog_manager_advance(dialog_manager, idx_shift = 1, already_initialized = true)
+{
+  return dialog_manager.__advance(idx_shift, already_initialized);
+}
+
+
+
+/**
+ * @desc Transforms a `DialogManager` instance in a string.
  * @param {Struct.DialogScene} dialog_manager - The `DialogManager` to serialize.
  * @param {Bool} [prettify] - Whether the output should be prettified (true) or collapsed (false).
  * @returns {String}
@@ -53,15 +68,30 @@ function dialog_manager_serialize(dialog_manager, prettify = false)
 
 
 /**
- * Transforms a string in a `DialogManager` instance.
+ * @desc Transforms a string into an array of `DialogScene` objects to assign to a `DialogManager` instance.
+ * @param {Struct.DialogManager} dialog_manager The dialog manager where to assign the data.
  * @param {String} data_string - The data to deserialize.
  * @param {Bool} [is_file] - Specifies whether the data string is a file name to read from (`true`) or not (`false`). Defaults to `false`.
  * @returns {Struct.DialogManager}
  */
 
-function dialog_manager_deserialize(data_string, is_file = false)
+function dialog_manager_deserialize(dialog_manager, data_string, is_file = false)
 {
-  return DialogManager.__deserialize(data_string, is_file);
+  return dialog_manager.__deserialize(data_string, is_file);
+}
+
+
+
+/**
+ * @desc Converts an array of raw data into an array of `DialogScene` objects.
+ * @param {Struct.DialogManager} dialog_manager The dialog manager where to add the parsed data.
+ * @param {Array<Struct>} scenes The parsed scenes to convert and add.
+ * @returns {Struct.DialogManager}
+ */
+
+function dialog_manager_parse(dialog_manager, scenes)
+{
+  return dialog_manager.__parse(scenes);
 }
 
 
@@ -89,7 +119,7 @@ function dialog_manager_deserialize(data_string, is_file = false)
 
 
 /**
- * `DialogScene` constructor.
+ * @desc DialogScene` constructor.
  * @param {Array<Struct.DialogSequence>} [sequences] - The array of `DialogSequence` of the scene.
  * @param {Real} [settings_mask] - The scene settings.
  * @returns {Struct.DialogScene}
@@ -106,7 +136,7 @@ function dialog_scene_create(sequences = [], settings_mask = 0)
 
 
 /**
- * Creates a new `DialogScene` object from an array.
+ * @desc Creates a new `DialogScene` object from an array.
  * @param {Array<Any>} data - The data of the object.
  * @returns {Struct.DialogScene}
  */
@@ -119,7 +149,7 @@ function dialog_scene_create_array(data)
 
 
 /**
- * Creates a new `DialogScene` object from a struct.
+ * @desc Creates a new `DialogScene` object from a struct.
  * @param {Struct} data - The data of the object.
  * @returns {Struct.DialogScene}
  */
@@ -132,7 +162,7 @@ function dialog_scene_create_struct(data)
 
 
 /**
- * Transforms a `DialogScene` instance in a string.
+ * @desc Transforms a `DialogScene` instance in a string.
  * @param {Struct.DialogScene} dialog_scene - The `DialogScene` to serialize.
  * @param {Bool} [prettify] - Whether the output should be prettified (true) or collapsed (false).
  * @returns {String}
@@ -146,7 +176,7 @@ function dialog_scene_serialize(dialog_scene, prettify = false)
 
 
 /**
- * Transforms a string in a `DialogScene` instance.
+ * @desc Transforms a string in a `DialogScene` instance.
  * @param {String} data_string - The data to deserialize.
  * @returns {Struct.DialogScene}
  */
@@ -181,7 +211,7 @@ function dialog_scene_deserialize(data_string)
 
 
 /**
- * `DialogSequence` constructor.
+ * @desc `DialogSequence` constructor.
  * @param {Array<Struct.Dialog>} [dialogs] - The array of `Dialog` of the sequence.
  * @param {Array<Real>} [speaker_map] - The indexes of the speakers.
  * @returns {Struct.DialogSequence}
@@ -198,7 +228,7 @@ function dialog_sequence_create(dialogs = [], speaker_map = [])
 
 
 /**
- * Creates a new `DialogSequence` object from an array.
+ * @desc Creates a new `DialogSequence` object from an array.
  * @param {Array<Any>} data - The data of the object.
  * @returns {Struct.DialogSequence}
  */
@@ -211,7 +241,7 @@ function dialog_sequence_create_array(data)
 
 
 /**
- * Creates a new `DialogSequence` object from a struct.
+ * @desc Creates a new `DialogSequence` object from a struct.
  * @param {Struct} data - The data of the object.
  * @returns {Struct.DialogSequence}
  */
@@ -224,7 +254,7 @@ function dialog_sequence_create_struct(data)
 
 
 /**
- * Transforms a `DialogSequence` instance in a string.
+ * @desc Transforms a `DialogSequence` instance in a string.
  * @param {Struct.DialogSequence} dialog_sequence - The `DialogSequence` to serialize.
  * @param {Bool} [prettify] - Whether the output should be prettified (true) or collapsed (false).
  * @returns {String}
@@ -238,7 +268,7 @@ function dialog_sequence_serialize(dialog_sequence, prettify = false)
 
 
 /**
- * Transforms a string in a `DialogSequence` instance.
+ * @desc Transforms a string in a `DialogSequence` instance.
  * @param {String} data_string - The data to deserialize.
  * @returns {Struct.DialogSequence}
  */
@@ -273,7 +303,7 @@ function dialog_sequence_deserialize(data_string)
 
 
 /**
- * `Dialog` constructor.
+ * @desc `Dialog` constructor.
  * @param {String} text - The text message of the dialog.
  * @param {Constant.DIALOG} [settings_mask] - The dialog info.
  * @param {Array<Struct.DialogFX>} [fx_map] - The array of `DialogFX` to apply.
@@ -292,7 +322,7 @@ function dialog_create(text, settings_mask = 0, fx_map = [])
 
 
 /**
- * Creates a new `Dialog` object from an array.
+ * @desc Creates a new `Dialog` object from an array.
  * @param {Array<Any>} data - The data of the object.
  * @returns {Struct.Dialog}
  */
@@ -305,7 +335,7 @@ function dialog_create_array(data)
 
 
 /**
- * Creates a new `Dialog` object from a struct.
+ * @desc Creates a new `Dialog` object from a struct.
  * @param {Struct} data - The data of the object.
  * @returns {Struct.Dialog}
  */
@@ -318,7 +348,37 @@ function dialog_create_struct(data)
 
 
 /**
- * Transforms a `Dialog` instance in a string.
+ * @desc Retrieves all dialog FX which match a filter.
+ * @param {Struct.Dialog} dialog The dialog where the effects should be retrieved from.
+ * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+ * @param {Array} [argv] The arguments to pass to the effects.
+ * @returns {Array<Struct.DialogFX>}
+ */
+
+function dialog_get_fx_all_of(dialog, filter_fn = function(fx, argv) { return true; }, argv = undefined)
+{
+  return dialog.__fx_get_all_of(filter_fn, argv);
+}
+
+
+
+/**
+ * @desc Executes all dialog FX which match a filter.
+ * @param {Struct.Dialog} dialog The dialog that should execute all the effects.
+ * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+ * @param {Array} [argv] The arguments to pass to the effects.
+ * @returns {Struct.Dialog}
+ */
+
+function dialog_execute_fx_all_of(dialog, filter_fn = function(fx, argv) { return true; }, argv = undefined)
+{
+  return dialog.__fx_execute_all_of(filter_fn, argv);
+}
+
+
+
+/**
+ * @desc Transforms a `Dialog` instance in a string.
  * @param {Struct.Dialog} dialog - The dialog to serialize.
  * @param {Bool} [prettify] - Whether the output should be prettified (true) or collapsed (false).
  * @returns {String}
@@ -332,7 +392,7 @@ function dialog_serialize(dialog, prettify = false)
 
 
 /**
- * Transforms a string in a `Dialog` instance.
+ * @desc Transforms a string in a `Dialog` instance.
  * @param {String} data_string - The data to deserialize.
  * @returns {Struct.Dialog}
  */
@@ -367,7 +427,7 @@ function dialog_deserialize(data_string)
 
 
 /**
- * `DialogFX` constructor.
+ * @desc `DialogFX` constructor.
  * @param {DIALOG_FX | Real} [settings_mask] - The effect info.
  * @param {Array<Any>} [argv] - The arguments of the mapped effect function.
  * @param {Function} [func] - The function to add to the dialog manager (NOT SERIALIZED).
@@ -382,7 +442,7 @@ function dialog_fx_create(settings_mask = 0, argv = [], func = undefined)
 
 
 /**
- * Creates a new `DialogFX` object from an array.
+ * @desc Creates a new `DialogFX` object from an array.
  * @param {Array} data - The data to create the `DialogFX` from.
  * @returns {Struct.DialogFX}
  */
@@ -395,7 +455,7 @@ function dialog_fx_create_array(data)
 
 
 /**
- * Creates a new `DialogFX` object from a struct.
+ * @desc Creates a new `DialogFX` object from a struct.
  * @param {Struct} data - The data to create the `DialogFX` from.
  * @returns {Struct.DialogFX}
  */
@@ -408,7 +468,21 @@ function dialog_fx_create_struct(data)
 
 
 /**
- * Transforms a `DialogFX` instance in a string.
+ * @desc Executes a dialog FX.
+ * @param {Struct.DialogFX} dialog_fx The dialog FX to execute.
+ * @param {undefined | Array} [argv] The arguments to pass to the effect.
+ * @returns {Any} 
+ */
+
+function dialog_fx_execute(dialog_fx, argv = undefined)
+{
+  return dialog_fx.__exec(argv);
+}
+
+
+
+/**
+ * @desc Transforms a `DialogFX` instance in a string.
  * @param {Struct.DialogFX} dialog_fx - The dialog effect to serialize.
  * @param {Bool} [prettify] - Whether the output should be prettified (true) or collapsed (false).
  * @returns {String}
@@ -422,7 +496,7 @@ function dialog_fx_serialize(dialog_fx, prettify = false)
 
 
 /**
- * Transforms a string in a `DialogFX` instance.
+ * @desc Transforms a string in a `DialogFX` instance.
  * @param {String} data_string - The data to deserialize.
  * @returns {Struct.DialogFX}
  */
