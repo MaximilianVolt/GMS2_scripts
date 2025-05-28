@@ -471,7 +471,7 @@ function dialog_fx_create_struct(data)
  * @desc Executes a dialog FX.
  * @param {Struct.DialogFX} dialog_fx The dialog FX to execute.
  * @param {undefined | Array} [argv] The arguments to pass to the effect.
- * @returns {Any} 
+ * @returns {Any}
  */
 
 function dialog_fx_execute(dialog_fx, argv = undefined)

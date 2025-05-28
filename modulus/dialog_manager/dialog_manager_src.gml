@@ -33,6 +33,7 @@ enum DIALOG_SCENE
  * @desc `ANCHOR_*` options refer to the dialog box positioning.
  * @desc `TEXTBOX_*` options refer to the dialog box style.
  * @desc `POSITION_CODE_*` options refer to relative dialog positioning encodings.
+ * @desc `FLAG_*` flags refer to various info stored in a bitfield.
  * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
  */
 
