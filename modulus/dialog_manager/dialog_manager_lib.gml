@@ -2,13 +2,12 @@
  * @desc `DialogManager` constructor.
  * @param {String | Id.TextFile} [data_string] The data to parse.
  * @param {Bool} [is_file] Specifies whether `data_string` is a file (`true`) or not (`false`).
- * @param {Struct} [contractor] The struct, instance or object where to assign the properties.
  * @returns {Struct.DialogManager}
  */
 
-function dialog_manager_create(data_string = "", is_file = false, contractor = global)
+function dialog_manager_create(data_string = "", is_file = false)
 {
-  return new DialogManager(data_string, is_file, contractor);
+  return new DialogManager(data_string, is_file);
 }
 
 
@@ -49,6 +48,29 @@ function dialog_manager_add(dialog_manager, dialog_linkable = [])
 function dialog_manager_advance(dialog_manager, idx_shift = 1, already_initialized = true)
 {
   return dialog_manager.__advance(idx_shift, already_initialized);
+}
+
+
+
+/**
+ * @desc Returns a list of all components from an element matching a tag.
+ * @param {Struct.DialogManager | Struct.DialogLinkable} collection The collection where to execute the search.
+ * @param {Constant.DIALOG_SCENE | Constant.DIALOG_SEQUENCE | Constant.DIALOG} tag The tag to search for.
+ * @returns {Array<Struct.DialogLinkable}
+ */
+
+function dialog_manager_search_by_tag(collection, tag)
+{
+  if (is_instanceof(collection, DialogManager))
+    return collection.__get_scenes_by_tag(tag);
+
+  if (is_instanceof(collection, DialogScene))
+    return collection.__get_sequences_by_tag(tag);
+
+  if (is_instanceof(collection, DialogSequence))
+    return collection.__get_dialogs_by_tag(tag);
+
+  return collection;
 }
 
 
@@ -213,14 +235,16 @@ function dialog_scene_deserialize(data_string)
 /**
  * @desc `DialogSequence` constructor.
  * @param {Array<Struct.Dialog>} [dialogs] - The array of `Dialog` of the sequence.
+ * @param {Constant.DIALOG_SEQUENCE} [settings_mask] - The sequence info.
  * @param {Array<Real>} [speaker_map] - The indexes of the speakers.
  * @returns {Struct.DialogSequence}
  */
 
-function dialog_sequence_create(dialogs = [], speaker_map = [])
+function dialog_sequence_create(dialogs = [], settings_mask = 0, speaker_map = [])
 {
   return new DialogSequence(
     is_array(dialogs) ? dialogs : [dialogs],
+    settings_mask,
     is_array(speaker_map) ? speaker_map : [speaker_map]
   );
 }
@@ -235,7 +259,7 @@ function dialog_sequence_create(dialogs = [], speaker_map = [])
 
 function dialog_sequence_create_array(data)
 {
-  return dialog_sequence_create(data[0], data[1]);
+  return dialog_sequence_create(data[0], data[1], data[2]);
 }
 
 
@@ -248,7 +272,7 @@ function dialog_sequence_create_array(data)
 
 function dialog_sequence_create_struct(data)
 {
-  return dialog_sequence_create(data.dialogs, data.speaker_map);
+  return dialog_sequence_create(data.dialogs, data.settings_mask, data.speaker_map);
 }
 
 
@@ -343,6 +367,20 @@ function dialog_create_array(data)
 function dialog_create_struct(data)
 {
   return dialog_create(data.text, data.settings_mask, data.fx_map,);
+}
+
+
+
+/**
+ * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects of the specified type.
+ * @param {Struct.Dialog} dialog The dialog to check.
+ * @param {Constant.DIALOG_FX} [type] The type of the effect to check for.
+ * @returns {Bool}
+ */
+
+function dialog_has_fx_of_type(dialog, type = DIALOG_FX.TYPE_DEFAULT)
+{
+  return dialog.__fx_has_of(function(fx, argv) { return fx.__decode_fx_type() == argv; }, type);
 }
 
 

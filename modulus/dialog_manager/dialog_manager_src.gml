@@ -2,6 +2,15 @@
  * @desc Dialog management system.
  * @author @MaximilianVolt
  * @version 0.7
+ *
+ * !: Next up, for version 0.8:
+ * -: +: 1. Add to each scene and sequence the number of items they have in and adapt it in methods that edit it.
+ * -: +: 2. Info and setting masks to sequences and dialogs, similarly to scenes, add methods for encoding and decoding and also for searching.
+ * -: +: 3. Try to find a way to have multiple instances of dialog managers, detaching it from global (unless it's the chosen contractor). Then add the reference to all scenes.
+ * -: 4. Generalize behavior for advancing in dialogs (including negative numbers).
+ * +: 5. A branching dialog effect, where you can have an array of possible jumps and given an index it knows where to jump.
+ * *: USARE L'OPZIONE flags SUL METODO __advance() PER DEDURRE SE SI TRATTA DI UNA CHOICE
+ * *: AGGIORNA GLI ARGOMENTI DI __next() E VEDI SE SERVONO ULTERIORI MODIFICHE NEI METODI DI SALTO CORRELATI.
  */
 
 
@@ -14,12 +23,123 @@
 // Edit as needed
 
 /**
+ * @desc `FLAG_*` flags refer to various info stored in a bitfield.
+ * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
+ */
+
+enum DIALOG_MANAGER
+{
+  // Status info
+  FLAG_STATUS_UNINITIALIZED,
+  FLAG_STATUS_FIRST_DIALOG,
+  FLAG_STATUS_FIRST_SEQUENCE,
+  FLAG_STATUS_FIRST_SCENE,
+  FLAG_STATUS_FIRST_OF_SEQUENCE,
+  FLAG_STATUS_FIRST_OF_SCENE,
+  FLAG_STATUS_LAST_DIALOG,
+  FLAG_STATUS_LAST_SEQUENCE,
+  FLAG_STATUS_LAST_SCENE,
+  FLAG_STATUS_LAST_OF_SEQUENCE,
+  FLAG_STATUS_LAST_OF_SCENE,
+  __BITMASK_STATUS_NO_AUTORESET_COUNT,
+  FLAG_STATUS_ADVANCED_DIALOG = DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  FLAG_STATUS_ADVANCED_SEQUENCE,
+  FLAG_STATUS_ADVANCED_SCENE,
+  FLAG_STATUS_RECEDED_DIALOG,
+  FLAG_STATUS_RECEDED_SEQUENCE,
+  FLAG_STATUS_RECEDED_SCENE,
+  FLAG_STATUS_EXECUTED_JUMP,
+  FLAG_STATUS_EXECUTED_FALLBACK,
+  FLAG_STATUS_EXECUTED_CHOICE,
+  FLAG_STATUS_COUNT,
+
+  // Jump info
+  __FLAG_INDEX_CHOICE = 1,
+  
+  // Masks (should not edit)
+  __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_MANAGER.FLAG_STATUS_COUNT - DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
+  __BITMASK_STATUS_AUTORESET_MASK = ((1 << DIALOG_MANAGER.__BITMASK_STATUS_AUTORESET_COUNT) - 1) << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_STATUS_MASK = (1 << DIALOG_MANAGER.FLAG_STATUS_COUNT) - 1,
+  FLAG_CHOICE = 1 << DIALOG_MANAGER.__FLAG_INDEX_CHOICE,
+}
+
+
+
+// Edit as needed
+
+/**
  * @desc Contains all useful information about a dialog scene.
+ * @desc `TAG_*` options refer to the scene type for categorization (useful for filtering).
+ * @desc `BG_*` options refer to the background index.
+ * @desc `BGM_*` options refer to the background music index.
+ * @desc `BGS_*` flags refer to the background sound index.
+ * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
  */
 
 enum DIALOG_SCENE
 {
+  // Scene bg
+  BG_NONE = 0,
+    // ...
+  BG_COUNT,
+  BG_DEFAULT = DIALOG_SCENE.BG_NONE,
 
+  // Scene bgm
+  BGM_NONE = 0,
+    // ...
+  BGM_COUNT,
+  BGM_DEFAULT = DIALOG_SCENE.BGM_NONE,
+
+  // Scene bgs
+  BGS_NONE = 0,
+    // ...
+  BGS_COUNT,
+  BGS_DEFAULT = DIALOG_SCENE.BGS_NONE,
+
+  // Scene tags
+  TAG_NONE = 0,
+    // ...
+  TAG_COUNT,
+  TAG_DEFAULT = DIALOG_SCENE.TAG_NONE,
+
+  // Masks (should not edit)
+  __BITMASK_BG_SHIFT = 0,
+  __BITMASK_BG_BITS = 7,
+  __BITMASK_BG_MASK = ((1 << DIALOG_SCENE.__BITMASK_BG_BITS) - 1) << DIALOG_SCENE.__BITMASK_BG_SHIFT,
+  __BITMASK_BGM_SHIFT = DIALOG_SCENE.__BITMASK_BG_SHIFT + DIALOG_SCENE.__BITMASK_BG_BITS,
+  __BITMASK_BGM_BITS = 8,
+  __BITMASK_BGM_MASK = ((1 << DIALOG_SCENE.__BITMASK_BGM_BITS) - 1) << DIALOG_SCENE.__BITMASK_BGM_SHIFT,
+  __BITMASK_BGS_SHIFT = DIALOG_SCENE.__BITMASK_BGM_SHIFT + DIALOG_SCENE.__BITMASK_BGM_BITS,
+  __BITMASK_BGS_BITS = 6,
+  __BITMASK_BGS_MASK = ((1 << DIALOG_SCENE.__BITMASK_BGS_BITS) - 1) << DIALOG_SCENE.__BITMASK_BGS_SHIFT,
+  __BITMASK_TAG_SHIFT = DIALOG_SCENE.__BITMASK_BGS_SHIFT + DIALOG_SCENE.__BITMASK_BGS_BITS,
+  __BITMASK_TAG_BITS = 5,
+  __BITMASK_TAG_MASK = ((1 << DIALOG_SCENE.__BITMASK_TAG_BITS) - 1) << DIALOG_SCENE.__BITMASK_TAG_SHIFT,
+}
+
+
+
+// Edit as needed
+
+/**
+ * @desc Contains all useful information about a dialog sequence.
+ * @desc `TAG_*` options refer to the sequence type for categorization (useful for filtering).
+ * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
+ */
+
+enum DIALOG_SEQUENCE
+{
+  // Sequence tags
+  TAG_NONE = 0,
+    // ...
+  TAG_COUNT,
+  TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
+
+  // Masks (should not edit)
+  __BITMASK_TAG_SHIFT = 0,
+  __BITMASK_TAG_BITS = 5,
+  __BITMASK_TAG_MASK = ((1 << DIALOG_SEQUENCE.__BITMASK_TAG_BITS) - 1) << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT,
 }
 
 
@@ -32,8 +152,8 @@ enum DIALOG_SCENE
  * @desc `EMOTION_*` options refer to the emotions (frames or expressions).
  * @desc `ANCHOR_*` options refer to the dialog box positioning.
  * @desc `TEXTBOX_*` options refer to the dialog box style.
+ * @desc `TAG_*` options refer to the dialog type for categorization (useful for filtering).
  * @desc `POSITION_CODE_*` options refer to relative dialog positioning encodings.
- * @desc `FLAG_*` flags refer to various info stored in a bitfield.
  * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
  */
 
@@ -67,6 +187,12 @@ enum DIALOG
   TEXTBOX_COUNT,
   TEXTBOX_DEFAULT = DIALOG.TEXTBOX_NONE,
 
+  // Dialog tags
+  TAG_NONE = 0,
+    // ...
+  TAG_COUNT,
+  TAG_DEFAULT = DIALOG.TAG_NONE,
+
   // Positioning codes (should not edit)
   POSITION_CODE_NONE = -5,
   POSITION_CODE_SCENE_END,
@@ -88,36 +214,18 @@ enum DIALOG
   __BITMASK_TEXTBOX_SHIFT = DIALOG.__BITMASK_ANCHOR_SHIFT + DIALOG.__BITMASK_ANCHOR_BITS,
   __BITMASK_TEXTBOX_BITS = 4,
   __BITMASK_TEXTBOX_MASK = ((1 << DIALOG.__BITMASK_TEXTBOX_BITS) - 1) << DIALOG.__BITMASK_TEXTBOX_SHIFT,
+  __BITMASK_TAG_SHIFT = DIALOG.__BITMASK_TEXTBOX_SHIFT + DIALOG.__BITMASK_TEXTBOX_BITS,
+  __BITMASK_TAG_BITS = 5,
+  __BITMASK_TAG_MASK = ((1 << DIALOG.__BITMASK_TAG_BITS) - 1) << DIALOG.__BITMASK_TAG_SHIFT,
   __BITMASK_POSITION_DIALOG_SHIFT = 0,
-  __BITMASK_POSITION_DIALOG_BITS = 13,
+  __BITMASK_POSITION_DIALOG_BITS = 12,
   __BITMASK_POSITION_DIALOG_MASK = ((1 << DIALOG.__BITMASK_POSITION_DIALOG_BITS) - 1) << DIALOG.__BITMASK_POSITION_DIALOG_SHIFT,
   __BITMASK_POSITION_SEQUENCE_SHIFT = DIALOG.__BITMASK_POSITION_DIALOG_SHIFT + DIALOG.__BITMASK_POSITION_DIALOG_BITS,
-  __BITMASK_POSITION_SEQUENCE_BITS = 8,
+  __BITMASK_POSITION_SEQUENCE_BITS = 9,
   __BITMASK_POSITION_SEQUENCE_MASK = ((1 << DIALOG.__BITMASK_POSITION_SEQUENCE_BITS) - 1) << DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT,
   __BITMASK_POSITION_SCENE_SHIFT = DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT + DIALOG.__BITMASK_POSITION_SEQUENCE_BITS,
   __BITMASK_POSITION_SCENE_BITS = 10,
   __BITMASK_POSITION_SCENE_MASK = ((1 << DIALOG.__BITMASK_POSITION_SCENE_BITS) - 1) << DIALOG.__BITMASK_POSITION_SCENE_SHIFT,
-  FLAG_STATUS_FIRST_DIALOG = 0,
-  FLAG_STATUS_FIRST_SEQUENCE,
-  FLAG_STATUS_FIRST_SCENE,
-  FLAG_STATUS_FIRST_OF_SEQUENCE,
-  FLAG_STATUS_FIRST_OF_SCENE,
-  FLAG_STATUS_LAST_DIALOG,
-  FLAG_STATUS_LAST_SEQUENCE,
-  FLAG_STATUS_LAST_SCENE,
-  FLAG_STATUS_LAST_OF_SEQUENCE,
-  FLAG_STATUS_LAST_OF_SCENE,
-  __BITMASK_STATUS_NO_AUTORESET_COUNT,
-  FLAG_STATUS_ADVANCED_DIALOG = DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT,
-  FLAG_STATUS_ADVANCED_SEQUENCE,
-  FLAG_STATUS_ADVANCED_SCENE,
-  FLAG_STATUS_EXECUTED_JUMP,
-  FLAG_STATUS_EXECUTED_FALLBACK,
-  FLAG_STATUS_COUNT,
-  __BITMASK_STATUS_AUTORESET_COUNT = DIALOG.FLAG_STATUS_COUNT - DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT,
-  __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
-  __BITMASK_STATUS_AUTORESET_MASK = ((1 << DIALOG.__BITMASK_STATUS_AUTORESET_COUNT) - 1) << DIALOG.__BITMASK_STATUS_NO_AUTORESET_COUNT,
-  __BITMASK_STATUS_MASK = (1 << DIALOG.FLAG_STATUS_COUNT) - 1,
 }
 
 
@@ -139,6 +247,7 @@ enum DIALOG_FX
   TYPE_ANY = 0,
   TYPE_JUMP,
   TYPE_FALLBACK,
+  TYPE_CHOICE,
   TYPE_STATE_MODIFY,
     // ...
   TYPE_COUNT,
@@ -154,15 +263,22 @@ enum DIALOG_FX
   TRIGGER_COUNT,
   TRIGGER_DEFAULT = DIALOG_FX.TRIGGER_AUTO,
 
-  // Fallback FX conditions
+  // Jump FX conditions
   FALLBACK_CONDITION_FALSE = 0,
   FALLBACK_CONDITION_TRUE,
     // ...
   FALLBACK_CONDITION_COUNT,
 
+  // Choice flag
+  CHOICE_INDEX_UNSELECTED = -1,
+  CHOICE_CONDITION_COUNT = -DIALOG_FX.CHOICE_INDEX_UNSELECTED,
+
   // FX arg positions
   ARG_JUMP_DESTINATION = 0,
   ARG_JUMP_CONDITION = 1,
+  ARG_CHOICE_LIST = 1,
+  ARG_SUBARG_CHOICE_PROMPT = 0,
+  ARG_SUBARG_CHOICE_DESTINATION = 1,
 
   // Masks (should not be edited)
   __BITMASK_TYPE_SHIFT = 0,
@@ -201,70 +317,65 @@ enum DIALOG_FX
  * @desc `DialogManager` constructor.
  * @param {String | Id.TextFile} data_string The data to parse.
  * @param {Bool} is_file Specifies whether `data_string` is a file (`true`) or not (`false`).
- * @param {Struct} contractor The struct, instance or object where to assign the properties.
  * @returns {Struct.DialogManager}
  */
 
-function DialogManager(data_string, is_file, contractor) constructor
+function DialogManager(data_string, is_file) constructor
 {
   /**
    * @desc Executes the inconditional jump effect.
+   * @param {Struct.DialogManager} The reference to the dialog manager.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
    * @returns {Struct.Dialog}
    */
 
-  static __fx_jump = function(argv)
+  static __fx_jump = function(manager, argv)
   {
-    with (global.dialog_manager)
-      return __jump(__resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]));
+    return manager.__jump(manager.__resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]));
   }
 
 
 
   /**
    * @desc Executes the conditional jump effect.
+   * @param {Struct.DialogManager} The reference to the dialog manager.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
    * @returns {Struct.Dialog}
    */
 
-  static __fx_fallback = function(argv)
+  static __fx_fallback = function(manager, argv)
   {
-    with (global.dialog_manager)
+    var position = manager.position;
+
+    if (manager.condition_map[argv[DIALOG_FX.ARG_JUMP_CONDITION]](argv))
     {
-      var position = self.position;
-
-      if (condition_map[argv[DIALOG_FX.ARG_JUMP_CONDITION]](argv))
-      {
-        self.status |= 1 << DIALOG.FLAG_STATUS_EXECUTED_FALLBACK;
-        position = __resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]);
-      }
-
-      return __get_dialog_position(position);
+      manager.position = manager.__resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]);
+      manager.status |= __flag(DIALOG_MANAGER.FLAG_STATUS_EXECUTED_FALLBACK);
     }
+
+    return manager.__get_dialog_position(position);
   }
 
 
 
   /**
-   * @desc Any `false` condition.
-   * @returns {Bool}
+   * @desc Executes the multi-option jump effect.
+   * @param {Struct.DialogManager} The reference to the dialog manager.
+   * @param {Array<Any>} argv The arguments to pass to the fx function.
+   * @returns {Struct.Dialog}
    */
 
-  static __condition_false = function()
+  static __fx_choice = function(manager, argv)
   {
-    return false;
-  }
+    var choice_index = argv[DIALOG_FX.ARG_JUMP_DESTINATION];
 
+    if (choice_index != DIALOG_FX.CHOICE_INDEX_UNSELECTED)
+    {
+      manager.status |= DIALOG_MANAGER.FLAG_STATUS_EXECUTED_CHOICE;
+      return manager.__get_dialog_position(manager.__resolve_position(argv[DIALOG_FX.ARG_CHOICE_LIST].argv[choice_index][DIALOG_FX.ARG_SUBARG_CHOICE_DESTINATION]));
+    }
 
-
-  /**
-   * @desc Any `true` condition.
-   * @returns {Bool}
-   */
-
-  static __condition_true = function()
-  {
-    return true;
+    return manager.__get_dialog();
   }
 
 
@@ -278,6 +389,41 @@ function DialogManager(data_string, is_file, contractor) constructor
   static __get_scene = function(scene_idx = __decode_scene_idx(self.position))
   {
     return self.scenes[scene_idx];
+  }
+
+
+
+  /**
+   * @desc Returns a scene given its absolute position in order as a number.
+   * @param {Real} [scene_number] The number of the scene. Defaults to `0`. Negative indices will iterate backwards.
+   * @returns {Struct.DialogScene}
+   */
+
+  static __get_scene_absolute = function(scene_number = 0)
+  {
+    return abs(scene_number) < self.scene_count
+      ? (self.scenes[scene_number ? scene_number : self.scene_count - scene_number])
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Returns a list of all scenes matching a tag.
+   * @param {Real} [tag] The tag to filter the scenes with. Defaults to `DIALOG_SCENE.TAG_DEFAULT`.
+   * @returns {Array<Struct.DialogScene>}
+   */
+
+  static __get_scenes_by_tag = function(tag = DIALOG_SCENE.TAG_DEFAULT)
+  {
+    var scenes = [];
+
+    for (var i = 0; i < self.scene_count; ++i)
+      if (self.scenes[i].__decode_tag() == tag)
+        array_push(scenes, self.scenes[i]);
+
+    return scenes;
   }
 
 
@@ -297,6 +443,44 @@ function DialogManager(data_string, is_file, contractor) constructor
 
 
   /**
+   * @desc Returns a sequence given its absolute position in order as a number.
+   * @param {Real} [sequence_number] The number of the sequence. Defaults to `0`. Negative indices will iterate backwards.
+   * @returns {Struct.DialogSequence}
+   */
+
+  static __get_sequence_absolute = function(sequence_number = 0)
+  {
+    var iter_negative = (sequence_number < 0)
+      , iter_dir = iter_negative ? -1 : 1
+      , scene_start = self.scene_count * iter_negative
+      , scene_end = self.scene_count * !iter_negative
+      , scene
+    ;
+
+    sequence_number = abs(sequence_number);
+
+    for (var i = scene_start; sequence_number && i != scene_end; i += iter_dir)
+    {
+      scene = self.scenes[i];
+
+      if (sequence_number < scene.sequence_count)
+      {
+        return scene.sequences[
+          iter_negative 
+            ? scene.sequence_count - sequence_number
+            : sequence_number
+        ];
+      }
+
+      sequence_number -= scene.sequence_count;
+    }
+
+    return undefined;
+  }
+
+
+
+  /**
    * @desc Returns a dialog given the scene, sequence and dialog indeces.
    * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @param {Real} [sequence_idx] The sequence index. Defaults to current sequence.
@@ -307,6 +491,54 @@ function DialogManager(data_string, is_file, contractor) constructor
   static __get_dialog = function(dialog_idx = __decode_dialog_idx(self.position), sequence_idx = __decode_sequence_idx(self.position), scene_idx = __decode_scene_idx(self.position))
   {
     return __get_sequence(sequence_idx, scene_idx).dialogs[dialog_idx];
+  }
+
+
+
+  /**
+   * @desc Returns a dialog given its absolute position in order as a number.
+   * @param {Real} [sequence_number] The number of the sequence. Defaults to `0`. Negative indices will iterate backwards.
+   * @returns {Struct.Dialog}
+   */
+
+  static __get_dialog_absolute = function(dialog_number = 0)
+  {
+    var iter_negative = (dialog_number < 0)
+      , iter_dir = iter_negative ? -1 : 1
+      , scene_start = self.scene_count * iter_negative
+      , scene_end = self.scene_count * !iter_negative
+      , sequence_start
+      , sequence_end
+      , scene
+      , sequence
+    ;
+
+    dialog_number = abs(dialog_number);
+
+    for (var i = scene_start; dialog_number && i != scene_end; i += iter_dir)
+    {
+      scene = self.scenes[i];
+      sequence_start = scene.sequence_count * iter_negative;
+      sequence_end = scene.sequence_count * !iter_negative;
+
+      for (var j = sequence_start; dialog_number && j != sequence_end; j += iter_dir)
+      {
+        sequence = scene.sequences[j];
+
+        if (dialog_number < sequence.dialog_count)
+        {
+          return sequence.dialogs[
+            iter_negative
+              ? sequence.dialog_count - dialog_number
+              : dialog_number
+          ];
+        }
+
+        dialog_number -= sequence.dialog_count;
+      }
+    }
+
+    return undefined;
   }
 
 
@@ -382,11 +614,12 @@ function DialogManager(data_string, is_file, contractor) constructor
 
   static __add_scene = function(scene)
   {
+    scene.manager = self;
     scene.scene_idx = self.scene_count++;
 
     array_push(self.scenes, scene);
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -399,15 +632,15 @@ function DialogManager(data_string, is_file, contractor) constructor
 
   static __add_scenes = function(scenes)
   {
-    var new_scene_count = array_length(scenes);
+    var scene_count = array_length(scenes);
 
-    for (var i = 0; i < new_scene_count; ++i)
+    for (var i = 0; i < scene_count; scenes[i++].manager = self)
       scenes[i].scene_idx = self.scene_count + i;
 
     self.scenes = array_concat(self.scenes, scenes);
-    self.scene_count += new_scene_count;
+    self.scene_count += scene_count;
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -419,17 +652,18 @@ function DialogManager(data_string, is_file, contractor) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static __insert_scene = function(scene, index = array_length(self.scenes))
+  static __insert_scene = function(scene, index = self.scene_count)
   {
-    for (var i = index; i < scene_count; ++i)
+    for (var i = index; i < self.scene_count; ++i)
       ++self.scenes[i].scene_idx;
 
     scene.scene_idx = index;
+    scene.manager = self;
     ++scene_count;
 
     array_insert(self.scenes, index, scene);
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -441,19 +675,19 @@ function DialogManager(data_string, is_file, contractor) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static __insert_scenes = function(scenes, index = array_length(self.scenes))
+  static __insert_scenes = function(scenes, index = self.scene_count)
   {
-    var new_scene_count = array_length(scenes);
+    var scene_count = array_length(scenes);
 
-    for (var i = index; i < scene_count; ++i)
-      scenes[i].scene_idx += new_scene_count;
+    for (var i = index; i < self.scene_count; ++i)
+      scenes[i].scene_idx += scene_count;
 
-    for (var i = 0; i < new_scene_count; ++i)
+    for (var i = 0; i < scene_count; scenes[i++].manager = self)
       array_insert(self.scenes, index + i, scenes[i]);
 
-    self.scene_count += new_scene_count;
+    self.scene_count += scene_count;
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -469,7 +703,7 @@ function DialogManager(data_string, is_file, contractor) constructor
   {
     __get_scene(scene_idx).__add_sequence(sequence);
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -485,7 +719,7 @@ function DialogManager(data_string, is_file, contractor) constructor
   {
     __get_scene(scene_idx).__add_sequences(sequences);
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -502,7 +736,7 @@ function DialogManager(data_string, is_file, contractor) constructor
   {
     __get_sequence(scene_idx, sequence_idx).__add_dialog(dialog);
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -519,7 +753,7 @@ function DialogManager(data_string, is_file, contractor) constructor
   {
     __get_sequence(scene_idx, sequence_idx).__add_dialogs(dialogs);
 
-    return __advance(0, false);
+    return __advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -540,14 +774,14 @@ function DialogManager(data_string, is_file, contractor) constructor
 
 
   /**
-   * @desc Encodes a dialog position given an index.
-   * @param {Real} dialog_idx The dialog index to encode.
+   * @desc Encode a scene position given an index.
+   * @param {Real} scene_idx The scene index to encode.
    * @returns {Real}
    */
 
-  static __encode_dialog_idx = function(dialog_idx)
+  static __encode_scene_idx = function(scene_idx)
   {
-    return dialog_idx << DIALOG.__BITMASK_POSITION_DIALOG_SHIFT & DIALOG.__BITMASK_POSITION_DIALOG_MASK;
+    return scene_idx << DIALOG.__BITMASK_POSITION_SCENE_SHIFT & DIALOG.__BITMASK_POSITION_SCENE_MASK;
   }
 
 
@@ -566,14 +800,14 @@ function DialogManager(data_string, is_file, contractor) constructor
 
 
   /**
-   * @desc Encode a scene position given an index.
-   * @param {Real} scene_idx The scene index to encode.
+   * @desc Encodes a dialog position given an index.
+   * @param {Real} dialog_idx The dialog index to encode.
    * @returns {Real}
    */
 
-  static __encode_scene_idx = function(scene_idx)
+  static __encode_dialog_idx = function(dialog_idx)
   {
-    return scene_idx << DIALOG.__BITMASK_POSITION_SCENE_SHIFT & DIALOG.__BITMASK_POSITION_SCENE_MASK;
+    return dialog_idx << DIALOG.__BITMASK_POSITION_DIALOG_SHIFT & DIALOG.__BITMASK_POSITION_DIALOG_MASK;
   }
 
 
@@ -649,11 +883,13 @@ function DialogManager(data_string, is_file, contractor) constructor
   /**
    * @desc Sets the position to match a given scene's index.
    * @param {Struct.DialogScene} scene The scene to jump to.
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
+   * @returns {Struct.Dialog}
    */
 
-  static __jump_to_scene = function(scene)
+  static __jump_to_scene = function(scene, argv = undefined)
   {
-    __set_position(scene.scene_idx, 0, 0);
+    return __jump(scene, argv);
   }
 
 
@@ -661,13 +897,13 @@ function DialogManager(data_string, is_file, contractor) constructor
   /**
    * @desc Sets the position to match a given sequence's index.
    * @param {Struct.DialogSequence} sequence The sequence to jump to.
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
+   * @returns {Struct.Dialog}
    */
 
-  static __jump_to_sequence = function(sequence)
+  static __jump_to_sequence = function(sequence, argv = undefined)
   {
-    var scene = sequence.scene;
-
-    __set_position(scene.scene_idx, sequence.sequence_idx, 0);
+    return __jump(sequence, argv);
   }
 
 
@@ -675,27 +911,29 @@ function DialogManager(data_string, is_file, contractor) constructor
   /**
    * @desc Sets the position to match a given dialog's index.
    * @param {Struct.Dialog} dialog The dialog to jump to.
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
+   * @returns {Struct.Dialog}
    */
 
-  static __jump_to_dialog = function(dialog)
+  static __jump_to_dialog = function(dialog, argv = undefined)
   {
-    var sequence = dialog.sequence
-      , scene = sequence.scene
-    ;
-
-    __set_position(scene.scene_idx, sequence.sequence_idx, dialog.dialog_idx);
+    return __jump(dialog, argv);
   }
 
 
 
   /**
    * @desc Sets the position to match a given one.
-   * @param {Real | Constant.Dialog} position The position to jump to. Defaults to current position.
+   * @param {Real | Constant.DIALOG | Struct.DialogLinkable} position The position to jump to. Defaults to current position.
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
    * @returns {Struct.Dialog}
    */
 
-  static __jump = function(position = self.position)
+  static __jump = function(position = self.position, argv = undefined)
   {
+    if (is_instanceof(position, DialogLinkable))
+      position = position.__get_position();
+
     var current_dialog = __get_dialog_position(self.position)
       , target_dialog = __get_dialog_position(position)
     ;
@@ -704,10 +942,10 @@ function DialogManager(data_string, is_file, contractor) constructor
       return fx.__decode_fx_trigger() == DIALOG_FX.TRIGGER_ON_END;
     });
 
-    var fallback_fx = target_dialog.__get_fallback();
+    var fallback_fx = target_dialog.__get_fallback(argv);
 
     if (fallback_fx)
-      return __jump(__resolve_position(fallback_fx.argv[DIALOG_FX.ARG_JUMP_DESTINATION]));
+      return __jump(__resolve_position(fallback_fx.argv[DIALOG_FX.ARG_JUMP_DESTINATION]), argv);
 
     target_dialog.__fx_execute_all_of(function(fx) {
       return fx.__decode_fx_trigger() == DIALOG_FX.TRIGGER_ON_START;
@@ -722,12 +960,15 @@ function DialogManager(data_string, is_file, contractor) constructor
 
   /**
    * Evaluates a given position to determine the destination of a jump.
-   * @param {Real | Constant.Dialog} [position] The position to resolve. Defaults to current position.
+   * @param {Real | Constant.DIALOG | Struct.DialogLinkable} [position] The position to resolve. Defaults to current position.
    * @returns {Real}
    */
 
   static __resolve_position = function(position = self.position)
   {
+    if (is_instanceof(position, DialogLinkable))
+      return position.__get_position();
+
     var scene_idx = __decode_scene_idx(self.position)
       , sequence_idx = __decode_sequence_idx(self.position)
     ;
@@ -752,20 +993,25 @@ function DialogManager(data_string, is_file, contractor) constructor
   /**
    * @desc Performs a jump to a certain dialog given its position as argument.
    * @param {Real} [position] The position where to jump. Default to current position.
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
+   * @param {Real} [mask] The jump info.
    * @returns {Struct.Dialog}
    */
 
-  static __next = function(position = self.position)
+  static __next = function(position = self.position, argv = undefined, mask = 0)
   {
+    if (__mask_check(DIALOG_MANAGER.FLAG_CHOICE, mask))
+      return __jump(__fx_choice(self, argv), argv);
+
     var jump_fx = __get_dialog().__get_jump();
 
     if (jump_fx)
     {
       position = __resolve_position(jump_fx.argv[DIALOG_FX.ARG_JUMP_DESTINATION]);
-      self.status |= 1 << DIALOG.FLAG_STATUS_EXECUTED_JUMP;
+      self.status |= __flag(DIALOG_MANAGER.FLAG_STATUS_EXECUTED_JUMP);
     }
 
-    return __jump(position);
+    return __jump(position, argv);
   }
 
 
@@ -773,85 +1019,108 @@ function DialogManager(data_string, is_file, contractor) constructor
   /**
    * @desc Makes the dialog manager advance a given number of dialogs.
    * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
    * @param {Bool} [already_initialized] Whether the dialog manager is already initialized (`true`) or not (`false`).
    * @returns {Struct.DialogManager}
    */
 
-  static __advance = function(idx_shift = 1, already_initialized = true)
+  static __advance = function(idx_shift = 1, flags = 0, argv = undefined)
   {
     self.status &= ~(
-      idx_shift
-        ? DIALOG.__BITMASK_STATUS_MASK
-        : DIALOG.__BITMASK_STATUS_AUTORESET_MASK
+      idx_shift != 0
+        ? DIALOG_MANAGER.__BITMASK_STATUS_MASK
+        : DIALOG_MANAGER.__BITMASK_STATUS_AUTORESET_MASK
     );
 
     if (
-      !idx_shift && already_initialized
+      idx_shift == 0 && !__flag_check(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED, flags)
       || !self.scene_count
     )
       return self;
 
-    var scene_idx = __decode_scene_idx()
-      , sequence_count = array_length(__get_scene(scene_idx).sequences)
+    var next_scene_idx = __decode_scene_idx()
+      , next_scene = __get_scene(next_scene_idx)
+      , next_sequence_idx = __decode_sequence_idx()
+      , next_sequence = __get_sequence(next_sequence_idx, next_scene_idx)
+      , next_dialog_idx = __decode_dialog_idx()
+      , shift_sign = sign(idx_shift)
+      , sequence_diff = 0
+      , scene_diff = 0
     ;
 
-    if (!sequence_count)
-      return self;
-
-    var sequence_idx = __decode_sequence_idx()
-      , dialog_count = array_length(__get_sequence(sequence_idx).dialogs)
-    ;
-
-    if (!dialog_count)
-      return self;
-
-    var dialog_idx = __decode_dialog_idx()
-      , next_dialog_idx = dialog_idx + idx_shift
-      , next_sequence_idx = sequence_idx
-      , next_scene_idx = scene_idx
-    ;
-
-    var should_advance_sequence = next_dialog_idx >= dialog_count;
-    next_dialog_idx *= !should_advance_sequence;
-    next_sequence_idx += should_advance_sequence;
-
-    var should_advance_scene = next_sequence_idx >= sequence_count;
-    next_sequence_idx *= !should_advance_scene;
-    next_scene_idx += should_advance_scene;
-    next_scene_idx *= next_scene_idx < self.scene_count;
+    if (__mask_check(DIALOG_MANAGER.FLAG_CHOICE, flags))
+    {
+      argv = [is_array(argv) ? argv[0] : argv, __get_dialog().__get_choice()];
+      idx_shift = 0;
+    }
+    else
+    {
+      var _wrap = function(val, low, high) {
+        var diff = high - low;
+        return ((val - low) % diff + diff) % diff + low;
+      };
+  
+      var _in_range = function(val, low, high) {
+        return val >= low && val < high;
+      }
+  
+      if (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
+      {
+        var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
+        next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
+        idx_shift += dialog_diff * shift_sign;
+  
+        while (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
+        {
+          idx_shift -= next_sequence.dialog_count * shift_sign;
+          next_sequence_idx += shift_sign;
+          sequence_diff += shift_sign;
+  
+          if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count)) {
+            next_scene_idx = _wrap(next_scene_idx + shift_sign, 0, self.scene_count);
+            next_scene = __get_scene(next_scene_idx);
+            scene_diff += shift_sign;
+            next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
+          }
+  
+          next_sequence = __get_sequence(next_sequence_idx, next_scene_idx);
+          next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
+        }
+      }
+  
+      next_dialog_idx += idx_shift;
+    }
 
     var position = __encode_position(next_scene_idx, next_sequence_idx, next_dialog_idx)
-      , target_position = __next(position).__get_position()
+      , target_position = __next(position, argv, flags).__get_position()
       , target_scene_idx = __decode_scene_idx(target_position)
       , target_sequence_idx = __decode_sequence_idx(target_position)
       , target_dialog_idx = __decode_dialog_idx(target_position)
+      , target_sequence_count = __get_scene(target_scene_idx).sequence_count
+      , target_dialog_count = __get_sequence(target_sequence_idx).dialog_count
+      , is_last_scene = target_scene_idx == self.scene_count - 1
+      , is_last_of_scene = target_sequence_idx == target_sequence_count - 1
+      , is_last_of_sequence = target_dialog_idx == target_dialog_count - 1
+      , is_last_sequence = is_last_scene && is_last_of_scene
     ;
 
-    if (target_scene_idx != scene_idx)
-      sequence_count = array_length(__get_scene(target_scene_idx).sequences);
-
-    if (target_sequence_idx != sequence_idx)
-      dialog_count = array_length(__get_sequence(target_sequence_idx).dialogs);
-
-    var is_last_scene = target_scene_idx == self.scene_count - 1
-      , is_last_sequence_rel = target_sequence_idx == sequence_count - 1
-      , is_last_dialog_rel = target_dialog_idx == dialog_count - 1
-      , is_last_sequence = is_last_scene && is_last_sequence_rel
-    ;
-
-    self.status |= (target_position == 0) << DIALOG.FLAG_STATUS_FIRST_DIALOG
-      | (target_position < 1 << DIALOG.__BITMASK_POSITION_DIALOG_BITS) << DIALOG.FLAG_STATUS_FIRST_SEQUENCE
-      | (target_scene_idx == 0) << DIALOG.FLAG_STATUS_FIRST_SCENE
-      | (target_dialog_idx == 0) << DIALOG.FLAG_STATUS_FIRST_OF_SEQUENCE
-      | (target_sequence_idx == 0) << DIALOG.FLAG_STATUS_FIRST_OF_SCENE
-      | (is_last_sequence && is_last_dialog_rel) << DIALOG.FLAG_STATUS_LAST_DIALOG
-      | is_last_sequence << DIALOG.FLAG_STATUS_LAST_SEQUENCE
-      | is_last_scene << DIALOG.FLAG_STATUS_LAST_SCENE
-      | is_last_dialog_rel << DIALOG.FLAG_STATUS_LAST_OF_SEQUENCE
-      | is_last_sequence_rel << DIALOG.FLAG_STATUS_LAST_OF_SCENE
-      | (idx_shift > 0) << DIALOG.FLAG_STATUS_ADVANCED_DIALOG
-      | should_advance_sequence << DIALOG.FLAG_STATUS_ADVANCED_SEQUENCE
-      | should_advance_scene << DIALOG.FLAG_STATUS_ADVANCED_SCENE
+    self.status |=
+        __flag(DIALOG_MANAGER.FLAG_STATUS_FIRST_DIALOG     , target_position == 0                                        )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_FIRST_SEQUENCE   , target_position < 1 << DIALOG.__BITMASK_POSITION_DIALOG_BITS)
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_FIRST_SCENE      , target_scene_idx == 0                                       )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_FIRST_OF_SEQUENCE, target_dialog_idx == 0                                      )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_FIRST_OF_SCENE   , target_sequence_idx == 0                                    )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_LAST_DIALOG      , is_last_sequence && is_last_of_sequence                     )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_LAST_SEQUENCE    , is_last_sequence                                            )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_LAST_SCENE       , is_last_scene                                               )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_LAST_OF_SEQUENCE , is_last_of_sequence                                         )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_LAST_OF_SCENE    , is_last_of_scene                                            )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_ADVANCED_DIALOG  , idx_shift > 0                                               )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_ADVANCED_SEQUENCE, sequence_diff > 0                                           )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_ADVANCED_SCENE   , scene_diff > 0                                              )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_RECEDED_DIALOG   , idx_shift < 0                                               )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_RECEDED_SEQUENCE , sequence_diff < 0                                           )
+      | __flag(DIALOG_MANAGER.FLAG_STATUS_RECEDED_SCENE    , scene_diff < 0                                              )
     ;
 
     return self;
@@ -939,7 +1208,7 @@ function DialogManager(data_string, is_file, contractor) constructor
   {
     self.scene_count = array_length(self.scenes);
 
-    for (var i = self.scene_count - 1; i; --i)
+    for (var i = self.scene_count - 1; i; self.scenes[i--].manager = self)
       self.scenes[i].scene_idx = i;
 
     return self;
@@ -948,27 +1217,43 @@ function DialogManager(data_string, is_file, contractor) constructor
 
 
   /**
-   * @desc Checks if a status flag is active.
-   * @param {Real} flag The flag to check.
-   * @returns {Bool | Real}
+   * @desc Encodes a flag.
+   * @param {Real} flag The index of the flag to encode.
+   * @param {Bool} [cond] The condition to activate the flag.
+   * @returns {Real}
    */
 
-  static __check_status_flag = function(flag)
+  static __flag = function(flag, cond = true)
   {
-    return self.status >> flag & 1;
+    return cond << flag;
   }
 
 
 
   /**
-   * @desc Checks is a combination of status flags is active.
-   * @param {Real} mask The mask to check.
+   * @desc Checks if a status flag is active.
+   * @param {Real} flag The flag to check.
+   * @param {Real} [field] The field to check.
    * @returns {Bool | Real}
    */
 
-  static __check_status_mask = function(mask)
+  static __flag_check = function(flag, field = self.status)
   {
-    return (self.status & mask) == mask;
+    return field >> flag & 1;
+  }
+
+
+
+  /**
+   * @desc Checks if a status mask is fully active.
+   * @param {Real} mask The mask to check.
+   * @param {Real} [field] The field to check.
+   * @returns {Bool | Real}
+   */
+
+  static __mask_check = function(mask, field = self.status)
+  {
+    return (field & mask) == mask;
   }
 
 
@@ -993,53 +1278,63 @@ function DialogManager(data_string, is_file, contractor) constructor
 
 
 
+  /**
+   * @desc Maps all dialog data of an array, given the bitmask info.
+   * @param {Real} size The size of the array.
+   * @param {Real} shift The bitmask shift.
+   * @param {Real} mask The bitmask to and (`&`) with.
+   * @returns {Array<Real>}
+   */
+
+  var __map_manager_data = function(size, shift, mask)
+  {
+    var array = array_create(size);
+
+    for (var i = 0; i < size; ++i)
+      array[i] = i << shift & mask;
+
+    return array;
+  }
+
+
+
   static fx_map = [
     /* Make and add functions to index here */
-    function(argv) { },
-    function(argv) { return global.dialog_manager.__fx_jump(argv); },
-    function(argv) { return global.dialog_manager.__fx_fallback(argv); },
+    function(manager, argv) { },
+    function(manager, argv) { return manager.__fx_jump(manager, argv); },
+    function(manager, argv) { return manager.__fx_fallback(manager, argv); },
+    function(manager, argv) { return manager.__fx_choice(manager, argv); },
   ];
 
   static condition_map = [
     /* Make and add condition functions to index here */
-    function(argv) { return false; },
-    function(argv) { return true; },
+    function(manager, argv) { return false; },
+    function(manager, argv) { return true; },
   ];
 
 
+
+  self.data = {
+    dialog_fx_types      : __map_manager_data(DIALOG_FX.TYPE_COUNT     , DIALOG_FX.__BITMASK_TYPE_SHIFT     , DIALOG_FX.__BITMASK_TYPE_MASK     ),
+    dialog_fx_triggers   : __map_manager_data(DIALOG_FX.TRIGGER_COUNT  , DIALOG_FX.__BITMASK_TRIGGER_SHIFT  , DIALOG_FX.__BITMASK_TRIGGER_MASK  ),
+    dialog_speakers      : __map_manager_data(DIALOG.SPEAKER_COUNT     , DIALOG.__BITMASK_SPEAKER_SHIFT     , DIALOG.__BITMASK_SPEAKER_MASK     ),
+    dialog_emotions      : __map_manager_data(DIALOG.EMOTION_COUNT     , DIALOG.__BITMASK_EMOTION_SHIFT     , DIALOG.__BITMASK_EMOTION_MASK     ),
+    dialog_anchors       : __map_manager_data(DIALOG.ANCHOR_COUNT      , DIALOG.__BITMASK_ANCHOR_SHIFT      , DIALOG.__BITMASK_ANCHOR_MASK      ),
+    dialog_textboxes     : __map_manager_data(DIALOG.TEXTBOX_COUNT     , DIALOG.__BITMASK_TEXTBOX_SHIFT     , DIALOG.__BITMASK_TEXTBOX_MASK     ),
+    dialog_tags          : __map_manager_data(DIALOG.TAG_COUNT         , DIALOG.__BITMASK_TAG_SHIFT         , DIALOG.__BITMASK_TAG_MASK         ),
+    dialog_sequence_tags : __map_manager_data(DIALOG_SEQUENCE.TAG_COUNT, DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT, DIALOG_SEQUENCE.__BITMASK_TAG_MASK),
+    dialog_scene_bg      : __map_manager_data(DIALOG_SCENE.BG_COUNT    , DIALOG_SCENE.__BITMASK_BG_SHIFT    , DIALOG_SCENE.__BITMASK_BG_MASK    ),
+    dialog_scene_bgm     : __map_manager_data(DIALOG_SCENE.BGM_COUNT   , DIALOG_SCENE.__BITMASK_BGM_SHIFT   , DIALOG_SCENE.__BITMASK_BGM_MASK   ),
+    dialog_scene_bgs     : __map_manager_data(DIALOG_SCENE.BGS_COUNT   , DIALOG_SCENE.__BITMASK_BGS_SHIFT   , DIALOG_SCENE.__BITMASK_BGS_MASK   ),
+    dialog_scene_tags    : __map_manager_data(DIALOG_SCENE.TAG_COUNT   , DIALOG_SCENE.__BITMASK_TAG_SHIFT   , DIALOG_SCENE.__BITMASK_TAG_MASK   ),
+  };
 
   self.status = 0;
   self.position = 0;
   self.scene_count = 0;
   self.scenes = [];
 
-  __deserialize(data_string, is_file).__advance(0, false);
-
-  global.dialog_manager = self;
-  contractor.dialog_speakers = array_create(DIALOG.SPEAKER_COUNT);
-  contractor.dialog_emotions = array_create(DIALOG.EMOTION_COUNT);
-  contractor.dialog_anchors = array_create(DIALOG.ANCHOR_COUNT);
-  contractor.dialog_textboxes = array_create(DIALOG.TEXTBOX_COUNT);
-  contractor.dialog_fx_types = array_create(DIALOG_FX.TYPE_COUNT);
-  contractor.dialog_fx_triggers = array_create(DIALOG_FX.TRIGGER_COUNT);
-
-  for (var i = 0; i < DIALOG.SPEAKER_COUNT; ++i)
-    contractor.dialog_speakers[i] = i << DIALOG.__BITMASK_SPEAKER_SHIFT & DIALOG.__BITMASK_SPEAKER_MASK;
-
-  for (var i = 0; i < DIALOG.EMOTION_COUNT; ++i)
-    contractor.dialog_emotions[i] = i << DIALOG.__BITMASK_EMOTION_SHIFT & DIALOG.__BITMASK_EMOTION_MASK;
-
-  for (var i = 0; i < DIALOG.ANCHOR_COUNT; ++i)
-    contractor.dialog_anchors[i] = i << DIALOG.__BITMASK_ANCHOR_SHIFT & DIALOG.__BITMASK_ANCHOR_MASK;
-
-  for (var i = 0; i < DIALOG.TEXTBOX_COUNT; ++i)
-    contractor.dialog_textboxes[i] = i << DIALOG.__BITMASK_TEXTBOX_SHIFT & DIALOG.__BITMASK_TEXTBOX_MASK;
-
-  for (var i = 0; i < DIALOG_FX.TYPE_COUNT; ++i)
-    contractor.dialog_fx_types[i] = i << DIALOG_FX.__BITMASK_TYPE_SHIFT & DIALOG_FX.__BITMASK_TYPE_MASK;
-
-  for (var i = 0; i < DIALOG_FX.TRIGGER_COUNT; ++i)
-    contractor.dialog_fx_triggers[i] = i << DIALOG_FX.__BITMASK_TRIGGER_SHIFT & DIALOG_FX.__BITMASK_TRIGGER_MASK;
+  __deserialize(data_string, is_file).__advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
 }
 
 
@@ -1108,10 +1403,12 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 {
   static scene_id = 0;
 
+  self.manager = undefined;
   self.scene_idx = 0;
   self.scene_id = scene_id++;
   self.sequences = [];
   self.settings_mask = settings_mask;
+  self.sequence_count = 0;
 
 
 
@@ -1127,6 +1424,110 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
     --DialogScene.scene_id;
 
     return self;
+  }
+
+
+
+  /**
+   * @desc Encodes the scene bg as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE} [bg] The bg identifier.
+   * @returns {Real}
+   */
+
+  static __encode_bg = function(bg = DIALOG_SCENE.BG_DEFAULT)
+  {
+    return bg << DIALOG_SCENE.__BITMASK_BG_SHIFT & DIALOG_SCENE.__BITMASK_BG_MASK;
+  }
+
+
+
+  /**
+   * @desc Encodes the scene bgm as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE} [bgm] The bgm identifier.
+   * @returns {Real}
+   */
+
+  static __encode_bgm = function(bgm = DIALOG_SCENE.BGM_DEFAULT)
+  {
+    return bgm << DIALOG_SCENE.__BITMASK_BGM_SHIFT & DIALOG_SCENE.__BITMASK_BGM_MASK;
+  }
+
+
+
+  /**
+   * @desc Encodes the scene bgs as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE} [bgs] The bgs identifier.
+   * @returns {Real}
+   */
+
+  static __encode_bgs = function(bgs = DIALOG_SCENE.BGS_DEFAULT)
+  {
+    return bgs << DIALOG_SCENE.__BITMASK_BGS_SHIFT & DIALOG_SCENE.__BITMASK_BGS_MASK;
+  }
+
+
+
+  /**
+   * @desc Encodes the scene tag as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE} [tag] The tag identifier.
+   * @returns {Real}
+   */
+
+  static __encode_tag = function(tag = DIALOG_SCENE.TAG_DEFAULT)
+  {
+    return tag << DIALOG_SCENE.__BITMASK_TAG_SHIFT & DIALOG_SCENE.__BITMASK_TAG_MASK;
+  }
+
+
+
+  /**
+   * @desc Extracts the scene bg from a settings bitmask.
+   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Constant.DIALOG_SCENE}
+   */
+
+  static __decode_bg = function(settings_mask = self.settings_mask)
+  {
+    return (settings_mask & DIALOG_SCENE.__BITMASK_BG_MASK) >> DIALOG_SCENE.__BITMASK_BG_SHIFT;
+  }
+
+
+
+  /**
+   * @desc Extracts the scene bgm from a settings bitmask.
+   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Constant.DIALOG_SCENE}
+   */
+
+  static __decode_bgm = function(settings_mask = self.settings_mask)
+  {
+    return (settings_mask & DIALOG_SCENE.__BITMASK_BGM_MASK) >> DIALOG_SCENE.__BITMASK_BGM_SHIFT;
+  }
+
+
+
+  /**
+   * @desc Extracts the scene bgs from a settings bitmask.
+   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Constant.DIALOG_SCENE}
+   */
+
+  static __decode_bgs = function(settings_mask = self.settings_mask)
+  {
+    return (settings_mask & DIALOG_SCENE.__BITMASK_BGS_MASK) >> DIALOG_SCENE.__BITMASK_BGS_SHIFT;
+  }
+
+
+
+  /**
+   * @desc Extracts the scene tag from a settings bitmask.
+   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Constant.DIALOG_SCENE}
+   */
+
+  static __decode_tag = function(settings_mask = self.settings_mask)
+  {
+    return (settings_mask & DIALOG_SCENE.__BITMASK_TAG_MASK) >> DIALOG_SCENE.__BITMASK_TAG_SHIFT;
   }
 
 
@@ -1208,6 +1609,25 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
 
   /**
+   * @desc Returns a list of all sequences matching a tag.
+   * @param {Real} [tag] The tag to filter the sequences with. Defaults to `DIALOG_SEQUENCE.TAG_DEFAULT`.
+   * @returns {Array<Struct.DialogSequence>}
+   */
+
+  static __get_sequences_by_tag = function(tag = DIALOG_SEQUENCE.TAG_DEFAULT)
+  {
+    var sequences = [];
+
+    for (var i = 0; i < self.sequence_count; ++i)
+      if (self.sequences[i].__decode_tag() == tag)
+        array_push(sequences, self.sequences[i]);
+
+    return sequences;
+  }
+
+
+
+  /**
    * @desc Appends a sequence to the scene's sequence list.
    * @param {Struct.DialogSequence} sequence The new sequence to add.
    * @returns {Struct.DialogScene}
@@ -1215,8 +1635,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   static __add_sequence = function(sequence)
   {
-    sequence.sequence_idx = array_length(self.sequences);
     sequence.scene = self;
+    sequence.sequence_idx = self.sequence_count++;
 
     array_push(self.sequences, sequence);
 
@@ -1233,15 +1653,13 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   static __add_sequences = function(sequences)
   {
-    var sequence_count = array_length(self.sequences);
+    var sequence_count = array_length(sequences);
 
-    for (var i = array_length(sequences) - 1; i >= 0; --i)
-    {
-      sequences[i].sequence_idx = sequence_count + i;
-      sequences[i].scene = self;
-    }
+    for (var i = 0; i < sequence_count; sequences[i++].scene = self)
+      sequences[i].sequence_idx = self.sequence_count + i;
 
     self.sequences = array_concat(self.sequences, sequences);
+    self.sequence_count += sequence_count;
 
     return self;
   }
@@ -1255,15 +1673,17 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
    * @returns {Struct.DialogScene}
    */
 
-  static __insert_sequence = function(sequence, index = array_length(self.sequences))
+  static __insert_sequence = function(sequence, index = self.sequence_count)
   {
-    sequence.sequence_idx = index;
     sequence.scene = self;
+    sequence.sequence_idx = index;
 
-    for (var i = array_length(self.sequences) - 1; i >= index; --i)
+    for (var i = index; i < self.sequence_count; ++i)
       ++self.sequences[i].sequence_idx;
 
     array_insert(self.sequences, index, sequence);
+
+    ++self.sequence_count;
 
     return self;
   }
@@ -1277,20 +1697,20 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
    * @returns {Struct.DialogScene}
    */
 
-  static __insert_sequences = function(sequences, index = array_length(self.sequences))
+  static __insert_sequences = function(sequences, index = self.sequence_count)
   {
-    var sequence_count = array_length(self.sequences);
-    var new_sequence_count = array_length(sequences);
+    var sequence_count = array_length(sequences);
 
-    for (var i = sequence_count - 1; i >= index; --i)
-      ++self.sequences[i].sequence_idx;
+    for (var i = index; i < self.sequence_count; --i)
+      self.sequences[i].sequence_idx += sequence_count;
 
-    for (var i = 0; i < new_sequence_count; ++i)
+    for (var i = 0; i < sequence_count; sequences[i++].scene = self)
     {
-      sequences[i].scene = self;
       sequences[i].sequence_idx = index + i;
       array_insert(self.sequences, index + i, sequences[i]);
     }
+
+    self.sequence_count += sequence_count;
 
     return self;
   }
@@ -1304,7 +1724,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   static __update_sequences = function()
   {
-    for (var i = array_length(self.sequences) - 1; i >= 0; self.sequences[i--].scene = self)
+    for (var i = 0; i < self.sequence_count; self.sequences[i++].scene = self)
       self.sequences[i].sequence_idx = i;
 
     return self;
@@ -1320,35 +1740,6 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
   static __get_position = function()
   {
     return DialogManager.__encode_position(self.scene_idx, 0, 0);
-  }
-
-
-
-  /**
-   * @desc Creates a map of the dialog speakers and readapts the ones in the dialog to match the relative map index.
-   * @returns {Void}
-   */
-
-  static __map_speakers = function()
-  {
-    self.speaker_map = [];
-
-    var map = {}
-      , count = 0
-    ;
-
-    for (var i = array_length(self.dialogs) - 1; i >= 0; --i)
-    {
-      var dialog = self.dialogs[i];
-
-      if (!struct_exists(map, dialog.speaker_id))
-      {
-        struct_set(map, dialog.speaker_id, count);
-        self.speaker_map[count++] = dialog.speaker_id;
-      }
-
-      dialog.speaker_id = struct_get(map, dialog.speaker_id);
-    }
   }
 
 
@@ -1410,18 +1801,21 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 /**
  * `DialogSequence` constructor.
  * @param {Array<Struct.Dialog>} [dialogs] - The array of `Dialog` of the sequence.
+ * @param {Constant.DIALOG_SEQUENCE} [settings_mask] - The sequence info.
  * @param {Array<Real>} [speaker_map] - The indexes of the speakers.
  * @returns {Struct.DialogSequence}
  */
 
-function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
+function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() constructor
 {
   static sequence_id = 0;
 
   self.scene = undefined;
-  self.sequence_id = sequence_id++;
   self.speaker_map = speaker_map;
+  self.sequence_id = sequence_id++;
+  self.settings_mask = settings_mask;
   self.sequence_idx = 0;
+  self.dialog_count = 0;
   self.dialogs = [];
 
 
@@ -1443,6 +1837,32 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
 
 
   /**
+   * @desc Encodes the sequence tag as a bitmask fragment.
+   * @param {Constant.DIALOG_SEQUENCE} [tag] The tag identifier.
+   * @returns {Real}
+   */
+
+  static __encode_tag = function(tag = DIALOG_SEQUENCE.TAG_DEFAULT)
+  {
+    return tag << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT & DIALOG_SEQUENCE.__BITMASK_TAG_MASK;
+  }
+
+
+
+  /**
+   * @desc Extracts the sequence tag from a settings bitmask.
+   * @param {Real} [settings_mask] The settings bitmask. Defaults to the sequence's current mask.
+   * @returns {Constant.DIALOG_SEQUENCE}
+   */
+
+  static __decode_tag = function(settings_mask = self.settings_mask)
+  {
+    return (settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK) >> DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT;
+  }
+
+
+
+  /**
    * @desc Serialises the sequence into a compact array.
    * @returns {Array}
    */
@@ -1451,6 +1871,7 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
   {
     return [
       int64(sequence_id),
+      int64(settings_mask),
       array_map(dialogs, function(dialog) {
         return dialog.__DIALOG_MANAGER_ENCODING_METHOD__();
       }),
@@ -1471,6 +1892,7 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
   {
     return {
       sequence_id: int64(sequence_id),
+      settings_mask: int64(settings_mask),
       dialogs: array_map(dialogs, function(dialog) {
         return dialog.__DIALOG_MANAGER_ENCODING_METHOD__();
       }),
@@ -1494,7 +1916,8 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
       array_map(data[1], function(dialog) {
         return Dialog.__DIALOG_MANAGER_DECODING_METHOD__(dialog);
       }),
-      data[2]
+      data[2],
+      data[3]
     )
     .__override_id(data[0])
     .__update_dialogs();
@@ -1514,12 +1937,31 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
       array_map(data.dialogs, function(dialog) {
         return Dialog.__DIALOG_MANAGER_DECODING_METHOD__(dialog);
       }),
+      data.settings_mask,
       data.speaker_map
     )
     .__override_id(data.sequence_id)
     .__update_dialogs();
   }
 
+
+
+  /**
+   * @desc Returns a list of all dialogs matching a tag.
+   * @param {Real} [tag] The tag to filter the dialogs with. Defaults to `DIALOG.TAG_DEFAULT`.
+   * @returns {Array<Struct.Dialog>}
+   */
+
+  static __get_dialogs_by_tag = function(tag = DIALOG.TAG_DEFAULT)
+  {
+    var dialogs = [];
+
+    for (var i = 0; i < self.dialog_count; ++i)
+      if (self.dialogs[i].__decode_tag() == tag)
+        array_push(dialogs, self.dialogs[i]);
+
+    return dialogs;
+  }
 
 
 
@@ -1532,7 +1974,7 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
   static __add_dialog = function(dialog)
   {
     dialog.sequence = self;
-    dialog.dialog_idx = array_length(self.dialogs);
+    dialog.dialog_idx = self.dialog_count++;
 
     array_push(self.dialogs, dialog);
 
@@ -1551,10 +1993,11 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
   {
     var dialog_count = array_length(dialogs);
 
-    for (var i = dialog_count - 1; i >= 0; dialogs[i--].sequence = self)
-      dialogs[i].dialog_idx = i;
+    for (var i = 0; i < dialog_count; dialogs[i++].sequence = self)
+      dialogs[i].dialog_idx = self.dialog_count + i;
 
     self.dialogs = array_concat(self.dialogs, dialogs);
+    self.dialog_count += dialog_count;
 
     return self;
   }
@@ -1568,15 +2011,17 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
    * @returns {Struct.DialogSequence}
    */
 
-  static __insert_dialog = function(dialog, index = array_length(self.dialogs))
+  static __insert_dialog = function(dialog, index = self.dialog_count)
   {
     dialog.sequence = self;
     dialog.dialog_idx = index;
 
-    for (var i = array_length(self.dialogs) - 1; i >= index; --i)
+    for (var i = index; i < self.dialog_count; ++i)
       ++self.dialogs[i].dialog_idx;
 
     array_insert(self.dialogs, index, dialog);
+
+    ++self.dialog_count;
 
     return self;
   }
@@ -1590,18 +2035,20 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
    * @returns {Struct.DialogSequence}
    */
 
-  static __insert_dialogs = function(dialogs, index = array_length(self.dialogs))
+  static __insert_dialogs = function(dialogs, index = self.dialog_count)
   {
-    var new_dialog_count = array_length(dialogs);
+    var dialog_count = array_length(dialogs);
 
-    for (var i = array_length(self.dialogs) - 1; i >= index; --i)
-      self.dialogs[i].position += new_dialog_count;
+    for (var i = index; i < self.dialog_count; ++i)
+      self.dialogs[i].dialog_idx += dialog_count;
 
-    for (var i = 0; i < new_dialog_count; dialogs[i++].sequence = self)
+    for (var i = 0; i < dialog_count; dialogs[i++].sequence = self)
     {
       array_insert(self.dialogs, index + i, dialogs[i]);
       dialogs[i].dialog_idx = index + i;
     }
+
+    self.dialog_count += dialog_count;
 
     return self;
   }
@@ -1629,8 +2076,39 @@ function DialogSequence(dialogs, speaker_map) : DialogLinkable() constructor
 
   static __update_dialogs = function()
   {
-    for (var i = array_length(self.dialogs) - 1; i >= 0; self.dialogs[i--].sequence = self)
+    for (var i = 0; i < self.dialog_count; self.dialogs[i++].sequence = self)
       self.dialogs[i].dialog_idx = i;
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Creates a map of the dialog speakers and readapts the ones in the dialog to match the relative map index.
+   * @returns {Struct.DialogSequence}
+   */
+
+  static __map_speakers = function()
+  {
+    self.speaker_map = [];
+
+    var map = {}
+      , count = 0
+    ;
+
+    for (var i = 0; i < self.dialog_count; ++i)
+    {
+      var dialog = self.dialogs[i];
+
+      if (!struct_exists(map, dialog.speaker_id))
+      {
+        struct_set(map, dialog.speaker_id, count);
+        self.speaker_map[count++] = dialog.speaker_id;
+      }
+
+      dialog.speaker_id = struct_get(map, dialog.speaker_id);
+    }
 
     return self;
   }
@@ -1788,6 +2266,32 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
 
 
+  /*
+   * @desc Encodes the dialog tag as a bitmask fragment.
+   * @param {Constant.DIALOG} tag The tag identifier.
+   * @returns {Real}
+   */
+
+  static __encode_tag = function(tag)
+  {
+    return tag << DIALOG.__BITMASK_TAG_SHIFT & DIALOG.__BITMASK_TAG_MASK;
+  }
+
+
+
+  /**
+   * @desc Extracts the dialog tag from a settings bitmask.
+   * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
+   * @returns {Constant.DIALOG}
+   */
+
+  static __decode_tag = function(settings_mask = self.settings_mask)
+  {
+    return (settings_mask & DIALOG.__BITMASK_TAG_MASK) >> DIALOG.__BITMASK_TAG_SHIFT;
+  }
+
+
+
   /**
    * @desc Extracts the speaker ID from a settings bitmask.
    * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
@@ -1915,6 +2419,18 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
 
   /**
+   * @desc Retrieves the assigned manager object.
+   * @returns {Struct.DialogManager}
+   */
+
+  static __get_manager = function()
+  {
+    return self.sequence.scene.manager;
+  }
+
+
+
+  /**
    * @desc Retrieves the dialog's global position.
    * @returns {Real}
    */
@@ -1938,7 +2454,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
   static __get_jump = function()
   {
     for (var i = array_length(self.fx_map) - 1; i >= 0; --i)
-      if (fx_map[i].__decode_fx_type() == DIALOG_FX.TYPE_JUMP)
+      if (self.fx_map[i].__decode_fx_type() == DIALOG_FX.TYPE_JUMP)
         return self.fx_map[i];
 
     return undefined;
@@ -1948,7 +2464,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Returns the first fallback FX that evaluates truthfully, if any.
-   * @param {Array} [argv] The arguments to pass to the effect.
+   * @param {Array|Any} [argv] The arguments to pass to the effect.
    * @returns {Struct.DialogFX}
    */
 
@@ -1957,8 +2473,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     var fx_count = array_length(self.fx_map);
 
     for (var i = 0; i < fx_count; ++i)
-      if (fx_map[i].__decode_fx_type() == DIALOG_FX.TYPE_FALLBACK && fx_map[i].__exec(argv))
-        return fx_map[i];
+      if (self.fx_map[i].__decode_fx_type() == DIALOG_FX.TYPE_FALLBACK && self.fx_map[i].__exec(__get_manager(), argv))
+        return self.fx_map[i];
 
     return undefined;
   }
@@ -1966,9 +2482,46 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
 
   /**
+   * @desc Returns the first choice FX, if any.
+   * @param {Array|Any} [argv] The arguments to pass to the effect.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __get_choice = function(argv = undefined)
+  {
+    var fx_count = array_length(self.fx_map);
+
+    for (var i = 0; i < fx_count; ++i)
+      if (self.fx_map[i].__decode_fx_type() == DIALOG_FX.TYPE_CHOICE)
+        return self.fx_map[i];
+
+    return undefined;
+  }
+
+
+
+  /**
+   * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects matching a specified criteria.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+   * @param {Array|Any} [argv] The arguments to pass to the effects.
+   * @returns {Bool}
+   */
+
+  static __fx_has_of = function(filter_fn = function(fx, argv) { return true; }, argv = undefined)
+  {
+    for (var i = array_length(self.fx_map) - 1; i >= 0; --i)
+      if (filter_fn(self.fx_map[i], argv))
+        return true;
+
+    return false;
+  }
+
+
+
+  /**
    * @desc Retrieves all dialog FX which match a filter.
    * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
-   * @param {Array} [argv] The arguments to pass to the effects.
+   * @param {Array|Any} [argv] The arguments to pass to the effects.
    * @returns {Array<Struct.DialogFX>}
    */
 
@@ -1978,8 +2531,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     var fx_count = array_length(self.fx_map);
 
     for (var i = 0; i < fx_count; ++i)
-      if (filter_fn(fx_map[i], argv))
-        array_push(filtered, fx_map[i]);
+      if (filter_fn(self.fx_map[i], argv))
+        array_push(filtered, self.fx_map[i]);
 
     return filtered;
   }
@@ -1989,7 +2542,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
   /**
    * @desc Executes all dialog FX which match a filter.
    * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
-   * @param {Array} [argv] The arguments to pass to the effects.
+   * @param {Array|Any} [argv] The arguments to pass to the effects.
    * @returns {Struct.Dialog}
    */
 
@@ -1998,8 +2551,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     var fx_count = array_length(self.fx_map);
 
     for (var i = 0; i < fx_count; ++i)
-      if (filter_fn(fx_map[i], argv))
-        fx_map[i].__exec(argv);
+      if (filter_fn(self.fx_map[i], argv))
+        self.fx_map[i].__exec(__get_manager(), argv);
 
     return self;
   }
@@ -2208,13 +2761,14 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Executes the FX using the global dialog manager's registered handlers.
+   * @param {Struct.DialogManager} [dialog_manager] The referenced dialog manager.
    * @param {Array} [argv] The arguments to pass to the effect.
    * @returns {Any}
    */
 
-  static __exec = function(argv = self.argv)
+  static __exec = function(dialog_manager, argv = self.argv)
   {
-    return global.dialog_manager.fx_map[__decode_fx_type()](argv);
+    return dialog_manager.fx_map[__decode_fx_type()](dialog_manager, argv);
   }
 
 
@@ -2255,7 +2809,7 @@ function DialogFX(settings_mask, argv, func) constructor
     DialogManager.fx_map[type] = func;
   else if (
     type == DIALOG_FX.TYPE_FALLBACK
-    && argv[DIALOG_FX.ARG_JUMP_CONDITION] >= array_length(DialogManager.condition_map)
+    && (argv[DIALOG_FX.ARG_JUMP_CONDITION] ?? 0) >= array_length(DialogManager.condition_map)
   )
     DialogManager.condition_map[type] = func;
 }
