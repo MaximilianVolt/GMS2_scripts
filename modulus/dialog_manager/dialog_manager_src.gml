@@ -340,9 +340,13 @@ function DialogManager(data_string, is_file) constructor
 
   static ERROR = function(type, argv = [])
   {
-    if (type >= DIALOG_MANAGER.ERR_COUNT)
+    if (type < 0 || type >= DIALOG_MANAGER.ERR_COUNT)
+    {
       argv = [type];
-    else if (!is_array(argv))
+      type = DIALOG_MANAGER.ERR_UNDEFINED_ERROR_TYPE;
+    }
+
+    if (!is_array(argv))
       argv = [argv];
 
     var msg = string_ext([
