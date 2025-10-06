@@ -2124,7 +2124,7 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
     var scene = self.scene;
 
     if (!scene)
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1, [instanceof(DialogSequence), instanceof(DialogScene), instanceof(DialogLinkable), instanceof(DialogFX), self.__struct()]);
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1, [nameof(DialogSequence), nameof(DialogScene), nameof(DialogLinkable), nameof(DialogFX), self.__struct()]);
 
     return DialogManager.__encode_position(self.scene.scene_idx, self.sequence_idx, 0);
   }
@@ -2504,12 +2504,12 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     var sequence = self.sequence;
 
     if (!sequence)
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1, [instanceof(Dialog), instanceof(DialogSequence), instanceof(DialogLinkable), instanceof(DialogFX), self.__struct()]);
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1, [nameof(Dialog), nameof(DialogSequence), nameof(DialogLinkable), nameof(DialogFX), self.__struct()]);
 
     var scene = sequence.scene;
 
     if (!scene)
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L2, [instanceof(Dialog), instanceof(DialogSequence), instanceof(DialogLinkable), instanceof(DialogFX), self.__struct(), sequence.__struct()]);
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L2, [nameof(Dialog), nameof(DialogSequence), nameof(DialogLinkable), nameof(DialogFX), self.__struct(), sequence.__struct()]);
 
     return DialogManager.__encode_position(scene.scene_idx, sequence.sequence_idx, self.dialog_idx);
   }
