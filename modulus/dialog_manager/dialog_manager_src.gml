@@ -1,5 +1,5 @@
 /**
- * @desc Dialog management system source code.
+ * @desc Dialog management system.
  * @author @MaximilianVolt
  * @version 0.8
  */
@@ -46,7 +46,7 @@ enum DIALOG_MANAGER
 
   // Jump info
   __FLAG_INDEX_CHOICE = 1,
-
+  
   // Masks (should not edit)
   __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_MANAGER.FLAG_STATUS_COUNT - DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
   __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
@@ -240,6 +240,12 @@ enum DIALOG_FX
   TYPE_FALLBACK,
   TYPE_CHOICE,
   TYPE_STATE_MODIFY,
+  TYPE_TEXT,
+  TYPE_IMAGE,
+  TYPE_VIDEO,
+  TYPE_BGM,
+  TYPE_BGS,
+  TYPE_SFX,
     // ...
   TYPE_COUNT,
   TYPE_DEFAULT = DIALOG_FX.TYPE_ANY,
@@ -313,6 +319,10 @@ enum DIALOG_FX
 
 function DialogManager(data_string, is_file) constructor
 {
+  static CONSTRUCTOR_ARGC = argument_count;
+
+
+
   /**
    * @desc Executes the inconditional jump effect.
    * @param {Struct.DialogManager} manager The reference to the dialog manager.
@@ -457,7 +467,7 @@ function DialogManager(data_string, is_file) constructor
       if (sequence_number < scene.sequence_count)
       {
         return scene.sequences[
-          iter_negative
+          iter_negative 
             ? scene.sequence_count - sequence_number
             : sequence_number
         ];
@@ -1050,35 +1060,35 @@ function DialogManager(data_string, is_file) constructor
         var diff = high - low;
         return ((val - low) % diff + diff) % diff + low;
       };
-
+  
       var _in_range = function(val, low, high) {
         return val >= low && val < high;
       }
-
+  
       if (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
       {
         var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
         next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
         idx_shift += dialog_diff * shift_sign;
-
+  
         while (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
         {
           idx_shift -= next_sequence.dialog_count * shift_sign;
           next_sequence_idx += shift_sign;
           sequence_diff += shift_sign;
-
+  
           if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count)) {
             next_scene_idx = _wrap(next_scene_idx + shift_sign, 0, self.scene_count);
             next_scene = __get_scene(next_scene_idx);
             scene_diff += shift_sign;
             next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
           }
-
+  
           next_sequence = __get_sequence(next_sequence_idx, next_scene_idx);
           next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
         }
       }
-
+  
       next_dialog_idx += idx_shift;
     }
 
@@ -1392,6 +1402,7 @@ function DialogLinkable() constructor {}
 
 function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 {
+  static CONSTRUCTOR_ARGC = argument_count;
   static scene_id = 0;
 
   self.manager = undefined;
@@ -1799,6 +1810,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
 function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() constructor
 {
+  static CONSTRUCTOR_ARGC = argument_count;
   static sequence_id = 0;
 
   self.scene = undefined;
@@ -2174,6 +2186,8 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
 function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 {
+  static CONSTRUCTOR_ARGC = argument_count;
+
   self.dialog_idx = 0;
   self.sequence = undefined;
   self.text = text;
@@ -2548,8 +2562,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     return self;
   }
 
-
-
+  
+  
   /**
    * @desc Links the specified dialog to a given choice fx.
    * @param {Struct.DialogFX} fx The effect to link the dialog to.
@@ -2627,6 +2641,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
 function DialogFX(settings_mask, argv, func) constructor
 {
+  static CONSTRUCTOR_ARGC = argument_count;
+
   self.settings_mask = settings_mask;
   self.argv = argv;
 
@@ -2805,7 +2821,7 @@ function DialogFX(settings_mask, argv, func) constructor
       type == DIALOG_FX.TYPE_FALLBACK
       && (argv[DIALOG_FX.ARG_JUMP_CONDITION] ?? 0) >= array_length(DialogManager.condition_map)
     )
-      DialogManager.condition_map[type] = func;
+      DialogManager.condition_map[type] = func; 
   }
 
 

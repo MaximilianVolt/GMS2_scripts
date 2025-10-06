@@ -391,7 +391,7 @@ function dialog_create_struct(data)
 
 function dialog_create_from_choice(dialog_args, fx, prompt, index = array_length(fx.argv))
 {
-  for (var arg = array_length(dialog_args); arg < 3; ++arg)
+  for (var arg = array_length(dialog_args); arg < Dialog.CONSTRUCTOR_ARGC; ++arg)
     dialog_args[arg] = undefined;
 
   return dialog_create_array(dialog_args).__fx_from_choice(fx, prompt, index);
