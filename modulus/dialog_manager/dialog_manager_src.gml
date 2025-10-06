@@ -1,16 +1,7 @@
 /**
- * @desc Dialog management system.
+ * @desc Dialog management system source code.
  * @author @MaximilianVolt
- * @version 0.7
- *
- * !: Next up, for version 0.8:
- * -: +: 1. Add to each scene and sequence the number of items they have in and adapt it in methods that edit it.
- * -: +: 2. Info and setting masks to sequences and dialogs, similarly to scenes, add methods for encoding and decoding and also for searching.
- * -: +: 3. Try to find a way to have multiple instances of dialog managers, detaching it from global (unless it's the chosen contractor). Then add the reference to all scenes.
- * -: 4. Generalize behavior for advancing in dialogs (including negative numbers).
- * +: 5. A branching dialog effect, where you can have an array of possible jumps and given an index it knows where to jump.
- * *: USARE L'OPZIONE flags SUL METODO __advance() PER DEDURRE SE SI TRATTA DI UNA CHOICE
- * *: AGGIORNA GLI ARGOMENTI DI __next() E VEDI SE SERVONO ULTERIORI MODIFICHE NEI METODI DI SALTO CORRELATI.
+ * @version 0.8
  */
 
 
@@ -55,7 +46,7 @@ enum DIALOG_MANAGER
 
   // Jump info
   __FLAG_INDEX_CHOICE = 1,
-  
+
   // Masks (should not edit)
   __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_MANAGER.FLAG_STATUS_COUNT - DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
   __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
@@ -315,7 +306,7 @@ enum DIALOG_FX
 
 /**
  * @desc `DialogManager` constructor.
- * @param {String | Id.TextFile} data_string The data to parse.
+ * @param {String|Id.TextFile} data_string The data to parse.
  * @param {Bool} is_file Specifies whether `data_string` is a file (`true`) or not (`false`).
  * @returns {Struct.DialogManager}
  */
@@ -324,7 +315,7 @@ function DialogManager(data_string, is_file) constructor
 {
   /**
    * @desc Executes the inconditional jump effect.
-   * @param {Struct.DialogManager} The reference to the dialog manager.
+   * @param {Struct.DialogManager} manager The reference to the dialog manager.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
    * @returns {Struct.Dialog}
    */
@@ -338,7 +329,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Executes the conditional jump effect.
-   * @param {Struct.DialogManager} The reference to the dialog manager.
+   * @param {Struct.DialogManager} manager The reference to the dialog manager.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
    * @returns {Struct.Dialog}
    */
@@ -347,7 +338,7 @@ function DialogManager(data_string, is_file) constructor
   {
     var position = manager.position;
 
-    if (manager.condition_map[argv[DIALOG_FX.ARG_JUMP_CONDITION]](argv))
+    if (manager.condition_map[argv[DIALOG_FX.ARG_JUMP_CONDITION]](manager, argv))
     {
       manager.position = manager.__resolve_position(argv[DIALOG_FX.ARG_JUMP_DESTINATION]);
       manager.status |= __flag(DIALOG_MANAGER.FLAG_STATUS_EXECUTED_FALLBACK);
@@ -360,7 +351,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Executes the multi-option jump effect.
-   * @param {Struct.DialogManager} The reference to the dialog manager.
+   * @param {Struct.DialogManager} manager The reference to the dialog manager.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
    * @returns {Struct.Dialog}
    */
@@ -371,7 +362,7 @@ function DialogManager(data_string, is_file) constructor
 
     if (choice_index != DIALOG_FX.CHOICE_INDEX_UNSELECTED)
     {
-      manager.status |= DIALOG_MANAGER.FLAG_STATUS_EXECUTED_CHOICE;
+      manager.status |= __flag(DIALOG_MANAGER.FLAG_STATUS_EXECUTED_CHOICE);
       return manager.__get_dialog_position(manager.__resolve_position(argv[DIALOG_FX.ARG_CHOICE_LIST].argv[choice_index][DIALOG_FX.ARG_SUBARG_CHOICE_DESTINATION]));
     }
 
@@ -382,7 +373,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns a scene given the scene index.
-   * @param {Real} [scene_id] The scene index. Defaults to current scene.
+   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @returns {Struct.DialogScene}
    */
 
@@ -411,7 +402,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns a list of all scenes matching a tag.
-   * @param {Real} [tag] The tag to filter the scenes with. Defaults to `DIALOG_SCENE.TAG_DEFAULT`.
+   * @param {Constant.DIALOG_SCENE|Real} [tag] The tag to filter the scenes with. Defaults to `DIALOG_SCENE.TAG_DEFAULT`.
    * @returns {Array<Struct.DialogScene>}
    */
 
@@ -430,8 +421,8 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns a scene given the scene and sequence indeces.
-   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @param {Real} [sequence_idx] The sequence index. Defaults to current sequence.
+   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @returns {Struct.DialogSequence}
    */
 
@@ -445,7 +436,7 @@ function DialogManager(data_string, is_file) constructor
   /**
    * @desc Returns a sequence given its absolute position in order as a number.
    * @param {Real} [sequence_number] The number of the sequence. Defaults to `0`. Negative indices will iterate backwards.
-   * @returns {Struct.DialogSequence}
+   * @returns {Struct.DialogSequence|undefined}
    */
 
   static __get_sequence_absolute = function(sequence_number = 0)
@@ -466,7 +457,7 @@ function DialogManager(data_string, is_file) constructor
       if (sequence_number < scene.sequence_count)
       {
         return scene.sequences[
-          iter_negative 
+          iter_negative
             ? scene.sequence_count - sequence_number
             : sequence_number
         ];
@@ -482,9 +473,9 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns a dialog given the scene, sequence and dialog indeces.
-   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
-   * @param {Real} [sequence_idx] The sequence index. Defaults to current sequence.
    * @param {Real} [dialog_idx] The dialog index. Defaults to current dialog.
+   * @param {Real} [sequence_idx] The sequence index. Defaults to current sequence.
+   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @returns {Struct.Dialog}
    */
 
@@ -497,8 +488,8 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns a dialog given its absolute position in order as a number.
-   * @param {Real} [sequence_number] The number of the sequence. Defaults to `0`. Negative indices will iterate backwards.
-   * @returns {Struct.Dialog}
+   * @param {Real} [dialog_number] The number of the sequence. Defaults to `0`. Negative indices will iterate backwards.
+   * @returns {Struct.Dialog|undefined}
    */
 
   static __get_dialog_absolute = function(dialog_number = 0)
@@ -727,8 +718,8 @@ function DialogManager(data_string, is_file) constructor
   /**
    * @desc Appends a new dialog to the dialog list of a selected sequence.
    * @param {Struct.Dialog} dialog The new dialog to add.
-   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @param {Real} [sequence_idx] The sequence index. Defaults to current sequence.
+   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @returns {Struct.DialogManager}
    */
 
@@ -744,8 +735,8 @@ function DialogManager(data_string, is_file) constructor
   /**
    * @desc Appends new dialogs to the dialog list of a selected sequence.
    * @param {Array<Struct.Dialog>} dialogs The new dialogs to add.
-   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @param {Real} [sequence_idx] The sequence index. Defaults to current sequence.
+   * @param {Real} [scene_idx] The scene index. Defaults to current scene.
    * @returns {Struct.DialogManager}
    */
 
@@ -843,7 +834,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns the scene index given a position.
-   * @param {Real} position The position to decode. Defaults to current position.
+   * @param {Real} [position] The position to decode. Defaults to current position.
    * @returns {Real}
    */
 
@@ -856,7 +847,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns the sequence index given a position.
-   * @param {Real} position The position to decode. Defaults to current position.
+   * @param {Real} [position] The position to decode. Defaults to current position.
    * @returns {Real}
    */
 
@@ -869,7 +860,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Returns the dialog index given a position.
-   * @param {Real} position The position to decode. Defaults to current position.
+   * @param {Real} [position] The position to decode. Defaults to current position.
    * @returns {Real}
    */
 
@@ -924,7 +915,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Sets the position to match a given one.
-   * @param {Real | Constant.DIALOG | Struct.DialogLinkable} position The position to jump to. Defaults to current position.
+   * @param {Real|Constant.DIALOG|Struct.DialogLinkable} [position] The position to jump to. Defaults to current position.
    * @param {Array} [argv] The arguments to pass to eventual fallback effects.
    * @returns {Struct.Dialog}
    */
@@ -960,7 +951,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * Evaluates a given position to determine the destination of a jump.
-   * @param {Real | Constant.DIALOG | Struct.DialogLinkable} [position] The position to resolve. Defaults to current position.
+   * @param {Real|Constant.DIALOG|Struct.DialogLinkable} [position] The position to resolve. Defaults to current position.
    * @returns {Real}
    */
 
@@ -1019,8 +1010,8 @@ function DialogManager(data_string, is_file) constructor
   /**
    * @desc Makes the dialog manager advance a given number of dialogs.
    * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
-   * @param {Bool} [already_initialized] Whether the dialog manager is already initialized (`true`) or not (`false`).
+   * @param {Constant.DIALOG_MANAGER|Real} [flags] The settings mask for the jump.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
    * @returns {Struct.DialogManager}
    */
 
@@ -1059,35 +1050,35 @@ function DialogManager(data_string, is_file) constructor
         var diff = high - low;
         return ((val - low) % diff + diff) % diff + low;
       };
-  
+
       var _in_range = function(val, low, high) {
         return val >= low && val < high;
       }
-  
+
       if (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
       {
         var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
         next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
         idx_shift += dialog_diff * shift_sign;
-  
+
         while (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
         {
           idx_shift -= next_sequence.dialog_count * shift_sign;
           next_sequence_idx += shift_sign;
           sequence_diff += shift_sign;
-  
+
           if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count)) {
             next_scene_idx = _wrap(next_scene_idx + shift_sign, 0, self.scene_count);
             next_scene = __get_scene(next_scene_idx);
             scene_diff += shift_sign;
             next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
           }
-  
+
           next_sequence = __get_sequence(next_sequence_idx, next_scene_idx);
           next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
         }
       }
-  
+
       next_dialog_idx += idx_shift;
     }
 
@@ -1148,7 +1139,7 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Parses a string loading all the data in the dialog manager.
-   * @param {String | Id.TextFile} [data_string] The data string to parse.
+   * @param {String|Id.TextFile} [data_string] The data string to parse.
    * @param {Bool} [is_file] Specifies whether the data string is a file name to read from (`true`) or not (`false`). Defaults to `false`.
    * @returns {Struct.DialogManager}
    */
@@ -1234,7 +1225,7 @@ function DialogManager(data_string, is_file) constructor
    * @desc Checks if a status flag is active.
    * @param {Real} flag The flag to check.
    * @param {Real} [field] The field to check.
-   * @returns {Bool | Real}
+   * @returns {Bool|Real}
    */
 
   static __flag_check = function(flag, field = self.status)
@@ -1248,7 +1239,7 @@ function DialogManager(data_string, is_file) constructor
    * @desc Checks if a status mask is fully active.
    * @param {Real} mask The mask to check.
    * @param {Real} [field] The field to check.
-   * @returns {Bool | Real}
+   * @returns {Bool|Real}
    */
 
   static __mask_check = function(mask, field = self.status)
@@ -1394,8 +1385,8 @@ function DialogLinkable() constructor {}
 
 /**
  * `DialogScene` constructor.
- * @param {Array<Struct.DialogSequence>} [sequences] - The array of `DialogSequence` of the scene.
- * @param {Real} [settings_mask] - The scene settings.
+ * @param {Array<Struct.DialogSequence>} sequences The array of `DialogSequence` of the scene.
+ * @param {Real} settings_mask The scene settings.
  * @returns {Struct.DialogScene}
  */
 
@@ -1430,7 +1421,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Encodes the scene bg as a bitmask fragment.
-   * @param {Constant.DIALOG_SCENE} [bg] The bg identifier.
+   * @param {Constant.DIALOG_SCENE|Real} [bg] The bg identifier.
    * @returns {Real}
    */
 
@@ -1443,7 +1434,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Encodes the scene bgm as a bitmask fragment.
-   * @param {Constant.DIALOG_SCENE} [bgm] The bgm identifier.
+   * @param {Constant.DIALOG_SCENE|Real} [bgm] The bgm identifier.
    * @returns {Real}
    */
 
@@ -1456,7 +1447,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Encodes the scene bgs as a bitmask fragment.
-   * @param {Constant.DIALOG_SCENE} [bgs] The bgs identifier.
+   * @param {Constant.DIALOG_SCENE|Real} [bgs] The bgs identifier.
    * @returns {Real}
    */
 
@@ -1469,7 +1460,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Encodes the scene tag as a bitmask fragment.
-   * @param {Constant.DIALOG_SCENE} [tag] The tag identifier.
+   * @param {Constant.DIALOG_SCENE|Real} [tag] The tag identifier.
    * @returns {Real}
    */
 
@@ -1482,8 +1473,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the scene bg from a settings bitmask.
-   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
-   * @returns {Constant.DIALOG_SCENE}
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Real}
    */
 
   static __decode_bg = function(settings_mask = self.settings_mask)
@@ -1495,8 +1486,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the scene bgm from a settings bitmask.
-   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
-   * @returns {Constant.DIALOG_SCENE}
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Real}
    */
 
   static __decode_bgm = function(settings_mask = self.settings_mask)
@@ -1508,8 +1499,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the scene bgs from a settings bitmask.
-   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
-   * @returns {Constant.DIALOG_SCENE}
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Real}
    */
 
   static __decode_bgs = function(settings_mask = self.settings_mask)
@@ -1521,8 +1512,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the scene tag from a settings bitmask.
-   * @param {Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
-   * @returns {Constant.DIALOG_SCENE}
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings bitmask. Defaults to the scene's current mask.
+   * @returns {Real}
    */
 
   static __decode_tag = function(settings_mask = self.settings_mask)
@@ -1534,7 +1525,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Serialises the scene into a compact array.
-   * @returns {Array}
+   * @returns {Array<Any>}
    */
 
   static __array = function()
@@ -1570,7 +1561,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Deserializes a scene from an array produced by {@link __array}.
-   * @param {Array} data The array payload.
+   * @param {Array<Any>} data The array payload.
    * @returns {Struct.DialogScene}
    */
 
@@ -1580,7 +1571,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
       array_map(data[1], function(sequence) {
         return DialogSequence.__DIALOG_MANAGER_DECODING_METHOD__(sequence);
       }),
-      data[2],
+      data[2]
     )
     .__override_id(data[0])
     .__update_sequences();
@@ -1600,7 +1591,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
       array_map(data.sequences, function(sequence) {
         return DialogSequence.__DIALOG_MANAGER_DECODING_METHOD__(sequence);
       }),
-      data.settings_mask,
+      data.settings_mask
     )
     .__override_id(data.scene_id)
     .__update_sequences();
@@ -1610,7 +1601,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
   /**
    * @desc Returns a list of all sequences matching a tag.
-   * @param {Real} [tag] The tag to filter the sequences with. Defaults to `DIALOG_SEQUENCE.TAG_DEFAULT`.
+   * @param {Constant.DIALOG_SEQUENCE|Real} [tag] The tag to filter the sequences with. Defaults to `DIALOG_SEQUENCE.TAG_DEFAULT`.
    * @returns {Array<Struct.DialogSequence>}
    */
 
@@ -1800,9 +1791,9 @@ function DialogScene(sequences, settings_mask) : DialogLinkable() constructor
 
 /**
  * `DialogSequence` constructor.
- * @param {Array<Struct.Dialog>} [dialogs] - The array of `Dialog` of the sequence.
- * @param {Constant.DIALOG_SEQUENCE} [settings_mask] - The sequence info.
- * @param {Array<Real>} [speaker_map] - The indexes of the speakers.
+ * @param {Array<Struct.Dialog>} dialogs The array of `Dialog` of the sequence.
+ * @param {Constant.DIALOG_SEQUENCE} settings_mask The sequence info.
+ * @param {Array<Real>} speaker_map The indexes of the speakers.
  * @returns {Struct.DialogSequence}
  */
 
@@ -1838,7 +1829,7 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
   /**
    * @desc Encodes the sequence tag as a bitmask fragment.
-   * @param {Constant.DIALOG_SEQUENCE} [tag] The tag identifier.
+   * @param {Constant.DIALOG_SEQUENCE|Real} [tag] The tag identifier.
    * @returns {Real}
    */
 
@@ -1851,8 +1842,8 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
   /**
    * @desc Extracts the sequence tag from a settings bitmask.
-   * @param {Real} [settings_mask] The settings bitmask. Defaults to the sequence's current mask.
-   * @returns {Constant.DIALOG_SEQUENCE}
+   * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The settings bitmask. Defaults to the sequence's current mask.
+   * @returns {Real}
    */
 
   static __decode_tag = function(settings_mask = self.settings_mask)
@@ -1864,7 +1855,7 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
   /**
    * @desc Serialises the sequence into a compact array.
-   * @returns {Array}
+   * @returns {Array<Any>}
    */
 
   static __array = function()
@@ -1948,7 +1939,7 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
   /**
    * @desc Returns a list of all dialogs matching a tag.
-   * @param {Real} [tag] The tag to filter the dialogs with. Defaults to `DIALOG.TAG_DEFAULT`.
+   * @param {Constant.DIALOG|Real} [tag] The tag to filter the dialogs with. Defaults to `DIALOG.TAG_DEFAULT`.
    * @returns {Array<Struct.Dialog>}
    */
 
@@ -2130,8 +2121,8 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
   /**
    * @desc Serialises the sequence to JSON.
-   * @param {Bool} [prettify] Whether the string should have line breaks/indentation (`true`) or not (`false`).
-   * @returns {String}
+   * @param {String} data_string The JSON payload.
+   * @returns {Struct.DialogSequence}
    */
 
   static __deserialize = function(data_string)
@@ -2175,9 +2166,9 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
 /**
  * `Dialog` constructor.
- * @param {String} text - The text message of the dialog.
- * @param {Constant.DIALOG} [settings_mask] - The dialog info.
- * @param {Array<Struct.DialogFX>} [fx_map] - The array of `DialogFX` to apply.
+ * @param {String} text The text message of the dialog.
+ * @param {Constant.DIALOG|Real} settings_mask The dialog info.
+ * @param {Array<Struct.DialogFX>} fx_map The array of `DialogFX` to apply.
  * @returns {Struct.Dialog}
  */
 
@@ -2200,10 +2191,10 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Combines all dialog visual settings into a single bitmask.
-   * @param {Constant.DIALOG} [speaker_id] Optional speaker identifier.
-   * @param {Constant.DIALOG} [emotion_id] Optional emotion identifier.
-   * @param {Constant.DIALOG} [anchor_id] Optional anchor point identifier.
-   * @param {Constant.DIALOG} [textbox_id] Optional textbox identifier.
+   * @param {Constant.DIALOG|Real} [speaker_id] Optional speaker identifier.
+   * @param {Constant.DIALOG|Real} [emotion_id] Optional emotion identifier.
+   * @param {Constant.DIALOG|Real} [anchor_id] Optional anchor point identifier.
+   * @param {Constant.DIALOG|Real} [textbox_id] Optional textbox identifier.
    * @returns {Real}
    */
 
@@ -2216,7 +2207,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Encodes only the speaker ID as a bitmask fragment.
-   * @param {Constant.DIALOG} speaker_id The speaker identifier.
+   * @param {Constant.DIALOG|Real} speaker_id The speaker identifier.
    * @returns {Real}
    */
 
@@ -2229,7 +2220,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Encodes only the speaker ID as a bitmask fragment.
-   * @param {Constant.DIALOG} speaker_id The speaker identifier.
+   * @param {Constant.DIALOG|Real} emotion_id The emotion identifier.
    * @returns {Real}
    */
 
@@ -2242,7 +2233,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Encodes only the anchor ID as a bitmask fragment.
-   * @param {Constant.DIALOG} anchor_id The anchor identifier.
+   * @param {Constant.DIALOG|Real} anchor_id The anchor identifier.
    * @returns {Real}
    */
 
@@ -2255,7 +2246,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Encodes only the textbox ID as a bitmask fragment.
-   * @param {Constant.DIALOG} textbox_id The textbox identifier.
+   * @param {Constant.DIALOG|Real} textbox_id The textbox identifier.
    * @returns {Real}
    */
 
@@ -2268,11 +2259,11 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /*
    * @desc Encodes the dialog tag as a bitmask fragment.
-   * @param {Constant.DIALOG} tag The tag identifier.
+   * @param {Constant.DIALOG|Real} [tag] The tag identifier.
    * @returns {Real}
    */
 
-  static __encode_tag = function(tag)
+  static __encode_tag = function(tag = DIALOG.TAG_DEFAULT)
   {
     return tag << DIALOG.__BITMASK_TAG_SHIFT & DIALOG.__BITMASK_TAG_MASK;
   }
@@ -2281,8 +2272,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the dialog tag from a settings bitmask.
-   * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
-   * @returns {Constant.DIALOG}
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings bitmask. Defaults to the dialog's current mask.
+   * @returns {Real}
    */
 
   static __decode_tag = function(settings_mask = self.settings_mask)
@@ -2294,8 +2285,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the speaker ID from a settings bitmask.
-   * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
-   * @returns {Constant.DIALOG}
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings bitmask. Defaults to the dialog's current mask.
+   * @returns {Real}
    */
 
   static __decode_speaker_id = function(settings_mask = self.settings_mask)
@@ -2307,8 +2298,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the emotion ID from a settings bitmask.
-   * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
-   * @returns {Constant.DIALOG}
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings bitmask. Defaults to the dialog's current mask.
+   * @returns {Real}
    */
 
   static __decode_emotion_id = function(settings_mask = self.settings_mask)
@@ -2320,8 +2311,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the anchor ID from a settings bitmask.
-   * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
-   * @returns {Constant.DIALOG}
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings bitmask. Defaults to the dialog's current mask.
+   * @returns {Real}
    */
 
   static __decode_anchor_id = function(settings_mask = self.settings_mask)
@@ -2333,8 +2324,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Extracts the textbox ID from a settings bitmask.
-   * @param {Real} settings_mask The settings bitmask. Defaults to the dialog's current mask.
-   * @returns {Constant.DIALOG}
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings bitmask. Defaults to the dialog's current mask.
+   * @returns {Real}
    */
 
   static __decode_textbox_id = function(settings_mask = self.settings_mask)
@@ -2346,7 +2337,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Serialises the dialog into a compact array.
-   * @returns {Array}
+   * @returns {Array<Any>}
    */
 
   static __array = function()
@@ -2382,7 +2373,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Deserialises a dialog from an array produced by {@link __array}.
-   * @param {Array} data The array payload.
+   * @param {Array<Any>} data The array payload.
    * @returns {Struct.Dialog}
    */
 
@@ -2448,7 +2439,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Returns the final jump FX in this dialog, if one exists.
-   * @returns {Struct.DialogFX}
+   * @returns {Struct.DialogFX|undefined}
    */
 
   static __get_jump = function()
@@ -2464,8 +2455,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Returns the first fallback FX that evaluates truthfully, if any.
-   * @param {Array|Any} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX}
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effect.
+   * @returns {Struct.DialogFX|undefined}
    */
 
   static __get_fallback = function(argv = undefined)
@@ -2483,8 +2474,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   /**
    * @desc Returns the first choice FX, if any.
-   * @param {Array|Any} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX}
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effect.
+   * @returns {Struct.DialogFX|undefined}
    */
 
   static __get_choice = function(argv = undefined)
@@ -2503,7 +2494,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
   /**
    * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects matching a specified criteria.
    * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
-   * @param {Array|Any} [argv] The arguments to pass to the effects.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
    * @returns {Bool}
    */
 
@@ -2521,7 +2512,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
   /**
    * @desc Retrieves all dialog FX which match a filter.
    * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
-   * @param {Array|Any} [argv] The arguments to pass to the effects.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
    * @returns {Array<Struct.DialogFX>}
    */
 
@@ -2542,7 +2533,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
   /**
    * @desc Executes all dialog FX which match a filter.
    * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
-   * @param {Array|Any} [argv] The arguments to pass to the effects.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
    * @returns {Struct.Dialog}
    */
 
@@ -2553,6 +2544,23 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     for (var i = 0; i < fx_count; ++i)
       if (filter_fn(self.fx_map[i], argv))
         self.fx_map[i].__exec(__get_manager(), argv);
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Links the specified dialog to a given choice fx.
+   * @param {Struct.DialogFX} fx The effect to link the dialog to.
+   * @param {String} prompt The choice's option text.
+   * @param {Real} [index] The specific index where to insert the new option in the choice list. Defaults to list length.
+   * @returns {Struct.Dialog}
+   */
+
+  static __fx_from_choice = function(fx, prompt, index = array_length(fx.argv))
+  {
+    array_insert(fx.argv, index, [prompt, self]);
 
     return self;
   }
@@ -2611,9 +2619,9 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
 /**
  * `DialogFX` constructor.
- * @param {DIALOG_FX | Real} [settings_mask] - The effect info.
- * @param {Array<Any>} [argv] - The arguments of the mapped effect function.
- * @param {Function} [func] - The function to add to the dialog manager (NOT SERIALIZED).
+ * @param {Constant.DIALOG_FX|Real} settings_mask The effect info.
+ * @param {Array<Any>} argv The arguments of the mapped effect function.
+ * @param {Function} func The function to add to the dialog manager (NOT SERIALIZED).
  * @returns {Struct.DialogFX}
  */
 
@@ -2626,8 +2634,8 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Combines FX type and trigger into a single bitmask.
-   * @param {Constant.DIALOG_FX} type The effect type.
-   * @param {Constant.DIALOG_FX} trigger The effect trigger condition.
+   * @param {Constant.DIALOG_FX|Real} type The effect type.
+   * @param {Constant.DIALOG_FX|Real} trigger The effect trigger condition.
    * @returns {Real}
    */
 
@@ -2640,7 +2648,7 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Encodes only the FX type as a bitmask fragment.
-   * @param {Constant.DIALOG_FX} type The effect type.
+   * @param {Constant.DIALOG_FX|Real} type The effect type.
    * @returns {Real}
    */
 
@@ -2653,7 +2661,7 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Encodes only the FX trigger as a bitmask fragment.
-   * @param {Constant.DIALOG_FX} trigger The trigger condition.
+   * @param {Constant.DIALOG_FX|Real} trigger The trigger condition.
    * @returns {Real}
    */
 
@@ -2666,8 +2674,8 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Extracts the FX type from a settings bitmask.
-   * @param {Real} [settings_mask] Optional override bitmask. Defaults to this FX's mask.
-   * @returns {Constant.DIALOG_FX}
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] Optional override bitmask. Defaults to this FX's mask.
+   * @returns {Real}
    */
 
   static __decode_fx_type = function(settings_mask = self.settings_mask)
@@ -2679,8 +2687,8 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Extracts the FX trigger from a settings bitmask.
-   * @param {Real} [settings_mask] Optional override bitmask. Defaults to this FX's mask.
-   * @returns {Constant.DIALOG_FX}
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] Optional override bitmask. Defaults to this FX's mask.
+   * @returns {Real}
    */
 
   static __decode_fx_trigger = function(settings_mask = self.settings_mask)
@@ -2692,19 +2700,14 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Serialises the FX into a compact array.
-   * @returns {Array}
+   * @returns {Array<Any>}
    */
 
   static __array = function()
   {
     return [
       int64(settings_mask),
-      array_map(argv, function(arg) {
-        return is_instanceof(arg, DialogLinkable)
-          ? arg.__get_position()
-          : arg
-        ;
-      })
+      __resolve_recursive(argv)
     ];
   }
 
@@ -2718,13 +2721,8 @@ function DialogFX(settings_mask, argv, func) constructor
   static __struct = function()
   {
     return {
-      settings_mask: int64(settings_mask),
-      argv: array_map(argv, function(arg) {
-        return is_instanceof(arg, DialogLinkable)
-          ? arg.__get_position()
-          : arg
-        ;
-      })
+      settings_mask: int64(self.settings_mask),
+      argv: __resolve_recursive(self.argv)
     };
   }
 
@@ -2732,13 +2730,13 @@ function DialogFX(settings_mask, argv, func) constructor
 
   /**
    * @desc Deserialises an FX from an array produced by {@link __array}.
-   * @param {Array} data The array payload.
+   * @param {Array<Any>} data The array payload.
    * @returns {Struct.DialogFX}
    */
 
   static __from_array = function(data)
   {
-    return new DialogFX(data[0], data[1]);
+    return new DialogFX(data[0], data[1], undefined);
   }
 
 
@@ -2751,18 +2749,15 @@ function DialogFX(settings_mask, argv, func) constructor
 
   static __from_struct = function(data)
   {
-    return new DialogFX(
-      data.settings_mask,
-      data.argv
-    );
+    return new DialogFX(data.settings_mask, data.argv, undefined);
   }
 
 
 
   /**
    * @desc Executes the FX using the global dialog manager's registered handlers.
-   * @param {Struct.DialogManager} [dialog_manager] The referenced dialog manager.
-   * @param {Array} [argv] The arguments to pass to the effect.
+   * @param {Struct.DialogManager} dialog_manager The referenced dialog manager.
+   * @param {Array<Any>} [argv] The arguments to pass to the effect.
    * @returns {Any}
    */
 
@@ -2800,16 +2795,29 @@ function DialogFX(settings_mask, argv, func) constructor
 
 
 
-  if (!func)
-    return;
+  if (func)
+  {
+    var type = __decode_fx_type(settings_mask);
 
-  var type = __decode_fx_type(settings_mask);
+    if (type >= array_length(DialogManager.fx_map))
+      DialogManager.fx_map[type] = func;
+    else if (
+      type == DIALOG_FX.TYPE_FALLBACK
+      && (argv[DIALOG_FX.ARG_JUMP_CONDITION] ?? 0) >= array_length(DialogManager.condition_map)
+    )
+      DialogManager.condition_map[type] = func;
+  }
 
-  if (type >= array_length(DialogManager.fx_map))
-    DialogManager.fx_map[type] = func;
-  else if (
-    type == DIALOG_FX.TYPE_FALLBACK
-    && (argv[DIALOG_FX.ARG_JUMP_CONDITION] ?? 0) >= array_length(DialogManager.condition_map)
-  )
-    DialogManager.condition_map[type] = func;
+
+
+  // Recursive argument serializer function
+  function __resolve_recursive(arg) {
+    return is_array(arg)
+      ? array_map(arg, __resolve_recursive)
+      : (is_instanceof(arg, DialogLinkable)
+        ? arg.__get_position()
+        : arg
+      )
+    ;
+  }
 }
