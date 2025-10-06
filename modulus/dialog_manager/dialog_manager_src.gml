@@ -46,13 +46,22 @@ enum DIALOG_MANAGER
 
   // Jump info
   __FLAG_INDEX_CHOICE = 1,
-  
+
   // Masks (should not edit)
   __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_MANAGER.FLAG_STATUS_COUNT - DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
   __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
   __BITMASK_STATUS_AUTORESET_MASK = ((1 << DIALOG_MANAGER.__BITMASK_STATUS_AUTORESET_COUNT) - 1) << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
   __BITMASK_STATUS_MASK = (1 << DIALOG_MANAGER.FLAG_STATUS_COUNT) - 1,
   FLAG_CHOICE = 1 << DIALOG_MANAGER.__FLAG_INDEX_CHOICE,
+
+  // Error codes
+  ERR_UNDEFINED_ERROR_TYPE = 0,
+  ERR_SERIALIZATION_FAILED,
+  ERR_DESERIALIZATION_FAILED,
+  ERR_PARSING_FAILED,
+  ERR_UNDEFINED_SEQUENCE_BACKREF,
+  ERR_UNDEFINED_SCENE_BACKREF,
+  ERR_COUNT,
 }
 
 
@@ -324,6 +333,35 @@ function DialogManager(data_string, is_file) constructor
 
 
   /**
+   * @desc Error message function.
+   * @param {Real} type The error type.
+   * @param {Any|Array<Any>} [argv] The arguments for the message.
+   */
+
+  static ERROR = function(type, argv = [])
+  {
+    if (type >= DIALOG_MANAGER.ERR_COUNT)
+      argv = [type];
+    else if (!is_array(argv))
+      argv = [argv];
+
+    var msg = string_ext([
+        "UNKNOWN ERROR TYPE: {0}",
+        "SERIALIZATION FAILED - INVALID DATA:\nENSURE PRESENCE OF ALL REFERENCED \{Struct.{0}\} OBJECTS.",
+        "DESERIALIZATION FAILED - A PROBLEM OCCURRED WHILE OPENING FILE {0}:\nENSURE INTEGRITY OF FILE NAME/PATH OR FILE HANDLE.",
+        "PARSING FAILED - INVALID DATA: ENSURE INTEGRITY OF SERIALIZED DATA.",
+        "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}",
+        "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}\n\nCONTAINER STRUCTURE INFO: {5}"
+      ][type],
+      argv
+    );
+
+    return $"\n\n\n{msg}\n\n";
+  }
+
+
+
+  /**
    * @desc Executes the inconditional jump effect.
    * @param {Struct.DialogManager} manager The reference to the dialog manager.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
@@ -467,7 +505,7 @@ function DialogManager(data_string, is_file) constructor
       if (sequence_number < scene.sequence_count)
       {
         return scene.sequences[
-          iter_negative 
+          iter_negative
             ? scene.sequence_count - sequence_number
             : sequence_number
         ];
@@ -1060,35 +1098,35 @@ function DialogManager(data_string, is_file) constructor
         var diff = high - low;
         return ((val - low) % diff + diff) % diff + low;
       };
-  
+
       var _in_range = function(val, low, high) {
         return val >= low && val < high;
       }
-  
+
       if (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
       {
         var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
         next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
         idx_shift += dialog_diff * shift_sign;
-  
+
         while (!_in_range(next_dialog_idx + idx_shift, 0, next_sequence.dialog_count))
         {
           idx_shift -= next_sequence.dialog_count * shift_sign;
           next_sequence_idx += shift_sign;
           sequence_diff += shift_sign;
-  
+
           if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count)) {
             next_scene_idx = _wrap(next_scene_idx + shift_sign, 0, self.scene_count);
             next_scene = __get_scene(next_scene_idx);
             scene_diff += shift_sign;
             next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
           }
-  
+
           next_sequence = __get_sequence(next_sequence_idx, next_scene_idx);
           next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
         }
       }
-  
+
       next_dialog_idx += idx_shift;
     }
 
@@ -1137,12 +1175,16 @@ function DialogManager(data_string, is_file) constructor
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(
-      array_map(self.scenes, function(scene) {
-        return scene.__DIALOG_MANAGER_ENCODING_METHOD__();
-      }),
-      prettify
-    );
+    try {
+      return json_stringify(
+        array_map(self.scenes, function(scene) {
+          return scene.__DIALOG_MANAGER_ENCODING_METHOD__();
+        }),
+        prettify
+      );
+    } catch (ex) {
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_SERIALIZATION_FAILED, [instanceof(DialogLinkable)]);
+    }
   }
 
 
@@ -1162,23 +1204,28 @@ function DialogManager(data_string, is_file) constructor
         , autoclose = !is_numeric(file)
       ;
 
-      if (autoclose)
-        file = file_text_open_read(file);
+      try {
+        if (autoclose)
+          file = file_text_open_read(file);
 
-      if (!file)
-        return self;
+        if (!file)
+          return self;
 
-      for (data_string = ""; !file_text_eof(file); file_text_readln(file))
-        data_string += file_text_read_string(file);
+        for (data_string = ""; !file_text_eof(file); file_text_readln(file))
+          data_string += file_text_read_string(file);
 
-      if (autoclose)
-        file_text_close(file);
+        if (autoclose)
+          file_text_close(file);
+      }
+      catch (ex) {
+        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_DESERIALIZATION_FAILED, [file]);
+      }
     }
 
     if (data_string == "")
       return self;
 
-    return __parse(json_parse(data_string)).__advance(0, false);
+    return __parse(json_parse(data_string)).__advance(0, __flag(DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED));
   }
 
 
@@ -1191,9 +1238,14 @@ function DialogManager(data_string, is_file) constructor
 
   static __parse = function(scenes)
   {
-    self.scenes = array_map(scenes, function(scene) {
-      return DialogScene.__DIALOG_MANAGER_DECODING_METHOD__(scene);
-    });
+    try {
+      self.scenes = array_map(scenes, function(scene) {
+        return DialogScene.__DIALOG_MANAGER_DECODING_METHOD__(scene);
+      });
+    }
+    catch (ex) {
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_PARSING_FAILED);
+    }
 
     return __update_scenes();
   }
@@ -2065,9 +2117,7 @@ function DialogSequence(dialogs, settings_mask, speaker_map) : DialogLinkable() 
 
   static __get_position = function()
   {
-    var scene = self.scene;
-
-    return DialogManager.__encode_position(scene.scene_idx, self.sequence_idx, 0);
+    return DialogManager.__encode_position(self.scene.scene_idx, self.sequence_idx, 0);
   }
 
 
@@ -2442,9 +2492,15 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
 
   static __get_position = function()
   {
-    var sequence = self.sequence
-      , scene = sequence.scene
-    ;
+    var sequence = self.sequence;
+
+    if (!sequence)
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_SEQUENCE_BACKREF, [instanceof(Dialog), instanceof(DialogSequence), instanceof(DialogLinkable), instanceof(DialogFX), self.__struct()]);
+
+    var scene = sequence.scene;
+
+    if (!scene)
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_SCENE_BACKREF, [instanceof(Dialog), instanceof(DialogSequence), instanceof(DialogLinkable), instanceof(DialogFX), self.__struct(), sequence.__struct()]);
 
     return DialogManager.__encode_position(scene.scene_idx, sequence.sequence_idx, self.dialog_idx);
   }
@@ -2562,8 +2618,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable() constructor
     return self;
   }
 
-  
-  
+
+
   /**
    * @desc Links the specified dialog to a given choice fx.
    * @param {Struct.DialogFX} fx The effect to link the dialog to.
@@ -2821,7 +2877,7 @@ function DialogFX(settings_mask, argv, func) constructor
       type == DIALOG_FX.TYPE_FALLBACK
       && (argv[DIALOG_FX.ARG_JUMP_CONDITION] ?? 0) >= array_length(DialogManager.condition_map)
     )
-      DialogManager.condition_map[type] = func; 
+      DialogManager.condition_map[type] = func;
   }
 
 

@@ -151,7 +151,7 @@ function dialog_manager_parse(dialog_manager, scenes)
 
 /**
  * @desc DialogScene` constructor.
- * @param {Array<Struct.DialogSequence>} [sequences] The array of `DialogSequence` of the scene.
+ * @param {Struct.DialogSequence|Array<Struct.DialogSequence>} [sequences] The array of `DialogSequence` of the scene.
  * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The scene settings.
  * @returns {Struct.DialogScene}
  */
@@ -243,7 +243,7 @@ function dialog_scene_deserialize(data_string)
 
 /**
  * @desc `DialogSequence` constructor.
- * @param {Array<Struct.Dialog>} [dialogs] The array of `Dialog` of the sequence.
+ * @param {Struct.Dialog|Array<Struct.Dialog>} [dialogs] The array of `Dialog` of the sequence.
  * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The sequence info.
  * @param {Array<Real>} [speaker_map] The indexes of the speakers.
  * @returns {Struct.DialogSequence}
@@ -495,7 +495,7 @@ function dialog_deserialize(data_string)
 /**
  * @desc `DialogFX` constructor.
  * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
- * @param {Array<Any>} [argv] The arguments of the mapped effect function.
+ * @param {Any|Array<Any>} [argv] The arguments of the mapped effect function.
  * @param {Function} [func] The function to add to the dialog manager (NOT SERIALIZED).
  * @returns {Struct.DialogFX}
  */
