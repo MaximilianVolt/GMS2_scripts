@@ -1,7 +1,7 @@
 /**
  * @desc Dialog management system.
  * @author @MaximilianVolt
- * @version 0.8
+ * @version 0.8.1
  */
 
 

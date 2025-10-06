@@ -1,7 +1,7 @@
 /**
  * @desc Dialog management system utility library.
  * @author @MaximilianVolt
- * @version 0.8
+ * @version 0.8.1
  */
 
 
