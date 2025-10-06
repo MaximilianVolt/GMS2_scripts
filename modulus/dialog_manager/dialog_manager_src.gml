@@ -352,7 +352,7 @@ function DialogManager(data_string, is_file) constructor
     var msg = string_ext([
         "UNKNOWN ERROR TYPE: {0}",
         "SERIALIZATION FAILED - INVALID DATA:\nENSURE PRESENCE OF ALL REFERENCED \{Struct.{0}\} OBJECTS.",
-        "DESERIALIZATION FAILED - A PROBLEM OCCURRED WHILE OPENING FILE {0}:\nENSURE INTEGRITY OF FILE NAME/PATH OR FILE HANDLE.",
+        "DESERIALIZATION FAILED - A PROBLEM OCCURRED WHILE OPENING FILE <{0}>:\nENSURE INTEGRITY OF FILE NAME/PATH OR FILE HANDLE.",
         "PARSING FAILED - INVALID DATA: ENSURE INTEGRITY OF SERIALIZED DATA.",
         "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}",
         "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}\n\nCONTAINER STRUCTURE INFO: {5}"
@@ -1205,15 +1205,13 @@ function DialogManager(data_string, is_file) constructor
     if (is_file)
     {
       var file = data_string
+        , filename = data_string
         , autoclose = !is_numeric(file)
       ;
 
       try {
         if (autoclose)
-          file = file_text_open_read(file);
-
-        if (!file)
-          return self;
+          file = file_text_open_read(filename);
 
         for (data_string = ""; !file_text_eof(file); file_text_readln(file))
           data_string += file_text_read_string(file);
@@ -1222,7 +1220,7 @@ function DialogManager(data_string, is_file) constructor
           file_text_close(file);
       }
       catch (ex) {
-        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_DESERIALIZATION_FAILED, [file]);
+        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_DESERIALIZATION_FAILED, [filename]);
       }
     }
 
