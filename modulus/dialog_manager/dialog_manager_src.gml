@@ -1187,7 +1187,7 @@ function DialogManager(data_string, is_file) constructor
         prettify
       );
     } catch (ex) {
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_SERIALIZATION_FAILED, [instanceof(DialogLinkable)]);
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_SERIALIZATION_FAILED, [nameof(DialogLinkable)]);
     }
   }
 
