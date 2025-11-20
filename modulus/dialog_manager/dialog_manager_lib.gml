@@ -1,7 +1,8 @@
 /**
  * @desc Dialog management system utility library.
+ * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.8.1
+ * @version 0.9.0
  */
 
 
@@ -32,13 +33,13 @@ function dialog_manager_add(dialog_manager, dialog_linkable = [])
   dialog_linkable = is_array(dialog_linkable) ? dialog_linkable : [dialog_linkable];
 
   if (is_instanceof(dialog_linkable[0], DialogScene))
-    return dialog_manager.__add_scenes(dialog_linkable);
+    return dialog_manager.add(dialog_linkable);
 
   if (is_instanceof(dialog_linkable[0], DialogSequence))
-    return dialog_manager.__add_sequences(dialog_linkable);
+    return dialog_manager.scene().add(dialog_linkable);
 
   if (is_instanceof(dialog_linkable[0], Dialog))
-    return dialog_manager.__add_dialogs(dialog_linkable);
+    return dialog_manager.sequence().add(dialog_linkable);
 
   return dialog_manager;
 }
@@ -51,12 +52,30 @@ function dialog_manager_add(dialog_manager, dialog_linkable = [])
  * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
  * @param {Constant.DIALOG_MANAGER|Real} [flags] The settings mask for the jump.
  * @param {Any|Array<Any>} [argv] The argument to pass to eventual dialog effects.
+ * @param {Constant.DIALOG|Real} [prev_position] The starting position of the dialog manager. Defaults to the current one.
  * @returns {Struct.DialogManager}
  */
 
-function dialog_manager_advance(dialog_manager, idx_shift = 1, flags = 0, argv = undefined)
+function dialog_manager_advance(dialog_manager, idx_shift = 1, flags = 0, argv = undefined, prev_position = undefined)
 {
-  return dialog_manager.__advance(idx_shift, already_initialized);
+  return dialog_manager.advance(idx_shift, flags, argv, prev_position);
+}
+
+
+
+/**
+ * @desc Simulates advancing the dialog manager without state modifications.
+ * @param {Struct.DialogManager} dialog_manager The dialog manager to cycle through.
+ * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
+ * @param {Constant.DIALOG_MANAGER|Real} [flags] The settings mask for the jump.
+ * @param {Any|Array<Any>} [argv] The argument to pass to eventual dialog effects.
+ * @param {Constant.DIALOG|Real} [prev_position] The starting position of the dialog manager. Defaults to the current one.
+ * @returns {Struct.DialogManager}
+ */
+
+function dialog_manager_forecast(dialog_manager, idx_shift = 1, flags = 0, argv = undefined, prev_position = undefined)
+{
+  return dialog_manager.forecast(idx_shift, flags, argv, prev_position);
 }
 
 
@@ -93,7 +112,7 @@ function dialog_manager_search_by_tag(collection, tag)
 
 function dialog_manager_serialize(dialog_manager, prettify = false)
 {
-  return dialog_manager.__serialize(prettify);
+  return dialog_manager.serialize(prettify);
 }
 
 
@@ -108,7 +127,7 @@ function dialog_manager_serialize(dialog_manager, prettify = false)
 
 function dialog_manager_deserialize(dialog_manager, data_string, is_file = false)
 {
-  return dialog_manager.__deserialize(data_string, is_file);
+  return dialog_manager.deserialize(data_string, is_file);
 }
 
 
@@ -122,7 +141,7 @@ function dialog_manager_deserialize(dialog_manager, data_string, is_file = false
 
 function dialog_manager_parse(dialog_manager, scenes)
 {
-  return dialog_manager.__parse(scenes);
+  return dialog_manager.parse(scenes);
 }
 
 
@@ -394,7 +413,7 @@ function dialog_create_from_choice(dialog_args, fx, prompt, index = array_length
   for (var arg = array_length(dialog_args); arg < Dialog.CONSTRUCTOR_ARGC; ++arg)
     dialog_args[arg] = undefined;
 
-  return dialog_create_array(dialog_args).__fx_from_choice(fx, prompt, index);
+  return dialog_create_array(dialog_args).derive(fx, prompt, index);
 }
 
 
@@ -408,7 +427,7 @@ function dialog_create_from_choice(dialog_args, fx, prompt, index = array_length
 
 function dialog_has_fx_of_type(dialog, type = DIALOG_FX.TYPE_DEFAULT)
 {
-  return dialog.__fx_has_of(function(fx, argv) { return fx.__decode_fx_type() == argv; }, type);
+  return dialog.__fx_has_of(function(fx, argv) { return fx.type() == argv; }, type);
 }
 
 
@@ -536,13 +555,14 @@ function dialog_fx_create_struct(data)
 /**
  * @desc Executes a dialog FX.
  * @param {Struct.DialogFX} dialog_fx The dialog FX to execute.
+ * @param {Struct.Dialog} parent The parent dialog of the effect.
  * @param {Any|Array<Any>} [argv] The arguments to pass to the effect.
  * @returns {Any}
  */
 
-function dialog_fx_execute(dialog_fx, argv = undefined)
+function dialog_fx_execute(dialog_fx, parent, argv = undefined)
 {
-  return dialog_fx.__exec(argv);
+  return dialog_fx.__exec(parent, argv);
 }
 
 
