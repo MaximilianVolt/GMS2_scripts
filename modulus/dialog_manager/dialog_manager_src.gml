@@ -469,6 +469,30 @@ function DialogManager(data_string, is_file) constructor
 
 
   /**
+   * @desc Changes the dialog manager position to the given one. [CHAINABLE]
+   * @param {Real|Constant.DialogManager|Struct.DialogLinkable} [position] The position to load.
+   * @param {Bool} [lazy] Whether the dialog manager should avoid executing jumps normally with effects (`true`) or not (`false`).
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects (only if `lazy` is `false`).
+   * @returns {Struct.DialogManager}
+   */
+
+  static load = function(position = self.position, lazy = true, argv = [])
+  {
+    self.status = 0;
+
+    if (lazy)
+      self.position = __resolve_position(position);
+    else
+      __jump(position, argv);
+
+    self.status |= __status();
+
+    return self;
+  }
+
+
+
+  /**
    * @desc Retrieves a scene given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
    * @param {Real} [scene_idx] The index of the scene to get.
    * @returns {Struct.DialogScene}
@@ -2476,9 +2500,13 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
     self.fx_count += fx_count;
 
     array_sort(self.fx_map, function(f1, f2) {
-      return f1.type != f2.type
-        ? f1.type - f2.type
-        : f1.trigger - f2.trigger
+      var f1_type = f1.type()
+        , f2_type = f2.type()
+      ;
+
+      return f1_type != f2_type
+        ? f1_type - f2_type
+        : f1.trigger() - f2.trigger()
       ;
     });
 

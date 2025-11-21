@@ -217,11 +217,21 @@ var relative_x = dialog_manager.delta(-1, DIALOG_MANAGER.JUMP_UNIT_SEQUENCE);
 
 
 
-// 3b. Get relative dialog, sequence or scene from current position
+// 3b. Get relative dialog, sequence or scene from custom position
 var relative_dialog_2 = dialog_manager.deltadialog(-10, DIALOG_MANAGER.POSITION_CODE_SCENE_MIDDLE);
 var relative_sequence_2 = dialog_manager.deltasequence(+8, relative_sequence);
 var relative_scene_2 = dialog_manager.deltascene(+2, relative_scene.position());
 var relative_x_2 = dialog_manager.delta(-2, DIALOG_MANAGER.JUMP_UNIT_SCENE, relative_scene_2);
+
+
+
+// 3c. Load dialog manager to custom position
+dialog_manager.load(relative_x_2); // Will set the new position and status according to the new position
+
+
+
+// 3d. Load dialog manager to custom position and executing effects
+dialog_manager.load(relative_dialog, /* lazy = */ false, /* argv = */ [/* ... */]);
 
 
 
