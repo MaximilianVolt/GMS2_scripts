@@ -47,35 +47,35 @@ function dialog_manager_add(dialog_manager, dialog_linkable = [])
 
 
 /**
- * @desc Makes the dialog manager advance a given number of dialogs.
+ * @desc Makes the dialog manager advance of a specified shift. Produces side effects on dialog manager position and/or status. [CHAINABLE]
  * @param {Struct.DialogManager} dialog_manager The dialog manager to cycle through.
- * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
- * @param {Constant.DIALOG_MANAGER|Real} [flags] The settings mask for the jump.
- * @param {Any|Array<Any>} [argv] The argument to pass to eventual dialog effects.
- * @param {Constant.DIALOG|Real} [prev_position] The starting position of the dialog manager. Defaults to the current one.
+ * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The settings mask for the jump.
+ * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [prev_position] The starting position of the advancement. Defaults to the current one.
  * @returns {Struct.DialogManager}
  */
 
-function dialog_manager_advance(dialog_manager, idx_shift = 1, flags = 0, argv = undefined, prev_position = undefined)
+function dialog_manager_advance(dialog_manager, shift = 1, jump_options = 0, argv = undefined, prev_position = self.position)
 {
-  return dialog_manager.advance(idx_shift, flags, argv, prev_position);
+  return dialog_manager.advance(shift, jump_options, argv, prev_position);
 }
 
 
 
 /**
- * @desc Simulates advancing the dialog manager without state modifications.
+ * @desc Simulates advancing the dialog manager without state modifications. Temporarily modifies position and status to compute the result to then reset them to their previous values.
  * @param {Struct.DialogManager} dialog_manager The dialog manager to cycle through.
- * @param {Real} [idx_shift] The number of dialogs to advance of. Defaults to `1`.
- * @param {Constant.DIALOG_MANAGER|Real} [flags] The settings mask for the jump.
- * @param {Any|Array<Any>} [argv] The argument to pass to eventual dialog effects.
- * @param {Constant.DIALOG|Real} [prev_position] The starting position of the dialog manager. Defaults to the current one.
- * @returns {Struct.DialogManager}
+ * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The settings mask for the jump.
+ * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [start_position] The starting position of the forecast. Defaults to the current one.
+ * @returns {Struct} { dialog: Struct.Dialog, position: Real status: Real }
  */
 
-function dialog_manager_forecast(dialog_manager, idx_shift = 1, flags = 0, argv = undefined, prev_position = undefined)
+function dialog_manager_forecast(dialog_manager, shift = 1, jump_options = 0, argv = undefined, prev_position = self.position)
 {
-  return dialog_manager.forecast(idx_shift, flags, argv, prev_position);
+  return dialog_manager.forecast(shift, jump_options, argv, prev_position);
 }
 
 
@@ -191,7 +191,7 @@ function dialog_scene_create(sequences = [], settings_mask = 0)
  * @returns {Struct.DialogScene}
  */
 
-function dialog_scene_create_array(data)
+function dialog_scene_create_from_array(data)
 {
   return dialog_scene_create(data[0], data[1]);
 }
@@ -204,7 +204,7 @@ function dialog_scene_create_array(data)
  * @returns {Struct.DialogScene}
  */
 
-function dialog_scene_create_struct(data)
+function dialog_scene_create_from_struct(data)
 {
   return dialog_scene_create(data.sequences, data.settings_mask);
 }
@@ -264,16 +264,16 @@ function dialog_scene_deserialize(data_string)
  * @desc `DialogSequence` constructor.
  * @param {Struct.Dialog|Array<Struct.Dialog>} [dialogs] The array of `Dialog` of the sequence.
  * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The sequence info.
- * @param {Array<Real>} [speaker_map] The indexes of the speakers.
+ * @param {Array<Real>} [speakers] The indices of the speakers.
  * @returns {Struct.DialogSequence}
  */
 
-function dialog_sequence_create(dialogs = [], settings_mask = 0, speaker_map = [])
+function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [])
 {
   return new DialogSequence(
     is_array(dialogs) ? dialogs : [dialogs],
     settings_mask,
-    is_array(speaker_map) ? speaker_map : [speaker_map]
+    is_array(speakers) ? speakers : [speakers]
   );
 }
 
@@ -285,7 +285,7 @@ function dialog_sequence_create(dialogs = [], settings_mask = 0, speaker_map = [
  * @returns {Struct.DialogSequence}
  */
 
-function dialog_sequence_create_array(data)
+function dialog_sequence_create_from_array(data)
 {
   return dialog_sequence_create(data[0], data[1], data[2]);
 }
@@ -298,9 +298,9 @@ function dialog_sequence_create_array(data)
  * @returns {Struct.DialogSequence}
  */
 
-function dialog_sequence_create_struct(data)
+function dialog_sequence_create_from_struct(data)
 {
-  return dialog_sequence_create(data.dialogs, data.settings_mask, data.speaker_map);
+  return dialog_sequence_create(data.dialogs, data.settings_mask, data.speakers);
 }
 
 
@@ -379,7 +379,7 @@ function dialog_create(text, settings_mask = 0, fx_map = [])
  * @returns {Struct.Dialog}
  */
 
-function dialog_create_array(data)
+function dialog_create_from_array(data)
 {
   return dialog_create(data[0], data[1], data[2]);
 }
@@ -392,7 +392,7 @@ function dialog_create_array(data)
  * @returns {Struct.Dialog}
  */
 
-function dialog_create_struct(data)
+function dialog_create_from_struct(data)
 {
   return dialog_create(data.text, data.settings_mask, data.fx_map);
 }
@@ -527,12 +527,100 @@ function dialog_fx_create(settings_mask = 0, argv = [], func = undefined)
 
 
 /**
+ * @desc Creates a jump dialog effect.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_jump(jump_position, jump_settings = 0)
+{
+  return dialog_fx_create(
+    DialogFX.type(DIALOG_FX.TYPE_JUMP),
+    [[jump_position, jump_settings]]
+  );
+}
+
+
+
+/**
+ * @desc Creates a fallback dialog effect.
+ * @param {Function} fx_condition_function The condition function to evaluate.
+ * @param {Array} [argv] The additional arguments to pass to the condition function.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_fallback(fx_condition_function, argv, jump_position, jump_settings = 0)
+{
+  return dialog_fx_create(
+    DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
+    [[jump_position, jump_settings], fx_condition_function, is_array(argv) ? argv : [argv]],
+  );
+}
+
+
+
+/**
+ * @desc Creates a fallback dialog effect using a pre-defined condition index.
+ * @param {Real} fx_condition_index The index of the condition to evaluate.
+ * @param {Function} fx_condition_function The condition function to evaluate.
+ * @param {Array} [argv] The additional arguments to pass to the condition function.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_fallback_indexed(fx_condition_index, fx_condition_function, argv, jump_position, jump_settings = 0)
+{
+  return dialog_fx_create(
+    DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
+    [[jump_position, jump_settings], fx_condition_index, is_array(argv) ? argv : [argv]],
+    fx_condition_function
+  );
+}
+
+
+
+/**
+ * @desc Creates a choice dialog effect.
+ * @param {Array<Any>} choice_options The array of choice options.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_choice(choice_options = [])
+{
+  return dialog_fx_create(
+    DialogFX.type(DIALOG_FX.TYPE_CHOICE),
+    choice_options
+  );
+}
+
+
+
+/**
+ * @desc Creates a choice option for a choice dialog effect.
+ * @param {String} prompt The choice's option text.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the option is selected.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
+ * @returns {Array<Any>}
+ */
+
+function dialog_fx_create_choice_option(prompt, jump_position, jump_settings = 0)
+{
+  return [[jump_position, jump_settings], prompt];
+}
+
+
+
+/**
  * @desc Creates a new `DialogFX` object from an array.
  * @param {Array} data The data to create the `DialogFX` from.
  * @returns {Struct.DialogFX}
  */
 
-function dialog_fx_create_array(data)
+function dialog_fx_create_from_array(data)
 {
   return dialog_fx_create(data[0], data[1]);
 }
@@ -545,7 +633,7 @@ function dialog_fx_create_array(data)
  * @returns {Struct.DialogFX}
  */
 
-function dialog_fx_create_struct(data)
+function dialog_fx_create_from_struct(data)
 {
   return dialog_fx_create(data.settings_mask, data.argv);
 }
