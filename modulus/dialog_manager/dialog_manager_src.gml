@@ -2612,7 +2612,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __struct = function()
   {
     return {
-      self.text,
+      text: self.text,
       settings_mask: int64(self.settings_mask),
       fx_map: array_map(self.fx_map, function(fx) {
         return fx.__DIALOG_MANAGER_ENCODING_METHOD__();
