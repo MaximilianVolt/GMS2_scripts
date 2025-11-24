@@ -649,22 +649,24 @@ function DialogManager(data_string, is_file) constructor
     var scene_count = array_length(scenes);
 
     for (var i = index; i < self.scene_count; ++i)
-      scenes[i].scene_idx += scene_count;
+      self.scenes[i].scene_idx += scene_count;
 
     for (var i = 0; i < scene_count; ++i)
     {
-      if (!scenes[i].sequence_count) {
+      var scene = scenes[i];
+
+      if (!scene.sequence_count) {
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT, [nameof(DialogScene)]);
       }
 
-      scenes[i].manager = self;
-      scenes[i].scene_idx = index + i;
-      array_insert(self.scenes, index + i, scenes[i]);
+      scene.manager = self;
+      scene.scene_idx = index + i;
+      array_insert(self.scenes, index + i, scene);
     }
 
     self.scene_count += scene_count;
 
-    return advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
+    return self.advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
   }
 
 
@@ -842,8 +844,11 @@ function DialogManager(data_string, is_file) constructor
   {
     self.scene_count = array_length(self.scenes);
 
-    for (var i = self.scene_count - 1; i; self.scenes[i--].manager = self)
-      self.scenes[i].scene_idx = i;
+    for (var i = 0; i < self.scene_count; ++i) {
+      var scene = self.scenes[i];
+      scene.manager = self;
+      scene.scene_idx = i;
+    }
 
     return self;
   }
@@ -1376,54 +1381,6 @@ function DialogManager(data_string, is_file) constructor
 
 
   /**
-   * @desc Sets the position to match a given scene's index.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogScene} scene The scene to jump to.
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
-   * @param {Constant.DIALOG_MANAGER} [jump_type] The type of jump to perform.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The position to jump from. Defaults to current position.
-   * @returns {Struct.Dialog}
-   */
-
-  static __jump_to_scene = function(scene, argv = undefined, jump_type = DIALOG_MANAGER.JUMP_TYPE_ABSOLUTE, prev_position = self.position)
-  {
-    return __jump(scene, argv, __encode_jump_options(jump_type, DIALOG_MANAGER.JUMP_UNIT_SCENE), prev_position);
-  }
-
-
-
-  /**
-   * @desc Sets the position to match a given sequence's index.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogSequence} sequence The sequence to jump to.
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
-   * @param {Constant.DIALOG_MANAGER} [jump_type] The type of jump to perform.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The position to jump from. Defaults to current position.
-   * @returns {Struct.Dialog}
-   */
-
-  static __jump_to_sequence = function(sequence, argv = undefined, jump_type = DIALOG_MANAGER.JUMP_TYPE_ABSOLUTE, prev_position = self.position)
-  {
-    return __jump(sequence, argv, __encode_jump_options(jump_type, DIALOG_MANAGER.JUMP_UNIT_SEQUENCE), prev_position);
-  }
-
-
-
-  /**
-   * @desc Sets the position to match a given dialog's index.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.Dialog} dialog The dialog to jump to.
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
-   * @param {Constant.DIALOG_MANAGER} [jump_type] The type of jump to perform.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The position to jump from. Defaults to current position.
-   * @returns {Struct.Dialog}
-   */
-
-  static __jump_to_dialog = function(dialog, argv = undefined, jump_type = DIALOG_MANAGER.JUMP_TYPE_ABSOLUTE, prev_position = self.position)
-  {
-    return __jump(dialog, argv, __encode_jump_options(jump_type, DIALOG_MANAGER.JUMP_UNIT_DIALOG), prev_position);
-  }
-
-
-
-  /**
    * @desc Resets the state of the manager. [CHAINABLE]
    * @returns {Struct.DialogManager}
    */
@@ -1444,7 +1401,7 @@ function DialogManager(data_string, is_file) constructor
 
 
 
-  __deserialize(data_string, is_file).advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
+  self.deserialize(data_string, is_file).advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
 }
 
 
@@ -1674,17 +1631,20 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
     var sequence_count = array_length(sequences);
 
-    for (var i = index; i < self.sequence_count; --i)
+    for (var i = index; i < self.sequence_count; ++i)
       self.sequences[i].sequence_idx += sequence_count;
 
-    for (var i = 0; i < sequence_count; sequences[i++].scene = self)
+    for (var i = 0; i < sequence_count; ++i)
     {
-      if (!sequences[i].dialog_count) {
+      var sequence = sequences[i];
+
+      if (!sequence.dialog_count) {
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT, [nameof(DialogSequence)]);
       }
 
-      sequences[i].sequence_idx = index + i;
-      array_insert(self.sequences, index + i, sequences[i]);
+      sequence.scene = self;
+      sequence.sequence_idx = index + i;
+      array_insert(self.sequences, index + i, sequence);
     }
 
     self.sequence_count += sequence_count;
@@ -1701,8 +1661,13 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __update_sequences = function()
   {
-    for (var i = 0; i < self.sequence_count; self.sequences[i++].scene = self)
-      self.sequences[i].sequence_idx = i;
+    self.sequence_count = array_length(self.sequences);
+
+    for (var i = 0; i < self.sequence_count; ++i) {
+      var sequence = self.sequences[i];
+      sequence.sequence_idx = i;
+      sequence.scene = self;
+    }
 
     return self;
   }
@@ -1790,8 +1755,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
       }),
       data[2]
     )
-    .__override_id(data[0])
-    .__update_sequences();
+    .__override_id(data[0]);
   }
 
 
@@ -1810,8 +1774,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
       }),
       data.settings_mask
     )
-    .__override_id(data.scene_id)
-    .__update_sequences();
+    .__override_id(data.scene_id);
   }
 
 
@@ -2002,10 +1965,13 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
     for (var i = index; i < self.dialog_count; ++i)
       self.dialogs[i].dialog_idx += dialog_count;
 
-    for (var i = 0; i < dialog_count; dialogs[i++].sequence = self)
+    for (var i = 0; i < dialog_count; ++i)
     {
-      array_insert(self.dialogs, index + i, dialogs[i]);
-      dialogs[i].dialog_idx = index + i;
+      var dialog = dialogs[i];
+
+      dialog.sequence = self;
+      dialog.dialog_idx = index + i;
+      array_insert(self.dialogs, index + i, dialog);
     }
 
     self.dialog_count += dialog_count;
@@ -2055,8 +2021,13 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __update_dialogs = function()
   {
-    for (var i = 0; i < self.dialog_count; self.dialogs[i++].sequence = self)
-      self.dialogs[i].dialog_idx = i;
+    self.dialog_count = array_length(self.dialogs);
+
+    for (var i = 0; i < self.dialog_count; ++i) {
+      var dialog = self.dialogs[i];
+      dialog.sequence = self;
+      dialog.dialog_idx = i;
+    }
 
     return self;
   }
@@ -2151,8 +2122,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
       data[2],
       data[3]
     )
-    .__override_id(data[0])
-    .__update_dialogs();
+    .__override_id(data[0]);
   }
 
 
@@ -2172,8 +2142,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
       data.settings_mask,
       data.speakers
     )
-    .__override_id(data.sequence_id)
-    .__update_dialogs();
+    .__override_id(data.sequence_id);
   }
 
 
