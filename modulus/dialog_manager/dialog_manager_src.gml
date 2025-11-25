@@ -808,7 +808,7 @@ function DialogManager(data_string, is_file) constructor
     if (data_string == "")
       return self;
 
-    return __parse(json_parse(data_string)).advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
+    return self.parse(json_parse(data_string)).advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
   }
 
 
