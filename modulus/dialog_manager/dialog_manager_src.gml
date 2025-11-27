@@ -5,8 +5,8 @@
  * @version 0.9.0
  */
 
-#macro __DIALOG_MANAGER_ENCODING_METHOD__ __struct      // Must be <__struct> or <__array>
-#macro __DIALOG_MANAGER_DECODING_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
+#macro __DIALOG_MANAGER_SERIALIZING_METHOD__   __struct      // Must be <__struct> or <__array>
+#macro __DIALOG_MANAGER_DESERIALIZING_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
 
 
 
@@ -133,7 +133,7 @@ enum DIALOG_MANAGER
   ERR_COUNT,
 
   // Error checks
-  ERR_CHECK_INFINITE_LOOP_THRESHOLD = 32,
+  ERR_CHECK_INFINITE_LOOP_TRESHOLD = 32,
 }
 
 
@@ -762,7 +762,7 @@ function DialogManager(data_string, is_file) constructor
     try {
       return json_stringify(
         array_map(self.scenes, function(scene) {
-          return scene.__DIALOG_MANAGER_ENCODING_METHOD__();
+          return scene.__DIALOG_MANAGER_SERIALIZING_METHOD__();
         }),
         prettify
       );
@@ -823,7 +823,7 @@ function DialogManager(data_string, is_file) constructor
   {
     try {
       self.scenes = array_map(scenes, function(scene) {
-        return DialogScene.__DIALOG_MANAGER_DECODING_METHOD__(scene);
+        return DialogScene.__DIALOG_MANAGER_DESERIALIZING_METHOD__(scene);
       });
     }
     catch (ex) {
@@ -1204,7 +1204,7 @@ function DialogManager(data_string, is_file) constructor
       , target_dialog = __get_dialog_from_position(next_position)
     ;
 
-    if (++self.jumps > DIALOG_MANAGER.ERR_CHECK_INFINITE_LOOP_THRESHOLD)
+    if (++self.jumps > DIALOG_MANAGER.ERR_CHECK_INFINITE_LOOP_TRESHOLD)
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED, [self.jumps, current_dialog.__struct()]);
 
     current_dialog.__fx_execute_all_of(function(fx) {
@@ -1715,7 +1715,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
     return [
       int64(self.scene_id),
       array_map(self.sequences, function(sequence) {
-        return sequence.__DIALOG_MANAGER_ENCODING_METHOD__();
+        return sequence.__DIALOG_MANAGER_SERIALIZING_METHOD__();
       }),
       int64(self.settings_mask),
     ];
@@ -1733,7 +1733,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
     return {
       scene_id: int64(self.scene_id),
       sequences: array_map(self.sequences, function(sequence) {
-        return sequence.__DIALOG_MANAGER_ENCODING_METHOD__();
+        return sequence.__DIALOG_MANAGER_SERIALIZING_METHOD__();
       }),
       settings_mask: int64(self.settings_mask),
     };
@@ -1751,7 +1751,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   {
     return new DialogScene(
       array_map(data[1], function(sequence) {
-        return DialogSequence.__DIALOG_MANAGER_DECODING_METHOD__(sequence);
+        return DialogSequence.__DIALOG_MANAGER_DESERIALIZING_METHOD__(sequence);
       }),
       data[2]
     )
@@ -1770,7 +1770,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   {
     return new DialogScene(
       array_map(data.sequences, function(sequence) {
-        return DialogSequence.__DIALOG_MANAGER_DECODING_METHOD__(sequence);
+        return DialogSequence.__DIALOG_MANAGER_DESERIALIZING_METHOD__(sequence);
       }),
       data.settings_mask
     )
@@ -1787,7 +1787,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_ENCODING_METHOD__(), prettify);
+    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
   }
 
 
@@ -1801,7 +1801,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static __deserialize = function(data_string)
   {
     var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DECODING_METHOD__(data).__update_sequences();
+    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data).__update_sequences();
   }
 
 
@@ -2076,7 +2076,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
       int64(self.sequence_id),
       int64(self.settings_mask),
       array_map(self.dialogs, function(dialog) {
-        return dialog.__DIALOG_MANAGER_ENCODING_METHOD__();
+        return dialog.__DIALOG_MANAGER_SERIALIZING_METHOD__();
       }),
       array_map(self.speakers, function(speaker) {
         return int64(speaker);
@@ -2097,7 +2097,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
       sequence_id: int64(self.sequence_id),
       settings_mask: int64(self.settings_mask),
       dialogs: array_map(self.dialogs, function(dialog) {
-        return dialog.__DIALOG_MANAGER_ENCODING_METHOD__();
+        return dialog.__DIALOG_MANAGER_SERIALIZING_METHOD__();
       }),
       speakers: array_map(self.speakers, function(speaker) {
         return int64(speaker);
@@ -2117,7 +2117,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   {
     return new DialogSequence(
       array_map(data[1], function(dialog) {
-        return Dialog.__DIALOG_MANAGER_DECODING_METHOD__(dialog);
+        return Dialog.__DIALOG_MANAGER_DESERIALIZING_METHOD__(dialog);
       }),
       data[2],
       data[3]
@@ -2137,7 +2137,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   {
     return new DialogSequence(
       array_map(data.dialogs, function(dialog) {
-        return Dialog.__DIALOG_MANAGER_DECODING_METHOD__(dialog);
+        return Dialog.__DIALOG_MANAGER_DESERIALIZING_METHOD__(dialog);
       }),
       data.settings_mask,
       data.speakers
@@ -2155,7 +2155,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_ENCODING_METHOD__(), prettify);
+    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
   }
 
 
@@ -2169,7 +2169,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   static __deserialize = function(data_string)
   {
     var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DECODING_METHOD__(data).__update_dialogs();
+    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data).__update_dialogs();
   }
 
 
@@ -2566,7 +2566,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       self.text,
       int64(self.settings_mask),
       array_map(self.fx_map, function(fx) {
-        return fx.__DIALOG_MANAGER_ENCODING_METHOD__();
+        return fx.__DIALOG_MANAGER_SERIALIZING_METHOD__();
       })
     ];
   }
@@ -2584,7 +2584,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       text: self.text,
       settings_mask: int64(self.settings_mask),
       fx_map: array_map(self.fx_map, function(fx) {
-        return fx.__DIALOG_MANAGER_ENCODING_METHOD__();
+        return fx.__DIALOG_MANAGER_SERIALIZING_METHOD__();
       })
     };
   }
@@ -2603,7 +2603,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       data[0],
       data[1],
       array_map(data[2], function(fx) {
-        return DialogFX.__DIALOG_MANAGER_DECODING_METHOD__(fx);
+        return DialogFX.__DIALOG_MANAGER_DESERIALIZING_METHOD__(fx);
       })
     );
   }
@@ -2622,7 +2622,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       data.text,
       data.settings_mask,
       array_map(data.fx_map, function(fx) {
-        return DialogFX.__DIALOG_MANAGER_DECODING_METHOD__(fx);
+        return DialogFX.__DIALOG_MANAGER_DESERIALIZING_METHOD__(fx);
       })
     );
   }
@@ -2637,7 +2637,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_ENCODING_METHOD__(), prettify);
+    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
   }
 
 
@@ -2651,7 +2651,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __deserialize = function(data_string)
   {
     var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DECODING_METHOD__(data);
+    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data);
   }
 
 
@@ -2936,7 +2936,7 @@ function DialogFX(settings_mask, argv, func) constructor
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_ENCODING_METHOD__(), prettify);
+    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
   }
 
 
@@ -2950,7 +2950,7 @@ function DialogFX(settings_mask, argv, func) constructor
   static __deserialize = function(data_string)
   {
     var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DECODING_METHOD__(data);
+    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data);
   }
 
 
