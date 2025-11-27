@@ -1517,6 +1517,18 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 
   /**
+   * @desc Returns the number of scenes in the selected scene's pool.
+   * @returns {Real}
+   */
+
+  static poolcount = function()
+  {
+    return self.manager.scene_count;
+  }
+
+
+
+  /**
    * @desc Returns whether the scene idx is the last of the containing manager's.
    * @returns {Bool}
    */
@@ -1888,6 +1900,18 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 
   /**
+   * @desc Returns the number of sequences in the selected sequence's pool.
+   * @returns {Real}
+   */
+
+  static poolcount = function()
+  {
+    return self.scene.sequence_count;
+  }
+
+
+
+  /**
    * @desc Returns whether the sequence idx is the last of the containing scene's.
    * @returns {Bool}
    */
@@ -2233,6 +2257,18 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       ? DialogManager.__encode_dialog_idx(dialog_idx)
       : self.dialog_idx
     ;
+  }
+
+
+
+  /**
+   * @desc Returns the number of dialogs in the selected dialog's pool.
+   * @returns {Real}
+   */
+
+  static poolcount = function()
+  {
+    return self.sequence.dialog_count;
   }
 
 
