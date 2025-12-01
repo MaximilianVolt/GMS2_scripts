@@ -530,7 +530,7 @@ function DialogManager(data_string, is_file) constructor
     var scene = self.scene(scene_idx ?? __decode_scene_idx(self.position));
 
     try {
-      return scene.sequences[sequence_idx + scene.sequence_count * (sequence_idx < 0)];
+      return scene.sequence(sequence_idx);
     }
     catch (ex) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INVALID_POSITION, [scene_idx, sequence_idx, 0]);
@@ -565,10 +565,8 @@ function DialogManager(data_string, is_file) constructor
     sequence_idx ??= __decode_sequence_idx(self.position);
     dialog_idx ??= __decode_dialog_idx(self.position);
 
-    var sequence = self.sequence(sequence_idx, scene_idx)
-
     try {
-      return sequence.dialogs[dialog_idx + sequence.dialog_count * (dialog_idx < 0)];
+      return self.sequence(sequence_idx, scene_idx).dialog(dialog_idx);
     }
     catch (ex) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INVALID_POSITION, [scene_idx, sequence_idx, dialog_idx]);
