@@ -2471,13 +2471,14 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
    * @param {Struct.DialogFX} fx The effect derive the dialog from.
    * @param {String} prompt The choice's option text.
    * @param {Real} [index] The specific index where to insert the new option in the choice list. Defaults to list length.
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
    * @returns {Struct.Dialog}
    */
 
-  static derive = function(fx, prompt, index = undefined)
+  static derive = function(fx, prompt, index = undefined, settings_mask = 0)
   {
     var choice_count = array_length(fx.argv)
-      , choice = [prompt, self]
+      , choice = [[self, 0], prompt, settings_mask]
     ;
 
     index ??= choice_count;
@@ -2902,8 +2903,9 @@ function DialogFX(settings_mask, argv, func) constructor
     if (choice_index != DIALOG_FX.CHOICE_INDEX_UNSELECTED)
     {
       var choice = argv[DIALOG_FX.ARG_JUMP_DATA][choice_index]
-        , jump_position = choice[DIALOG_FX.ARG_JUMP_DATA_POSITION]
-        , jump_options = array_length(choice) < DIALOG_FX.ARG_JUMP_DATA_COUNT ? 0 : choice[DIALOG_FX.ARG_JUMP_DATA_OPTIONS]
+        , jump_position_array = choice[DIALOG_FX.ARG_JUMP_DATA]
+        , jump_position = jump_position_array[DIALOG_FX.ARG_JUMP_DATA_POSITION]
+        , jump_options = array_length(jump_position_array) < DIALOG_FX.ARG_JUMP_DATA_COUNT ? 0 : jump_position_array[DIALOG_FX.ARG_JUMP_DATA_OPTIONS]
       ;
 
       position = manager.__resolve_position(jump_position, jump_options, parent.position());

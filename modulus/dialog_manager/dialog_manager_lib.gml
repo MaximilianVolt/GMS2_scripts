@@ -405,15 +405,16 @@ function dialog_create_from_struct(data)
  * @param {Struct.DialogFX} fx The effect to link the dialog to.
  * @param {String} prompt The choice's option text.
  * @param {Real} [index] The specific index where to insert the new option in the choice list. Defaults to list length.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
  * @returns {Struct.Dialog}
  */
 
-function dialog_create_from_choice(dialog_args, fx, prompt, index = array_length(fx.argv))
+function dialog_create_from_choice(dialog_args, fx, prompt, index = array_length(fx.argv), settings_mask = 0)
 {
   for (var arg = array_length(dialog_args); arg < Dialog.CONSTRUCTOR_ARGC; ++arg)
     dialog_args[arg] = undefined;
 
-  return dialog_create_array(dialog_args).derive(fx, prompt, index);
+  return dialog_create_from_array(dialog_args).derive(fx, prompt, index, settings_mask);
 }
 
 
@@ -604,7 +605,7 @@ function dialog_fx_create_choice(choice_options = [])
  * @param {String} prompt The choice's option text.
  * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the option is selected.
  * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump data.
- * @param {Constant.DIALOG_FX|Real} The settings mask for the choice effect.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
  * @returns {Array<Any>}
  */
 
