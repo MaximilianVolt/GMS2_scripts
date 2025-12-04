@@ -2,7 +2,7 @@
  * @desc Dialog management system utility library.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.9.0
+ * @version 0.9.1
  */
 
 
@@ -603,13 +603,14 @@ function dialog_fx_create_choice(choice_options = [])
  * @desc Creates a choice option for a choice dialog effect.
  * @param {String} prompt The choice's option text.
  * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the option is selected.
- * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
+ * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump data.
+ * @param {Constant.DIALOG_FX|Real} The settings mask for the choice effect.
  * @returns {Array<Any>}
  */
 
-function dialog_fx_create_choice_option(prompt, jump_position, jump_settings = 0)
+function dialog_fx_create_choice_option(prompt, jump_position, jump_settings = 0, settings_mask = 0)
 {
-  return [[jump_position, jump_settings], prompt];
+  return [[jump_position, jump_settings], prompt, settings_mask];
 }
 
 

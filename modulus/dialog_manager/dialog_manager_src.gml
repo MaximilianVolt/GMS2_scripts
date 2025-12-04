@@ -2,7 +2,7 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.9.0
+ * @version 0.9.1
  */
 
 #macro __DIALOG_MANAGER_SERIALIZING_METHOD__   __struct      // Must be <__struct> or <__array>
@@ -340,7 +340,11 @@ enum DIALOG_FX
     // ...
   FALLBACK_CONDITION_COUNT,
 
-  // Choice flag
+  // Choice data
+  CHOICE_TAG_NONE = 0,
+    // ...
+  CHOICE_TAG_COUNT,
+
   CHOICE_INDEX_UNSELECTED = -1,
   CHOICE_CONDITION_COUNT = -DIALOG_FX.CHOICE_INDEX_UNSELECTED,
 
@@ -351,7 +355,8 @@ enum DIALOG_FX
   ARG_JUMP_DATA_COUNT,
   ARG_FALLBACK_CONDITION = 1,
   ARG_CHOICE_INDEX = 1,
-  ARG_SUBARG_CHOICE_PROMPT = 1,
+  ARG_CHOICE_PROMPT = 1,
+  ARG_CHOICE_SETTINGS,
 
   // Masks (should not be edited)
   __BITMASK_TYPE_SHIFT = 0,
@@ -360,6 +365,9 @@ enum DIALOG_FX
   __BITMASK_TRIGGER_SHIFT = DIALOG_FX.__BITMASK_TYPE_SHIFT + DIALOG_FX.__BITMASK_TYPE_BITS,
   __BITMASK_TRIGGER_BITS = 3,
   __BITMASK_TRIGGER_MASK = ((1 << DIALOG_FX.__BITMASK_TRIGGER_BITS) - 1) << DIALOG_FX.__BITMASK_TRIGGER_SHIFT,
+  __BITMASK_CHOICE_TAG_SHIFT = 0,
+  __BITMASK_CHOICE_TAG_BITS = 3,
+  __BITMASK_CHOICE_TAG_MASK = ((1 << DIALOG_FX.__BITMASK_CHOICE_TAG_BITS) - 1) << DIALOG_FX.__BITMASK_CHOICE_TAG_SHIFT,
 }
 
 
@@ -410,18 +418,19 @@ function DialogManager(data_string, is_file) constructor
   }
 
   self.data = {
-    dialog_scene_bg      : __map_manager_data(DIALOG_SCENE.BG_COUNT    , DIALOG_SCENE.__BITMASK_BG_SHIFT    , DIALOG_SCENE.__BITMASK_BG_MASK    ),
-    dialog_scene_bgm     : __map_manager_data(DIALOG_SCENE.BGM_COUNT   , DIALOG_SCENE.__BITMASK_BGM_SHIFT   , DIALOG_SCENE.__BITMASK_BGM_MASK   ),
-    dialog_scene_bgs     : __map_manager_data(DIALOG_SCENE.BGS_COUNT   , DIALOG_SCENE.__BITMASK_BGS_SHIFT   , DIALOG_SCENE.__BITMASK_BGS_MASK   ),
-    dialog_scene_tags    : __map_manager_data(DIALOG_SCENE.TAG_COUNT   , DIALOG_SCENE.__BITMASK_TAG_SHIFT   , DIALOG_SCENE.__BITMASK_TAG_MASK   ),
-    dialog_sequence_tags : __map_manager_data(DIALOG_SEQUENCE.TAG_COUNT, DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT, DIALOG_SEQUENCE.__BITMASK_TAG_MASK),
-    dialog_speakers      : __map_manager_data(DIALOG.SPEAKER_COUNT     , DIALOG.__BITMASK_SPEAKER_SHIFT     , DIALOG.__BITMASK_SPEAKER_MASK     ),
-    dialog_emotions      : __map_manager_data(DIALOG.EMOTION_COUNT     , DIALOG.__BITMASK_EMOTION_SHIFT     , DIALOG.__BITMASK_EMOTION_MASK     ),
-    dialog_anchors       : __map_manager_data(DIALOG.ANCHOR_COUNT      , DIALOG.__BITMASK_ANCHOR_SHIFT      , DIALOG.__BITMASK_ANCHOR_MASK      ),
-    dialog_textboxes     : __map_manager_data(DIALOG.TEXTBOX_COUNT     , DIALOG.__BITMASK_TEXTBOX_SHIFT     , DIALOG.__BITMASK_TEXTBOX_MASK     ),
-    dialog_tags          : __map_manager_data(DIALOG.TAG_COUNT         , DIALOG.__BITMASK_TAG_SHIFT         , DIALOG.__BITMASK_TAG_MASK         ),
-    dialog_fx_types      : __map_manager_data(DIALOG_FX.TYPE_COUNT     , DIALOG_FX.__BITMASK_TYPE_SHIFT     , DIALOG_FX.__BITMASK_TYPE_MASK     ),
-    dialog_fx_triggers   : __map_manager_data(DIALOG_FX.TRIGGER_COUNT  , DIALOG_FX.__BITMASK_TRIGGER_SHIFT  , DIALOG_FX.__BITMASK_TRIGGER_MASK  ),
+    dialog_scene_bg       : __map_manager_data(DIALOG_SCENE.BG_COUNT     , DIALOG_SCENE.__BITMASK_BG_SHIFT     , DIALOG_SCENE.__BITMASK_BG_MASK     ),
+    dialog_scene_bgm      : __map_manager_data(DIALOG_SCENE.BGM_COUNT    , DIALOG_SCENE.__BITMASK_BGM_SHIFT    , DIALOG_SCENE.__BITMASK_BGM_MASK    ),
+    dialog_scene_bgs      : __map_manager_data(DIALOG_SCENE.BGS_COUNT    , DIALOG_SCENE.__BITMASK_BGS_SHIFT    , DIALOG_SCENE.__BITMASK_BGS_MASK    ),
+    dialog_scene_tags     : __map_manager_data(DIALOG_SCENE.TAG_COUNT    , DIALOG_SCENE.__BITMASK_TAG_SHIFT    , DIALOG_SCENE.__BITMASK_TAG_MASK    ),
+    dialog_sequence_tags  : __map_manager_data(DIALOG_SEQUENCE.TAG_COUNT , DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT , DIALOG_SEQUENCE.__BITMASK_TAG_MASK ),
+    dialog_speakers       : __map_manager_data(DIALOG.SPEAKER_COUNT      , DIALOG.__BITMASK_SPEAKER_SHIFT      , DIALOG.__BITMASK_SPEAKER_MASK      ),
+    dialog_emotions       : __map_manager_data(DIALOG.EMOTION_COUNT      , DIALOG.__BITMASK_EMOTION_SHIFT      , DIALOG.__BITMASK_EMOTION_MASK      ),
+    dialog_anchors        : __map_manager_data(DIALOG.ANCHOR_COUNT       , DIALOG.__BITMASK_ANCHOR_SHIFT       , DIALOG.__BITMASK_ANCHOR_MASK       ),
+    dialog_textboxes      : __map_manager_data(DIALOG.TEXTBOX_COUNT      , DIALOG.__BITMASK_TEXTBOX_SHIFT      , DIALOG.__BITMASK_TEXTBOX_MASK      ),
+    dialog_tags           : __map_manager_data(DIALOG.TAG_COUNT          , DIALOG.__BITMASK_TAG_SHIFT          , DIALOG.__BITMASK_TAG_MASK          ),
+    dialog_fx_types       : __map_manager_data(DIALOG_FX.TYPE_COUNT      , DIALOG_FX.__BITMASK_TYPE_SHIFT      , DIALOG_FX.__BITMASK_TYPE_MASK      ),
+    dialog_fx_triggers    : __map_manager_data(DIALOG_FX.TRIGGER_COUNT   , DIALOG_FX.__BITMASK_TRIGGER_SHIFT   , DIALOG_FX.__BITMASK_TRIGGER_MASK   ),
+    dialog_fx_choice_tags : __map_manager_data(DIALOG_FX.CHOICE_TAG_COUNT, DIALOG_FX.__BITMASK_CHOICE_TAG_SHIFT, DIALOG_FX.__BITMASK_CHOICE_TAG_MASK),
   };
 
   self.scene_count = 0;
