@@ -2,11 +2,21 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.9.1
+ * @version 0.9.2
  */
+
+
 
 #macro __DIALOG_MANAGER_SERIALIZING_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZING_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
+
+
+
+// Self-initialization
+gml_pragma(
+  "global",
+  "new DialogManager(\"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, [], undefined);"
+);
 
 
 
@@ -130,6 +140,7 @@ enum DIALOG_MANAGER
   ERR_EMPTY_CONTAINER_OBJECT,
   ERR_INVALID_POSITION,
   ERR_INFINITE_LOOP_DETECTED,
+  ERR_TEXT_OVERFLOW,
   ERR_COUNT,
 
   // Error checks
@@ -468,6 +479,7 @@ function DialogManager(data_string, is_file) constructor
         "USED CONTAINER OBJECT OF TYPE \{Struct.{0}\} SHOULD NOT BE EMPTY",
         "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
         "INFINITE LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
+        "DIALOG TEXT OVERFLOW DETECTED: SPLIT TEXT INTO MULTIPLE DIALOG OBJECTS\n\nCRASH POSITION DATA: {0}",
       ][type],
       argv
     );
@@ -2243,6 +2255,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) constructor
 {
   static CONSTRUCTOR_ARGC = argument_count;
+  static TEXT_MAXWIDTH = -1;
 
   self.dialog_idx = 0;
   self.sequence = undefined;
@@ -2250,7 +2263,9 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   self.fx_count = 0;
   self.fx_map = [];
 
-
+  if (Dialog.TEXT_MAXWIDTH && string_width(text) > Dialog.TEXT_MAXWIDTH) {
+    throw DialogManager.ERROR(DIALOG_MANAGER.ERR_TEXT_OVERFLOW, [self.__struct()]);
+  }
 
   /**
    * @desc Returns the current/encoded dialog index.
@@ -2471,14 +2486,14 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
    * @param {Struct.DialogFX} fx The effect derive the dialog from.
    * @param {String} prompt The choice's option text.
    * @param {Real} [index] The specific index where to insert the new option in the choice list. Defaults to list length.
-   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
+   * @param {Constant.DIALOG_FX|Real} [choice_settings] The settings mask for the choice effect.
    * @returns {Struct.Dialog}
    */
 
-  static derive = function(fx, prompt, index = undefined, settings_mask = 0)
+  static derive = function(fx, prompt, index = undefined, choice_settings = 0)
   {
     var choice_count = array_length(fx.argv)
-      , choice = [[self, 0], prompt, settings_mask]
+      , choice = DialogFX.__create_choice_option(prompt, self, 0, choice_settings)
     ;
 
     index ??= choice_count;
@@ -2818,6 +2833,113 @@ function DialogFX(settings_mask, argv, func) constructor
     }
 
     return index;
+  }
+
+
+
+  /**
+   * @desc `DialogFX` constructor.
+   * @param {Constant.DIALOG_FX|Real} settings_mask The effect info.
+   * @param {Array<Any>} argv The arguments of the mapped effect function.
+   * @param {Function} func The function to add to the dialog manager (NOT SERIALIZED).
+   * @returns {Struct.DialogFX}
+   */
+
+  static __create = function(settings_mask, argv, func)
+  {
+    return new DialogFX(settings_mask, argv, func);
+  }
+
+
+
+  /**
+   * @desc Creates a jump dialog effect.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings mask for the jump effect.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __create_jump = function(jump_position, jump_settings)
+  {
+    return __create(
+      DialogFX.type(DIALOG_FX.TYPE_JUMP),
+      [[jump_position, jump_settings]],
+      undefined
+    );
+  }
+
+
+
+  /**
+   * @desc Creates a fallback dialog effect.
+   * @param {Function} fx_condition_function The condition function to evaluate.
+   * @param {Array} [argv] The additional arguments to pass to the condition function.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings mask for the jump effect.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __create_fallback = function(fx_condition_function, argv, jump_position, jump_settings)
+  {
+    return __create(
+      DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
+      [[jump_position, jump_settings], fx_condition_function, argv],
+      undefined
+    );
+  }
+
+
+
+  /**
+   * @desc Creates a fallback dialog effect using a pre-defined condition index.
+   * @param {Real} fx_condition_index The index of the condition to evaluate.
+   * @param {Function} fx_condition_function The condition function to evaluate.
+   * @param {Array} [argv] The additional arguments to pass to the condition function.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings mask for the jump effect.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __create_fallback_indexed = function(fx_condition_index, fx_condition_function, argv, jump_position, jump_settings)
+  {
+    return __create(
+      DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
+      [[jump_position, jump_settings], fx_condition_index, argv],
+      fx_condition_function
+    );
+  }
+
+
+
+  /**
+   * @desc Creates a choice dialog effect.
+   * @param {Array<Any>} choice_options The array of choice options.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __create_choice = function(choice_options)
+  {
+    return __create(
+      DialogFX.type(DIALOG_FX.TYPE_CHOICE),
+      choice_options,
+      undefined
+    );
+  }
+
+
+
+  /**
+   * @desc Creates a choice option for a choice dialog effect.
+   * @param {String} prompt The choice's option text.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the option is selected.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump data.
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
+   * @returns {Array<Any>}
+   */
+
+  static __create_choice_option = function(prompt, jump_position, jump_settings = 0, settings_mask = 0)
+  {
+    return [[jump_position, jump_settings], prompt, settings_mask];
   }
 
 

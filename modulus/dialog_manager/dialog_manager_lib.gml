@@ -2,7 +2,7 @@
  * @desc Dialog management system utility library.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.9.1
+ * @version 0.9.2
  */
 
 
@@ -522,7 +522,7 @@ function dialog_deserialize(data_string)
 
 function dialog_fx_create(settings_mask = 0, argv = [], func = undefined)
 {
-  return new DialogFX(settings_mask, is_array(argv) ? argv : [argv], func);
+  return DialogFX.__create(settings_mask, is_array(argv) ? argv : [argv], func);
 }
 
 
@@ -536,10 +536,7 @@ function dialog_fx_create(settings_mask = 0, argv = [], func = undefined)
 
 function dialog_fx_create_jump(jump_position, jump_settings = 0)
 {
-  return dialog_fx_create(
-    DialogFX.type(DIALOG_FX.TYPE_JUMP),
-    [[jump_position, jump_settings]]
-  );
+  return DialogFX.__create_jump(jump_position, jump_settings);
 }
 
 
@@ -547,7 +544,7 @@ function dialog_fx_create_jump(jump_position, jump_settings = 0)
 /**
  * @desc Creates a fallback dialog effect.
  * @param {Function} fx_condition_function The condition function to evaluate.
- * @param {Array} [argv] The additional arguments to pass to the condition function.
+ * @param {Array} argv The additional arguments to pass to the condition function.
  * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
  * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
  * @returns {Struct.DialogFX}
@@ -555,10 +552,7 @@ function dialog_fx_create_jump(jump_position, jump_settings = 0)
 
 function dialog_fx_create_fallback(fx_condition_function, argv, jump_position, jump_settings = 0)
 {
-  return dialog_fx_create(
-    DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
-    [[jump_position, jump_settings], fx_condition_function, is_array(argv) ? argv : [argv]],
-  );
+  return DialogFX.__create_fallback(fx_condition_function, is_array(argv) ? argv : [argv], jump_position, jump_settings);
 }
 
 
@@ -567,7 +561,7 @@ function dialog_fx_create_fallback(fx_condition_function, argv, jump_position, j
  * @desc Creates a fallback dialog effect using a pre-defined condition index.
  * @param {Real} fx_condition_index The index of the condition to evaluate.
  * @param {Function} fx_condition_function The condition function to evaluate.
- * @param {Array} [argv] The additional arguments to pass to the condition function.
+ * @param {Array} argv The additional arguments to pass to the condition function.
  * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
  * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump effect.
  * @returns {Struct.DialogFX}
@@ -575,27 +569,20 @@ function dialog_fx_create_fallback(fx_condition_function, argv, jump_position, j
 
 function dialog_fx_create_fallback_indexed(fx_condition_index, fx_condition_function, argv, jump_position, jump_settings = 0)
 {
-  return dialog_fx_create(
-    DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
-    [[jump_position, jump_settings], fx_condition_index, is_array(argv) ? argv : [argv]],
-    fx_condition_function
-  );
+  return DialogFX.__create_fallback_indexed(fx_condition_index, fx_condition_function, is_array(argv) ? argv : [argv], jump_position, jump_settings);
 }
 
 
 
 /**
  * @desc Creates a choice dialog effect.
- * @param {Array<Any>} choice_options The array of choice options.
+ * @param {Array<Any>} [choice_options] The array of choice options.
  * @returns {Struct.DialogFX}
  */
 
 function dialog_fx_create_choice(choice_options = [])
 {
-  return dialog_fx_create(
-    DialogFX.type(DIALOG_FX.TYPE_CHOICE),
-    choice_options
-  );
+  return DialogFX.__create_choice(is_array(choice_options) ? choice_options : [choice_options]);
 }
 
 
@@ -605,13 +592,13 @@ function dialog_fx_create_choice(choice_options = [])
  * @param {String} prompt The choice's option text.
  * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the option is selected.
  * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump data.
- * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
+ * @param {Constant.DIALOG_FX|Real} [choice_settings] The settings mask for the choice effect.
  * @returns {Array<Any>}
  */
 
-function dialog_fx_create_choice_option(prompt, jump_position, jump_settings = 0, settings_mask = 0)
+function dialog_fx_create_choice_option(prompt, jump_position, jump_settings = 0, choice_settings = 0)
 {
-  return [[jump_position, jump_settings], prompt, settings_mask];
+  return DialogFX.__create_choice_option(prompt, jump_position, jump_settings, choice_settings);
 }
 
 
