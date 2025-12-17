@@ -479,7 +479,7 @@ function DialogManager(data_string, is_file) constructor
         "USED CONTAINER OBJECT OF TYPE \{Struct.{0}\} SHOULD NOT BE EMPTY",
         "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
         "INFINITE LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
-        "DIALOG TEXT OVERFLOW DETECTED: SPLIT TEXT INTO MULTIPLE DIALOG OBJECTS\n\nCRASH POSITION DATA: {0}",
+        "DIALOG TEXT POTENTIAL OVERFLOW DETECTED (W: {0}/{1}): SPLIT TEXT INTO MULTIPLE DIALOG OBJECTS\n\nCRASH POSITION DATA: {2}",
       ][type],
       argv
     );
@@ -2263,8 +2263,14 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   self.fx_count = 0;
   self.fx_map = [];
 
-  if (Dialog.TEXT_MAXWIDTH && string_width(text) > Dialog.TEXT_MAXWIDTH) {
-    throw DialogManager.ERROR(DIALOG_MANAGER.ERR_TEXT_OVERFLOW, [self.__struct()]);
+  if (Dialog.TEXT_MAXWIDTH) {
+    var text_width = string_width(text);
+
+    if (text_width > Dialog.TEXT_MAXWIDTH) {
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_TEXT_OVERFLOW, [
+        text_width, Dialog.TEXT_MAXWIDTH, self.__struct()
+      ]);
+    }
   }
 
   /**
