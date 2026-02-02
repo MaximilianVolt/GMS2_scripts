@@ -45,93 +45,123 @@ var json = dialog_manager.serialize(/* prettify = */ true);
 
 
 
-// The dialog manager system will automatically create all the masks needed for the encoded values in the corresponding enumerators
+// The dialog manager components will automatically create all the masks needed for the encoded values in the corresponding enumerators
 // If you need to add more voices to these, you are free to do so where you notice a "// ..." in a list of items
 
 
 
-// Optional lookup tables recommended for autocompletion suggestions
-var data = dialog_manager.data
-  , dialog_speakers    = data.dialog_speakers
-  , dialog_emotions    = data.dialog_emotions
-  , dialog_anchors     = data.dialog_anchors
-  , dialog_fx_types    = data.dialog_fx_types
-  , dialog_fx_triggers = data.dialog_fx_triggers
-  // ... other lookup tables as needed
-
-  // Add enum voices as needed (e.g., DIALOG.SPEAKER_CHARACTER_1, DIALOG.EMOTION_HAPPY, etc.)
-  , spk_system         = dialog_speakers[DIALOG.SPEAKER_SYSTEM]
-  , spk_narrator       = dialog_speakers[DIALOG.SPEAKER_NARRATOR]
-  , spk_character_1    = dialog_speakers[DIALOG.SPEAKER_CHARACTER_1]
-  , emt_none           = dialog_emotions[DIALOG.EMOTION_NONE]
-  , emt_happy          = dialog_emotions[DIALOG.EMOTION_HAPPY]
-  , fxtrigger_enter    = dialog_fx_triggers[DIALOG_FX.TRIGGER_ON_ENTER]
-  , fxtrigger_leave    = dialog_fx_triggers[DIALOG_FX.TRIGGER_ON_LEAVE]
+// Add enum voices as needed (e.g., DIALOG.SPEAKER_CHARACTER_1, DIALOG.EMOTION_HAPPY, etc.)
+var spk_system      = Dialog.speaker(DIALOG.SPEAKER_SYSTEM)
+  , spk_narrator    = Dialog.speaker(DIALOG.SPEAKER_NARRATOR)
+  , spk_character_1 = Dialog.speaker(DIALOG.SPEAKER_CHARACTER_1)
+  , emt_none        = Dialog.emotion(DIALOG.EMOTION_NONE)
+  , emt_happy       = Dialog.emotion(DIALOG.EMOTION_HAPPY)
+  , fxtrigger_enter = DialogFX.trigger(DIALOG_FX.TRIGGER_ON_ENTER)
+  , fxtrigger_leave = DialogFX.trigger(DIALOG_FX.TRIGGER_ON_LEAVE)
   // ... etc., recommended for readability and faster composition
 ;
 
 
 
 // --------------------------------------------------
-// Dialog FX
+// Dialog FX - REGISTRATION
 // --------------------------------------------------
 
 
 
+// Custom FX functions can be registered globally so that they can be used throughout your dialog data
+// Registered functions can be saved on either normal fx map, condition map or indexer map
+
+// 1. Normal FX function registration
+var custom_fx_function_index = DialogFX.register(
+  function(argv) { /* Custom FX logic here (-> any) */ },
+  DIALOG_FX.REGISTER_FX_FUNC
+);
+
+
+
+// 2. FX condition function registration
+var custom_fx_condition_function_index = DialogFX.register(
+  function(argv) { /* Custom FX condition logic here (-> boolean) */ },
+  DIALOG_FX.REGISTER_FX_FUNC_CONDITION
+);
+
+
+
+// 3. FX indexing function registration
+var custom_fx_indexing_function_index = DialogFX.register(
+  function(argv) { /* Custom FX indexing logic here (-> integer) */ },
+  DIALOG_FX.REGISTER_FX_FUNC_INDEXER
+);
+
+
+
+// --------------------------------------------------
+// Dialog FX - FLOW CONTROLS
+// --------------------------------------------------
+
+
+
+// 0. Flow option creation (oftentimes not needed directly)
+var flow_option_absolute = dialog_fx_create_flow_option(
+  DIALOG_MANAGER.POSITION_CODE_SCENE_FIRST,
+  DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_ABSOLUTE,
+  "Prompt text for absolute flow option",
+  0
+);
+
+var flow_option_relative = dialog_fx_create_flow_option(
+  DIALOG_MANAGER.POSITION_CODE_SCENE_FIRST,
+  DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE | DIALOG_RUNNER.MASK_JUMP_SETTING_UNIT_SEQUENCE,
+  "Prompt text for relative flow option",
+  0
+);
+
+
+
 // 1. Unconditional jump effect
-var fx_jump_absolute = dialog_fx_create_jump(DIALOG_MANAGER.POSITION_CODE_SCENE_NEXT);
-var fx_jump_relative = dialog_fx_create_jump(1, DIALOG_MANAGER.MASK_JUMP_UNIT_SCENE);
+var fx_jump_absolute = dialog_fx_create_jump(fxtrigger_leave, flow_option_absolute);
+var fx_jump_relative = dialog_fx_create_jump(fxtrigger_enter, flow_option_relative);
 
 
 
-// 2a. Conditional jump effect (automatic index assignment)
-var fx_condition_function = function(argv) {
-  return argv[0] < random(1); // <- Matching argv indices
-};
-
+// 2. Conditional jump effect
 var fx_fallback = dialog_fx_create_fallback(
-  fx_condition_function, [.5], // <- Matching argv indices
-  DIALOG_MANAGER.POSITION_CODE_SCENE_START
+  fxtrigger_leave,
+  flow_option_absolute
 );
 
 
 
-// 2b. Conditional jump effect (manual index assignment)
-var fx_condition_index = 8;
-
-var fx_fallback_indexed = dialog_fx_create_fallback_indexed(
-  fx_condition_index, fx_condition_function, [.5], // <- Matching argv indices
-  -10, DIALOG_MANAGER.MASK_JUMP_UNIT_SEQUENCE
+// 3a. Jump selection effect (no condition)
+var fx_dispatch = dialog_fx_create_dispatch(
+  fxtrigger_enter, [
+    flow_option_absolute,
+    flow_option_relative,
+    // ...
+  ],
+  custom_fx_indexing_function_index
 );
 
 
 
-// 3. Choice effect
+// 3b. Jump selection effect (with condition)
+var fx_dispatch = dialog_fx_create_dispatch(
+  fxtrigger_enter, [
+    flow_option_absolute,
+    flow_option_relative,
+    // ...
+  ],
+  custom_fx_indexing_function_index,
+  custom_fx_condition_function_index
+);
+
+
+
+// 4. Choice effect
 var fx_choice = dialog_fx_create_choice([
-  dialog_fx_create_choice_option("Would you like to hear the story again?", DIALOG_MANAGER.POSITION_CODE_SCENE_START),
-  dialog_fx_create_choice_option("No, proceed to the next scene.", +1, DIALOG_MANAGER.MASK_JUMP_UNIT_SCENE)
+  flow_option_absolute, flow_option_relative, // ...
 ]);
-
-
-
-// 4a. Custom effect (automatic index assignment)
-var fx_custom_function = function(argv) {
-  // ...
-};
-
-var fx_type_custom = DialogFX.type(DialogFX.register(fx_custom_function));
-var fx_custom = dialog_fx_create(fx_type_custom | fxtrigger_enter, [fx_custom_arg_1 /* , ... */]);
-
-
-
-// 4b. Custom effect (manual index assignment)
-var fx_custom_function = function(argv) {
-  // ...
-};
-
-var fx_type_custom_index = 20;
-var fx_type_custom = DialogFX.type(DialogFX.register(fx_custom_function, fx_type_custom_index));
-var fx_custom = dialog_fx_create(fx_type_custom | fxtrigger_enter, [fx_custom_arg_1, /* , ... */]);
 
 
 
@@ -155,11 +185,11 @@ var dlg3 = dialog_create("< Hurry to the castle before nightfall. >", 0);
 
 
 
-// 1c. Dialogs from choices (dialog_args, fx, prompt, index) -> SIDE EFFECT: this will ADD the choices to the effect's option list
-var fx_choice = dialog_fx_create_choice();
+// 1c. Dialogs from flow resolution effects -> SIDE EFFECT: this will ADD/OVERWRITE the choices to the effect's option list
+var fx_choice = dialog_fx_create_choice(fxtrigger_leave);
 
-var dlg5 = dialog_create_from_choice(["You truly are lazy, adventurer...", spk_character_1 | emt_none], fx_choice, "5 more minutes...", 1);
-var dlg4 = dialog_create_from_choice(["Good to see you lock n'loaded, adventurer!", spk_character_1 | emt_happy], fx_choice, "Sir yes sir!", 0);
+var dlg4 = dialog_create("Good to see you lock n'loaded, adventurer!", spk_character_1 | emt_happy, fx_choice).from(fx_choice, "Sir yes sir!", 0);
+var dlg5 = dialog_create("You truly are lazy, adventurer...", spk_character_1 | emt_none, fx_choice).from(fx_choice, "I'm just tired...", 1);
 
 
 
@@ -185,7 +215,7 @@ var scn1 = dialog_scene_create([seq1]);
 
 
 // 4. Adding scenes to the dialog manager
-dialog_manager_add(dialog_manager, [scn1]);
+dialog_manager.add([scn1]);
 
 
 
@@ -195,48 +225,53 @@ dialog_manager_add(dialog_manager, [scn1]);
 
 
 
+// 0. Instantiate a dialog runner to cycle through the dialog manager data
+dialog_runner = dialog_runner_create(dialog_manager);
+
+
+
 // 1. Get current dialog, sequence or scene
-var current_dialog = dialog_manager.dialog();
-var current_sequence = dialog_manager.sequence();
-var current_scene = dialog_manager.scene();
+var current_dialog = dialog_runner.dialog();
+var current_sequence = dialog_runner.sequence();
+var current_scene = dialog_runner.scene();
 
 
 
 // 2. Get absolute dialog, sequence or scene (negative indices iterate backwards)
-var absolute_dialog = dialog_manager.dialog(-10);
-var absolute_sequence = dialog_manager.sequence(8);
-var absolute_scene = dialog_manager.scene(2);
+var absolute_dialog = dialog_runner.dialog(-10);
+var absolute_sequence = dialog_runner.sequence(8);
+var absolute_scene = dialog_runner.scene(2);
 
 
 
 // 3a. Get relative dialog, sequence or scene from current position
-var relative_dialog = dialog_manager.deltadialog(-10);
-var relative_sequence = dialog_manager.deltasequence(+8);
-var relative_scene = dialog_manager.deltascene(+2);
-var relative_x = dialog_manager.delta(-1, DIALOG_MANAGER.JUMP_UNIT_SEQUENCE);
+var relative_dialog = dialog_runner.deltadialog(-10);
+var relative_sequence = dialog_runner.deltasequence(+8);
+var relative_scene = dialog_runner.deltascene(+2);
+var relative_x = dialog_runner.delta(-1, DIALOG_MANAGER.JUMP_UNIT_SEQUENCE);
 
 
 
 // 3b. Get relative dialog, sequence or scene from custom position
-var relative_dialog_2 = dialog_manager.deltadialog(-10, DIALOG_MANAGER.POSITION_CODE_SCENE_MIDDLE);
-var relative_sequence_2 = dialog_manager.deltasequence(+8, relative_sequence);
-var relative_scene_2 = dialog_manager.deltascene(+2, relative_scene.position());
-var relative_x_2 = dialog_manager.delta(-2, DIALOG_MANAGER.JUMP_UNIT_SCENE, relative_scene_2);
+var relative_dialog_2 = dialog_runner.deltadialog(-10, DIALOG_MANAGER.POSITION_CODE_SCENE_MIDDLE);
+var relative_sequence_2 = dialog_runner.deltasequence(+8, relative_sequence);
+var relative_scene_2 = dialog_runner.deltascene(+2, relative_scene.position());
+var relative_x_2 = dialog_runner.delta(-2, DIALOG_MANAGER.JUMP_UNIT_SCENE, relative_scene_2);
 
 
 
-// 3c. Load dialog manager to custom position
-dialog_manager.load(relative_x_2); // Will set the new position and status according to the new position
+// 3c. Load dialog runner to custom position
+dialog_runner.load(relative_x_2); // Will set the new position and status according to the new position
 
 
 
-// 3d. Load dialog manager to custom position and executing effects
-dialog_manager.load(relative_dialog, /* lazy = */ false, /* argv = */ [/* ... */]);
+// 3d. Load dialog runner to custom position and executing effects
+dialog_runner.load(relative_dialog, /* busy = */ true, /* argv = */ [/* ... */]);
 
 
 
 // 4. Decoding dialog data
-var scene = dialog_manager.scene(2);
+var scene = dialog_runner.scene(2);
 
 var scene_index = scene.index();             // Index in the dialog manager
 var scene_is_last = scene.islast();          // Last scene
@@ -292,7 +327,7 @@ var enc_fx_trigger = DialogFX.trigger(4);
 
 
 // --------------------------------------------------
-// Dialog management advancement
+// Dialog management & advancement
 // --------------------------------------------------
 
 
@@ -314,13 +349,13 @@ var enc_fx_trigger = DialogFX.trigger(4);
 // Example 1: advancing dialogs when pressing Enter (linearly only)
 var enter_key_pressed = keyboard_check_pressed(vk_enter);
 
-dialog_manager.advance(enter_key_pressed);
+dialog_runner.advance(enter_key_pressed);
 
 
 
 // Example 2: advancing dialogs (generic solution with choices)
 var enter_key_pressed = keyboard_check_pressed(vk_enter)
-  , choice = dialog_manager.dialog().choice()
+  , choice = dialog_runner.dialog().choice()
   , has_choice = choice != undefined
 ;
 
@@ -331,20 +366,18 @@ if (has_choice)
     , incr = vk_down - vk_up
   ;
 
-  // Choice index initialized in create event
-  choice_index = clamp(choice_index + incr, 0, array_length(choice.argv) - 1);
+  // Choice index is already initialized in dialog runner
+  dialog_runner.choice_index = clamp(dialog_runner.choice_index + incr, 0, array_length(choice.options()) - 1);
 }
 
-dialog_manager.advance(enter_key_pressed, has_choice * DIALOG_MANAGER.MASK_JUMP_CHOICE, choice_index);
+dialog_runner.advance(enter_key_pressed, has_choice * DIALOG_RUNNER.FLAG_JUMP_SETTING_CHOICE);
 
 
 
-// Example 3: forecasting dialog manager positions
+// Example 3: forecasting dialog runner positions (returns dialog runner copy)
 var enter_key_pressed = keyboard_check_pressed(vk_enter);
 
-var next_dialog_data = dialog_manager.forecast(vk_enter); // Same parameters as DialogManager.advance()
-var next_dialog = next_dialog_data.dialog;
-var next_status = next_dialog_data.status;
+var next_dialog_data = dialog_runner.forecast(vk_enter); // Same parameters as DialogRunner.advance()
 
 
 
@@ -357,14 +390,14 @@ var next_status = next_dialog_data.status;
 // You may find useful to have values to use in a single frame to perform an operation or simply to keep track
 // of a particular relative position of the current dialog.
 //
-// The dialog manager also includes a status member that has both flags toggled based on particular situations
+// The dialog runner also includes a status member that has both flags toggled based on particular situations
 // with positions (first/last dialog/sequence/scene, first/middle/last of sequence/scene, etc.) and frame-based
 // operations, such as having advanced/receded dialogs/sequences/scenes or having executed jumps/fallbacks/choices
 
 
 
 // 1. Position status flag
-if (advance_key && dialog_manager.status & DIALOG_MANAGER.FLAG_STATUS_LAST_OF_SEQUENCE) {
+if (advance_key && dialog_runner.status & DIALOG_RUNNER.FLAG_STATUS_LAST_OF_SEQUENCE) {
   // E.g. hides textboxes
   is_active = false;
   exit;
@@ -373,6 +406,6 @@ if (advance_key && dialog_manager.status & DIALOG_MANAGER.FLAG_STATUS_LAST_OF_SE
 
 
 // 2. Runtime status flag
-if (dialog_manager.status & DIALOG_MANAGER.FLAG_STATUS_EXECUTED_CHOICE) {
+if (dialog_runner.status & DIALOG_RUNNER.FLAG_STATUS_EXECUTED_CHOICE) {
   show_debug_message("A choice has been executed this frame.");
 }

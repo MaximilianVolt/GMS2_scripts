@@ -2,40 +2,666 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.9.2
+ * @version 0.10.0
+*/
+
+
+
+#macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
+#macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogRunner` constructor.
+ * @param dialog_manager The dialog manager to run on.
+ * @returns {Struct.DialogRunner}
  */
 
+function dialog_runner_create(dialog_manager)
+{
+  return new DialogRunner(dialog_manager);
+}
 
 
-#macro __DIALOG_MANAGER_SERIALIZING_METHOD__   __struct      // Must be <__struct> or <__array>
-#macro __DIALOG_MANAGER_DESERIALIZING_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogManager` constructor.
+ * @param {String|Id.TextFile} [data_string] The data to parse.
+ * @param {Bool} [is_file] Specifies whether `data_string` is a file (`true`) or not (`false`).
+ * @returns {Struct.DialogManager}
+ */
+
+function dialog_manager_create(data_string = "", is_file = false)
+{
+  return new DialogManager(data_string, is_file);
+}
+
+
+
+/**
+ * @desc Returns a list of all components from an element matching a tag.
+ * @param {Struct.DialogManager|Struct.DialogLinkable} collection The collection where to execute the search.
+ * @param {Constant.DIALOG_SCENE|Constant.DIALOG_SEQUENCE|Constant.DIALOG|Real} tag The tag to search for.
+ * @returns {Array<Struct.DialogLinkable}
+ */
+
+function dialog_manager_search_by_tag(collection, tag)
+{
+  if (is_instanceof(collection, DialogManager))
+    return collection.__get_scenes_by_tag(tag);
+
+  if (is_instanceof(collection, DialogScene))
+    return collection.__get_sequences_by_tag(tag);
+
+  if (is_instanceof(collection, DialogSequence))
+    return collection.__get_dialogs_by_tag(tag);
+
+  return collection;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc DialogScene` constructor.
+ * @param {Struct.DialogSequence|Array<Struct.DialogSequence>} [sequences] The array of `DialogSequence` of the scene.
+ * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The scene settings.
+ * @returns {Struct.DialogScene}
+ */
+
+function dialog_scene_create(sequences = [], settings_mask = 0)
+{
+  return new DialogScene(
+    is_array(sequences) ? sequences : [sequences],
+    settings_mask
+  );
+}
+
+
+
+/**
+ * @desc Creates a new `DialogScene` object from an array.
+ * @param {Array<Any>} data The data of the object.
+ * @returns {Struct.DialogScene}
+ */
+
+function dialog_scene_create_from_array(data)
+{
+  return dialog_scene_create(data[DIALOG_SCENE.ARG_SEQUENCES], data[DIALOG_SCENE.ARG_SETTINGS_MASK]);
+}
+
+
+
+/**
+ * @desc Creates a new `DialogScene` object from a struct.
+ * @param {Struct} data The data of the object.
+ * @returns {Struct.DialogScene}
+ */
+
+function dialog_scene_create_from_struct(data)
+{
+  return dialog_scene_create(data.sequences, data.settings_mask);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogSequence` constructor.
+ * @param {Struct.Dialog|Array<Struct.Dialog>} [dialogs] The array of `Dialog` of the sequence.
+ * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The sequence info.
+ * @param {Array<Real>} [speakers] The indices of the speakers.
+ * @returns {Struct.DialogSequence}
+ */
+
+function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [])
+{
+  return new DialogSequence(
+    is_array(dialogs) ? dialogs : [dialogs],
+    settings_mask,
+    is_array(speakers) ? speakers : [speakers]
+  );
+}
+
+
+
+/**
+ * @desc Creates a new `DialogSequence` object from an array.
+ * @param {Array<Any>} data The data of the object.
+ * @returns {Struct.DialogSequence}
+ */
+
+function dialog_sequence_create_from_array(data)
+{
+  return dialog_sequence_create(data[DIALOG_SEQUENCE.ARG_DIALOGS], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS]);
+}
+
+
+
+/**
+ * @desc Creates a new `DialogSequence` object from a struct.
+ * @param {Struct} data The data of the object.
+ * @returns {Struct.DialogSequence}
+ */
+
+function dialog_sequence_create_from_struct(data)
+{
+  return dialog_sequence_create(data.dialogs, data.settings_mask, data.speakers);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `Dialog` constructor.
+ * @param {String} text The text message of the dialog.
+ * @param {Constant.DIALOG|Real} [settings_mask] The dialog info.
+ * @param {Struct.DialogFX|Array<Struct.DialogFX>} [fx_map] The array of `DialogFX` to apply.
+ * @returns {Struct.Dialog}
+ */
+
+function dialog_create(text, settings_mask = 0, fx_map = [])
+{
+  return new Dialog(
+    text,
+    settings_mask,
+    is_array(fx_map) ? fx_map : [fx_map]
+  );
+}
+
+
+
+/**
+ * @desc Creates a new `Dialog` object from an array.
+ * @param {Array<Any>} data The data of the object.
+ * @returns {Struct.Dialog}
+ */
+
+function dialog_create_from_array(data)
+{
+  return dialog_create(data[DIALOG.ARG_TEXT], data[DIALOG.ARG_SETTINGS_MASK], data[DIALOG.ARG_FX_MAP]);
+}
+
+
+
+/**
+ * @desc Creates a new `Dialog` object from a struct.
+ * @param {Struct} data The data of the object.
+ * @returns {Struct.Dialog}
+ */
+
+function dialog_create_from_struct(data)
+{
+  return dialog_create(data.text, data.settings_mask, data.fx_map);
+}
+
+
+
+/**
+ * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects of the specified type.
+ * @param {Struct.Dialog} dialog The dialog to check.
+ * @param {Constant.DIALOG_FX|Real} [type] The type of the effect to check for.
+ * @returns {Bool}
+ */
+
+function dialog_has_fx_of_type(dialog, type = DIALOG_FX.TYPE_DEFAULT)
+{
+  return dialog.__fx_has_of(function(fx, argv) { return fx.type() == argv; }, type);
+}
+
+
+
+/**
+ * @desc Retrieves all dialog FX which match a filter.
+ * @param {Struct.Dialog} dialog The dialog where the effects should be retrieved from.
+ * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+ * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+ * @returns {Array<Struct.DialogFX>}
+ */
+
+function dialog_get_fx_all_of(dialog, filter_fn = function(fx, argv) { return true; }, argv = undefined)
+{
+  return dialog.__fx_get_all_of(filter_fn, argv);
+}
+
+
+
+/**
+ * @desc Executes all dialog FX which match a filter.
+ * @param {Struct.Dialog} dialog The dialog that should execute all the effects.
+ * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+ * @param {Array} [argv] The arguments to pass to the effects.
+ * @returns {Struct.Dialog}
+ */
+
+function dialog_execute_fx_all_of(dialog, filter_fn = function(fx, argv) { return true; }, argv = undefined)
+{
+  return dialog.__fx_execute_all_of(filter_fn, argv);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogFX` constructor.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
+ * @param {Any|Array<Any>} [argv] The arguments of the mapped effect function.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create(settings_mask = 0, argv = [])
+{
+  return new DialogFX(settings_mask, is_array(argv) ? argv : [argv]);
+}
+
+
+
+/**
+ * @desc Creates a flow option for a flow resolutor dialog effect.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The jump option destination.
+ * @param {Constant.DIALOG_RUNNER|Real} [jump_settings] The settings mask for the jump data.
+ * @param {String} [prompt] The flow option's text.
+ * @param {Constant.DIALOG_FX|Real} [jump_metadata_settings] Extra bitmask data about the flow option.
+ * @returns {Array}
+ */
+
+function dialog_fx_create_flow_option(jump_position, jump_settings = 0, prompt = undefined, jump_metadata_settings = 0)
+{
+  return DialogFX.__create_option_flow(jump_position, jump_settings, prompt, jump_metadata_settings);
+}
+
+
+
+/**
+ * @desc Creates a jump dialog effect.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [flow_option] The jump option's data.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
+{
+  return new DialogFX(
+    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP) | settings_mask,
+    [[flow_option], undefined, undefined, undefined, undefined]
+  );
+}
+
+
+
+/**
+ * @desc Creates a dispatch dialog effect.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
+ * @param {Array} [flow_options] The jump options' data.
+ * @param {Constant.DIALOG_FX|Real} [fx_indexer_index] The indexer function index to evaluate.
+ * @param {Array} [fx_indexer_argv] The arguments of the indexer function.
+ * @param {Constant.DIALOG_FX|Real} [fx_condition_index] The condition function index to evaluate.
+ * @param {Array} [fx_condition_argv] The additional arguments to pass to the condition function.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_indexer_index = undefined, fx_condition_index = undefined,  fx_indexer_argv = [], fx_condition_argv = [])
+{
+  return new DialogFX(
+    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH) | settings_mask,
+    [flow_options, fx_indexer_index, fx_condition_index, fx_indexer_argv, fx_condition_argv]
+  );
+}
+
+
+
+/**
+ * @desc Creates a fallback dialog effect.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
+ * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [flow_option] The jump option's data.
+ * @param {Constant.DIALOG_FX|Real} [fx_condition_index] The condition function index to evaluate.
+ * @param {Array} [fx_condition_argv] The additional arguments to pass to the condition function.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, fx_condition_index = undefined, fx_condition_argv = [])
+{
+  return new DialogFX(
+    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK) | settings_mask,
+    [[flow_option], undefined, fx_condition_index, undefined, fx_condition_argv]
+  );
+}
+
+
+
+/**
+ * @desc Creates a choice dialog effect.
+ * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
+ * @param {Array} [flow_options] The array of choice options.
+ * @param {Constant.DIALOG_FX|Real} [fx_indexer_index] The indexer function index to evaluate.
+ * @param {Array} [fx_indexer_argv] The arguments of the indexer function.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_choice(settings_mask = 0, flow_options = [], fx_indexer_index = DIALOG_FX.FUNC_INDEXER_RUNNER_CHOICE_INDEX, fx_indexer_argv = [])
+{
+  return new DialogFX(
+    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE) | settings_mask,
+    [flow_options, fx_indexer_index, undefined, fx_indexer_argv, undefined]
+  );
+}
+
+
+
+/**
+ * @desc Creates a new `DialogFX` object from an array.
+ * @param {Array} data The data to create the `DialogFX` from.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_from_array(data)
+{
+  return dialog_fx_create(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV]);
+}
+
+
+
+/**
+ * @desc Creates a new `DialogFX` object from a struct.
+ * @param {Struct} data The data to create the `DialogFX` from.
+ * @returns {Struct.DialogFX}
+ */
+
+function dialog_fx_create_from_struct(data)
+{
+  return dialog_fx_create(data.settings_mask, data.argv);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
 
 
 // Self-initialization
 gml_pragma(
   "global",
-  "new DialogManager(\"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, [], undefined);"
+  "new DialogRunner(undefined); new DialogManager(\"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, []);"
 );
 
 
 
-// Do not edit
+/**
+ * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
+ * @desc `FLAG_STATUS_*` flags refer to possible positioning/execution states of the dialog runner.
+ * @desc `JUMP_SETTING_*` options refer to jump effect settings. Not to use with bitmasks.
+ * @desc `MASK_JUMP_SETTING_*`/`FLAG_JUMP_SETTING_*` settings refer to jump settings masks and can be used to encode settings.
+ */
+
+enum DIALOG_RUNNER // Should not edit
+{
+  // Status info indices
+  __BITMASK_FLAG_INDEX_STATUS_UNINITIALIZED = 0,
+  __BITMASK_FLAG_INDEX_STATUS_FIRST_DIALOG,
+  __BITMASK_FLAG_INDEX_STATUS_FIRST_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_FIRST_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_MIDDLE_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_LAST_DIALOG,
+  __BITMASK_FLAG_INDEX_STATUS_LAST_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_LAST_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_LAST_OF_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_LAST_OF_SCENE,
+  __BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_FLAG_INDEX_STATUS_ADVANCED_DIALOG = DIALOG_RUNNER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_FLAG_INDEX_STATUS_ADVANCED_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_ADVANCED_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_RECEDED_DIALOG,
+  __BITMASK_FLAG_INDEX_STATUS_RECEDED_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_RECEDED_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_MAINTAINED_DIALOG,
+  __BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SEQUENCE,
+  __BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SCENE,
+  __BITMASK_FLAG_INDEX_STATUS_EXECUTED_JUMP,
+  __BITMASK_FLAG_INDEX_STATUS_EXECUTED_DISPATCH,
+  __BITMASK_FLAG_INDEX_STATUS_EXECUTED_FALLBACK,
+  __BITMASK_FLAG_INDEX_STATUS_EXECUTED_CHOICE,
+  FLAG_STATUS_COUNT,
+
+  // Status info values
+  FLAG_STATUS_UNINITIALIZED       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_UNINITIALIZED,
+  FLAG_STATUS_FIRST_DIALOG        = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_DIALOG,
+  FLAG_STATUS_FIRST_SEQUENCE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_SEQUENCE,
+  FLAG_STATUS_FIRST_SCENE         = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_SCENE,
+  FLAG_STATUS_FIRST_OF_SEQUENCE   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SEQUENCE,
+  FLAG_STATUS_FIRST_OF_SCENE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SCENE,
+  FLAG_STATUS_MIDDLE_OF_SEQUENCE  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SEQUENCE,
+  FLAG_STATUS_MIDDLE_OF_SCENE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SCENE,
+  FLAG_STATUS_MIDDLE_SCENE        = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_SCENE,
+  FLAG_STATUS_LAST_DIALOG         = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_DIALOG,
+  FLAG_STATUS_LAST_SEQUENCE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_SEQUENCE,
+  FLAG_STATUS_LAST_SCENE          = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_SCENE,
+  FLAG_STATUS_LAST_OF_SEQUENCE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_OF_SEQUENCE,
+  FLAG_STATUS_LAST_OF_SCENE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_OF_SCENE,
+  FLAG_STATUS_ADVANCED_DIALOG     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_DIALOG,
+  FLAG_STATUS_ADVANCED_SEQUENCE   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_SEQUENCE,
+  FLAG_STATUS_ADVANCED_SCENE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_SCENE,
+  FLAG_STATUS_RECEDED_DIALOG      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_DIALOG,
+  FLAG_STATUS_RECEDED_SEQUENCE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_SEQUENCE,
+  FLAG_STATUS_RECEDED_SCENE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_SCENE,
+  FLAG_STATUS_MAINTAINED_DIALOG   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_DIALOG,
+  FLAG_STATUS_MAINTAINED_SEQUENCE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SEQUENCE,
+  FLAG_STATUS_MAINTAINED_SCENE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SCENE,
+  FLAG_STATUS_EXECUTED_JUMP       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_JUMP,
+  FLAG_STATUS_EXECUTED_DISPATCH   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_DISPATCH,
+  FLAG_STATUS_EXECUTED_FALLBACK   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_FALLBACK,
+  FLAG_STATUS_EXECUTED_CHOICE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_CHOICE,
+
+  // Status masks
+  __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_RUNNER.FLAG_STATUS_COUNT - DIALOG_RUNNER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG_RUNNER.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
+  __BITMASK_STATUS_AUTORESET_MASK = ((1 << DIALOG_RUNNER.__BITMASK_STATUS_AUTORESET_COUNT) - 1) << DIALOG_RUNNER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
+  __BITMASK_STATUS_MASK = (1 << DIALOG_RUNNER.FLAG_STATUS_COUNT) - 1,
+
+  // Jump settings
+  JUMP_SETTING_TYPE_ABSOLUTE = 0,
+  JUMP_SETTING_TYPE_RELATIVE,
+  __BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT = 0,
+  __BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT,
+  __BITMASK_MASK_JUMP_SETTING_TYPE_BITS = 1,
+  __BITMASK_MASK_JUMP_SETTING_TYPE_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
+  MASK_JUMP_SETTING_TYPE_ABSOLUTE = DIALOG_RUNNER.JUMP_SETTING_TYPE_ABSOLUTE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
+  MASK_JUMP_SETTING_TYPE_RELATIVE = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
+  JUMP_SETTING_UNIT_DIALOG = 0,
+  JUMP_SETTING_UNIT_SEQUENCE,
+  JUMP_SETTING_UNIT_SCENE,
+  __BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS,
+  __BITMASK_MASK_JUMP_SETTING_UNIT_BITS = 2,
+  __BITMASK_MASK_JUMP_SETTING_UNIT_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT,
+  MASK_JUMP_SETTING_UNIT_DIALOG = DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE,
+  MASK_JUMP_SETTING_UNIT_SEQUENCE = DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE,
+  MASK_JUMP_SETTING_UNIT_SCENE = DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE,
+  __BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_BITS,
+  __BITMASK_MASK_JUMP_SETTING_RESOLUTION_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT,
+  __BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE = DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_EXEC_FX_ON_ENTER,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_EXEC_FX_ON_LEAVE,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SEQUENCE,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SCENE,
+  __BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT,
+  __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
+  __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_BITS = DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT - DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT,
+  __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT,
+  __BITMASK_JUMP_SETTINGS_BEHAVIOUR_MASK = ((1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT) - 1) << DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT,
+  FLAG_JUMP_SETTING_CHOICE             = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE,
+  FLAG_JUMP_SETTING_BYPASS_FX_ON_ENTER = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
+  FLAG_JUMP_SETTING_BYPASS_FX_ON_LEAVE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
+  FLAG_JUMP_SETTING_MAINTAIN_DIALOG    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
+  FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SEQUENCE,
+  FLAG_JUMP_SETTING_MAINTAIN_SCENE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SCENE,
+}
+
+
 
 /**
- * @desc `POSITION_CODE_*` options refer to relative dialog positioning encodings.
- * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
- * @desc `FLAG_*` flags refer to various info stored in a bitfield.
- * @desc `JUMP_*` options refer to jump effect settings.
- * @desc `MASK_JUMP_*` options refer to jump effect settings masks and can be used to encode settings.
+ * @desc `POSITION_CODE_*` options refer to relative dialog positioning encodings when absolute jumps are to be made.
+ * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
  * @desc `ERR_*` options refer to error codes and can be used to check error types.
  */
 
-enum DIALOG_MANAGER
+enum DIALOG_MANAGER // Should not edit
 {
-  // Positioning codes (should not edit)
-  POSITION_CODE_NONE = -15,
-  POSITION_CODE_SCENE_LAST,
+  // Positioning codes
+  POSITION_CODE_SCENE_LAST = -14,
   POSITION_CODE_SCENE_NEXT,
   POSITION_CODE_SCENE_END,
   POSITION_CODE_SCENE_MIDDLE,
@@ -49,86 +675,24 @@ enum DIALOG_MANAGER
   POSITION_CODE_SEQUENCE_START,
   POSITION_CODE_SEQUENCE_PREVIOUS,
   POSITION_CODE_SEQUENCE_FIRST,
-  POSITION_CODE_COUNT = -DIALOG_MANAGER.POSITION_CODE_NONE,
+  POSITION_CODE_NONE,
+  POSITION_CODE_COUNT = -DIALOG_MANAGER.POSITION_CODE_SCENE_LAST + 1,
 
-  // Status info (indexes)
-  __BITMASK_FLAG_STATUS_INDEX_UNINITIALIZED = 0,
-  __BITMASK_FLAG_STATUS_INDEX_FIRST_DIALOG,
-  __BITMASK_FLAG_STATUS_INDEX_FIRST_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_FIRST_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_FIRST_OF_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_FIRST_OF_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_MIDDLE_OF_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_MIDDLE_OF_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_MIDDLE_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_LAST_DIALOG,
-  __BITMASK_FLAG_STATUS_INDEX_LAST_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_LAST_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_LAST_OF_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_LAST_OF_SCENE,
-  __BITMASK_STATUS_NO_AUTORESET_COUNT,
-  __BITMASK_FLAG_STATUS_INDEX_ADVANCED_DIALOG = DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
-  __BITMASK_FLAG_STATUS_INDEX_ADVANCED_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_ADVANCED_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_RECEDED_DIALOG,
-  __BITMASK_FLAG_STATUS_INDEX_RECEDED_SEQUENCE,
-  __BITMASK_FLAG_STATUS_INDEX_RECEDED_SCENE,
-  __BITMASK_FLAG_STATUS_INDEX_EXECUTED_JUMP,
-  __BITMASK_FLAG_STATUS_INDEX_EXECUTED_FALLBACK,
-  __BITMASK_FLAG_STATUS_INDEX_EXECUTED_CHOICE,
-  FLAG_STATUS_COUNT,
+  // Argument positions
+  ARG_DATA_STRING = 0,
+  ARG_IS_FILE,
+  ARG_COUNT,
 
-  // Status info (values)
-  FLAG_STATUS_UNINITIALIZED      = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_UNINITIALIZED,
-  FLAG_STATUS_FIRST_DIALOG       = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_FIRST_DIALOG,
-  FLAG_STATUS_FIRST_SEQUENCE     = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_FIRST_SEQUENCE,
-  FLAG_STATUS_FIRST_SCENE        = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_FIRST_SCENE,
-  FLAG_STATUS_FIRST_OF_SEQUENCE  = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_FIRST_OF_SEQUENCE,
-  FLAG_STATUS_FIRST_OF_SCENE     = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_FIRST_OF_SCENE,
-  FLAG_STATUS_MIDDLE_OF_SEQUENCE = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_MIDDLE_OF_SEQUENCE,
-  FLAG_STATUS_MIDDLE_OF_SCENE    = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_MIDDLE_OF_SCENE,
-  FLAG_STATUS_MIDDLE_SCENE       = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_MIDDLE_SCENE,
-  FLAG_STATUS_LAST_DIALOG        = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_LAST_DIALOG,
-  FLAG_STATUS_LAST_SEQUENCE      = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_LAST_SEQUENCE,
-  FLAG_STATUS_LAST_SCENE         = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_LAST_SCENE,
-  FLAG_STATUS_LAST_OF_SEQUENCE   = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_LAST_OF_SEQUENCE,
-  FLAG_STATUS_LAST_OF_SCENE      = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_LAST_OF_SCENE,
-  FLAG_STATUS_ADVANCED_DIALOG    = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_ADVANCED_DIALOG,
-  FLAG_STATUS_ADVANCED_SEQUENCE  = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_ADVANCED_SEQUENCE,
-  FLAG_STATUS_ADVANCED_SCENE     = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_ADVANCED_SCENE,
-  FLAG_STATUS_RECEDED_DIALOG     = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_RECEDED_DIALOG,
-  FLAG_STATUS_RECEDED_SEQUENCE   = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_RECEDED_SEQUENCE,
-  FLAG_STATUS_RECEDED_SCENE      = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_RECEDED_SCENE,
-  FLAG_STATUS_EXECUTED_JUMP      = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_EXECUTED_JUMP,
-  FLAG_STATUS_EXECUTED_FALLBACK  = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_EXECUTED_FALLBACK,
-  FLAG_STATUS_EXECUTED_CHOICE    = 1 << DIALOG_MANAGER.__BITMASK_FLAG_STATUS_INDEX_EXECUTED_CHOICE,
-
-  // Masks
-  __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_MANAGER.FLAG_STATUS_COUNT - DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
-  __BITMASK_STATUS_NO_AUTORESET_MASK = (1 << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT) - 1,
-  __BITMASK_STATUS_AUTORESET_MASK = ((1 << DIALOG_MANAGER.__BITMASK_STATUS_AUTORESET_COUNT) - 1) << DIALOG_MANAGER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
-  __BITMASK_STATUS_MASK = (1 << DIALOG_MANAGER.FLAG_STATUS_COUNT) - 1,
-
-  // Jump options
-  JUMP_TYPE_ABSOLUTE = 0,
-  JUMP_TYPE_RELATIVE,
-  __BITMASK_JUMP_TYPE_SHIFT = 0,
-  __BITMASK_JUMP_TYPE_BITS = 1,
-  __BITMASK_JUMP_TYPE_MASK = ((1 << DIALOG_MANAGER.__BITMASK_JUMP_TYPE_BITS) - 1) << DIALOG_MANAGER.__BITMASK_JUMP_TYPE_SHIFT,
-  MASK_JUMP_TYPE_ABSOLUTE = DIALOG_MANAGER.JUMP_TYPE_ABSOLUTE << DIALOG_MANAGER.__BITMASK_JUMP_TYPE_SHIFT,
-  MASK_JUMP_TYPE_RELATIVE = DIALOG_MANAGER.JUMP_TYPE_RELATIVE << DIALOG_MANAGER.__BITMASK_JUMP_TYPE_SHIFT,
-  JUMP_UNIT_DIALOG = 0,
-  JUMP_UNIT_SEQUENCE,
-  JUMP_UNIT_SCENE,
-  __BITMASK_JUMP_UNIT_SHIFT = DIALOG_MANAGER.__BITMASK_JUMP_TYPE_SHIFT + DIALOG_MANAGER.__BITMASK_JUMP_TYPE_BITS,
-  __BITMASK_JUMP_UNIT_BITS = 2,
-  __BITMASK_JUMP_UNIT_MASK = ((1 << DIALOG_MANAGER.__BITMASK_JUMP_UNIT_BITS) - 1) << DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT,
-  MASK_JUMP_UNIT_DIALOG = DIALOG_MANAGER.JUMP_UNIT_DIALOG << DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT | DIALOG_MANAGER.MASK_JUMP_TYPE_RELATIVE,
-  MASK_JUMP_UNIT_SEQUENCE = DIALOG_MANAGER.JUMP_UNIT_SEQUENCE << DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT | DIALOG_MANAGER.MASK_JUMP_TYPE_RELATIVE,
-  MASK_JUMP_UNIT_SCENE = DIALOG_MANAGER.JUMP_UNIT_SCENE << DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT | DIALOG_MANAGER.MASK_JUMP_TYPE_RELATIVE,
-  __BITMASK_JUMP_CHOICE_SHIFT = DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT + DIALOG_MANAGER.__BITMASK_JUMP_UNIT_BITS,
-  __BITMASK_JUMP_CHOICE_BITS = 1,
-  MASK_JUMP_CHOICE = ((1 << DIALOG_MANAGER.__BITMASK_JUMP_CHOICE_BITS) - 1) << DIALOG_MANAGER.__BITMASK_JUMP_CHOICE_SHIFT,
+  // Positioning masks
+  __BITMASK_POSITION_DIALOG_SHIFT = 0,
+  __BITMASK_POSITION_DIALOG_BITS = 12,
+  __BITMASK_POSITION_DIALOG_MASK = ((1 << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS) - 1) << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT,
+  __BITMASK_POSITION_SEQUENCE_SHIFT = DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT + DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS,
+  __BITMASK_POSITION_SEQUENCE_BITS = 9,
+  __BITMASK_POSITION_SEQUENCE_MASK = ((1 << DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_BITS) - 1) << DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT,
+  __BITMASK_POSITION_SCENE_SHIFT = DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT + DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_BITS,
+  __BITMASK_POSITION_SCENE_BITS = 10,
+  __BITMASK_POSITION_SCENE_MASK = ((1 << DIALOG_MANAGER.__BITMASK_POSITION_SCENE_BITS) - 1) << DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT,
 
   // Error codes
   ERR_UNDEFINED_ERROR_TYPE = 0,
@@ -149,18 +713,16 @@ enum DIALOG_MANAGER
 
 
 
-// Edit as needed
-
 /**
  * @desc Contains all useful information about a dialog scene.
  * @desc `BG_*` options refer to the background index.
  * @desc `BGM_*` options refer to the background music index.
  * @desc `BGS_*` flags refer to the background sound index.
  * @desc `TAG_*` options refer to the scene type for categorization (useful for filtering).
- * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
+ * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
  */
 
-enum DIALOG_SCENE
+enum DIALOG_SCENE // Edit as needed
 {
   // Scene bg
   BG_NONE = 0,
@@ -186,7 +748,14 @@ enum DIALOG_SCENE
   TAG_COUNT,
   TAG_DEFAULT = DIALOG_SCENE.TAG_NONE,
 
-  // Masks (should not edit)
+  // Argument positions
+  ARG_SEQUENCES = 0,
+  ARG_SETTINGS_MASK,
+  ARG_COUNT,
+  ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARG_COUNT,
+  ARG_COUNT_DESERIALIZATION,
+
+  // Settings masks
   __BITMASK_BG_SHIFT = 0,
   __BITMASK_BG_BITS = 7,
   __BITMASK_BG_MASK = ((1 << DIALOG_SCENE.__BITMASK_BG_BITS) - 1) << DIALOG_SCENE.__BITMASK_BG_SHIFT,
@@ -203,15 +772,13 @@ enum DIALOG_SCENE
 
 
 
-// Edit as needed
-
 /**
  * @desc Contains all useful information about a dialog sequence.
  * @desc `TAG_*` options refer to the sequence type for categorization (useful for filtering).
- * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
+ * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
  */
 
-enum DIALOG_SEQUENCE
+enum DIALOG_SEQUENCE // Edit as needed
 {
   // Sequence tags
   TAG_NONE = 0,
@@ -219,15 +786,21 @@ enum DIALOG_SEQUENCE
   TAG_COUNT,
   TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
 
-  // Masks (should not edit)
+  // Argument positions
+  ARG_DIALOGS = 0,
+  ARG_SETTINGS_MASK,
+  ARG_SPEAKERS,
+  ARG_COUNT,
+  ARG_DIALOG_COUNT = DIALOG_SEQUENCE.ARG_COUNT,
+  ARG_COUNT_DESERIALIZATION,
+
+  // Settings masks
   __BITMASK_TAG_SHIFT = 0,
   __BITMASK_TAG_BITS = 5,
   __BITMASK_TAG_MASK = ((1 << DIALOG_SEQUENCE.__BITMASK_TAG_BITS) - 1) << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT,
 }
 
 
-
-// Edit as needed
 
 /**
  * @desc Contains all useful information about a dialog.
@@ -236,10 +809,10 @@ enum DIALOG_SEQUENCE
  * @desc `ANCHOR_*` options refer to the dialog box positioning.
  * @desc `TEXTBOX_*` options refer to the dialog box style.
  * @desc `TAG_*` options refer to the dialog type for categorization (useful for filtering).
- * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
+ * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
  */
 
-enum DIALOG
+enum DIALOG // Edit as needed
 {
   // Speakers
   SPEAKER_NONE = 0,
@@ -275,7 +848,15 @@ enum DIALOG
   TAG_COUNT,
   TAG_DEFAULT = DIALOG.TAG_NONE,
 
-  // Positioning masks (should not edit)
+  // Argument positions
+  ARG_TEXT = 0,
+  ARG_SETTINGS_MASK,
+  ARG_FX_MAP,
+  ARG_COUNT,
+  ARG_FX_COUNT = DIALOG.ARG_COUNT,
+  ARG_COUNT_DESERIALIZATION,
+
+  // Settings masks
   __BITMASK_SPEAKER_SHIFT = 0,
   __BITMASK_SPEAKER_BITS = 8,
   __BITMASK_SPEAKER_MASK = ((1 << DIALOG.__BITMASK_SPEAKER_BITS) - 1) << DIALOG.__BITMASK_SPEAKER_SHIFT,
@@ -291,38 +872,34 @@ enum DIALOG
   __BITMASK_TAG_SHIFT = DIALOG.__BITMASK_TEXTBOX_SHIFT + DIALOG.__BITMASK_TEXTBOX_BITS,
   __BITMASK_TAG_BITS = 5,
   __BITMASK_TAG_MASK = ((1 << DIALOG.__BITMASK_TAG_BITS) - 1) << DIALOG.__BITMASK_TAG_SHIFT,
-  __BITMASK_POSITION_DIALOG_SHIFT = 0,
-  __BITMASK_POSITION_DIALOG_BITS = 12,
-  __BITMASK_POSITION_DIALOG_MASK = ((1 << DIALOG.__BITMASK_POSITION_DIALOG_BITS) - 1) << DIALOG.__BITMASK_POSITION_DIALOG_SHIFT,
-  __BITMASK_POSITION_SEQUENCE_SHIFT = DIALOG.__BITMASK_POSITION_DIALOG_SHIFT + DIALOG.__BITMASK_POSITION_DIALOG_BITS,
-  __BITMASK_POSITION_SEQUENCE_BITS = 9,
-  __BITMASK_POSITION_SEQUENCE_MASK = ((1 << DIALOG.__BITMASK_POSITION_SEQUENCE_BITS) - 1) << DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT,
-  __BITMASK_POSITION_SCENE_SHIFT = DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT + DIALOG.__BITMASK_POSITION_SEQUENCE_BITS,
-  __BITMASK_POSITION_SCENE_BITS = 10,
-  __BITMASK_POSITION_SCENE_MASK = ((1 << DIALOG.__BITMASK_POSITION_SCENE_BITS) - 1) << DIALOG.__BITMASK_POSITION_SCENE_SHIFT,
 }
 
 
 
-// Edit as needed
-
 /**
  * @desc Contains all the useful information about a dialog effect.
- * @desc `TYPE_*` options refer to the effect type.
+ * @desc `TYPE_*` options refer to the effect type. In particular, `FLOWRES_*` types refer to flow control effects.
  * @desc `TRIGGER_*` options refer to the effect trigger type.
- * @desc `FALLBACK_*` options refer to the conditions of fallback effects.
- * @desc `CHOICE_*` options refer to particular values for choice effects.
- * @desc `ARG_*` options refer to the positions of the arguments passed to the effects.
- * @desc `__BITMASK_*` options are used to manage bitmasks and should not be referenced directly.
+ * @desc `SIGNAL_*` options refer to the return signals from effect execution.
+ * @desc `TAG_*` options refer to the dialog fx type for categorization (useful for filtering).
+ * @desc `FUNC_CONDITION_*` options refer to the condition functions used by the effects effects.
+ * @desc `FUNC_INDEXER_*` options refer to the indexer functions used by the effects effects.
+ * @desc `[FX_TYPE_NAME]_*` options refer to particular values for that type of fx.
+ * @desc `ARG_*` options refer to the positions of the arguments passed to the fx.
+ * @desc `FX_ARG_FLOWRES_*` options refer to the positions of the arguments passed to the flow resolver fx.
+ * @desc `FLAG_REGISTER_*` options refer to where a function should be registered.
+ * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
  */
 
-enum DIALOG_FX
+enum DIALOG_FX // Edit as needed
 {
   // FX types
   TYPE_ANY = 0,
-  TYPE_JUMP,
-  TYPE_FALLBACK,
-  TYPE_CHOICE,
+  TYPE_FLOWRES_JUMP,
+  TYPE_FLOWRES_DISPATCH,
+  TYPE_FLOWRES_FALLBACK,
+  TYPE_FLOWRES_CHOICE,
+  __TYPE_FLOWRES_COUNT = DIALOG_FX.TYPE_FLOWRES_CHOICE,
   TYPE_STATE_MODIFIER,
   TYPE_TEXT_PARSE,
   TYPE_TEXT,
@@ -336,49 +913,624 @@ enum DIALOG_FX
   TYPE_DEFAULT = DIALOG_FX.TYPE_ANY,
 
   // FX triggers
-  TRIGGER_AUTO = 0,
+  TRIGGER_NONE = 0,
   TRIGGER_ON_ENTER,
-  TRIGGER_ON_CUSTOM,
+  TRIGGER_ON_STAY,
   TRIGGER_ON_LEAVE,
-  TRIGGER_NONE,
+  TRIGGER_ON_CUSTOM,
     // ...
   TRIGGER_COUNT,
-  TRIGGER_DEFAULT = DIALOG_FX.TRIGGER_AUTO,
+  TRIGGER_DEFAULT = DIALOG_FX.TRIGGER_NONE,
 
-  // Fallback FX conditions
-  FALLBACK_CONDITION_FALSE = 0,
-  FALLBACK_CONDITION_TRUE,
+  // Flow signals
+  SIGNAL_NONE = 0,
+  SIGNAL_JUMP,
+  SIGNAL_SKIP_NEXT,
+  SIGNAL_STOP_CYCLE,
+  SIGNAL_STOP_RESOLUTION,
+  SIGNAL_COUNT,
+  SIGNAL_DEFAULT = DIALOG_FX.SIGNAL_NONE,
+
+  // FX tags
+  TAG_NONE = 0,
     // ...
-  FALLBACK_CONDITION_COUNT,
+  TAG_COUNT,
+  TAG_DEFAULT = DIALOG_FX.TAG_NONE,
 
-  // Choice data
-  CHOICE_TAG_NONE = 0,
+  // FX conditions
+  FUNC_CONDITION_FALSE = 0,
+  FUNC_CONDITION_TRUE,
     // ...
-  CHOICE_TAG_COUNT,
+  FUNC_CONDITION_COUNT,
 
-  CHOICE_INDEX_UNSELECTED = -1,
-  CHOICE_CONDITION_COUNT = -DIALOG_FX.CHOICE_INDEX_UNSELECTED,
+  // FX indexers
+  FUNC_INDEXER_RUNNER_CHOICE_INDEX = 0,
+    // ...
+  FUNC_INDEXER_COUNT,
 
-  // FX arg positions
-  ARG_JUMP_DATA = 0,
-  ARG_JUMP_DATA_POSITION = 0,
-  ARG_JUMP_DATA_OPTIONS,
-  ARG_JUMP_DATA_COUNT,
-  ARG_FALLBACK_CONDITION = 1,
-  ARG_CHOICE_INDEX = 1,
-  ARG_CHOICE_PROMPT = 1,
-  ARG_CHOICE_SETTINGS,
+  // Argument positions
+  ARG_SETTINGS_MASK = 0,
+  ARG_ARGV,
+  ARG_FUNC,
+  ARG_COUNT,
 
-  // Masks (should not be edited)
+  // FX flowres arguments positions
+  FX_ARG_FLOWRES_DATA = 0,
+  FX_ARG_FLOWRES_INDEXER_INDEX,
+  FX_ARG_FLOWRES_CONDITION_INDEX,
+  FX_ARG_FLOWRES_INDEXER_ARGV,
+  FX_ARG_FLOWRES_CONDITION_ARGV,
+  FX_ARG_FLOWRES_SETTINGS,
+  FX_ARG_FLOWRES_INDEX_UNSELECTED = -1,
+
+  // FX flowres subarguments positions
+  FX_ARG_FLOWRES_DATA_POSITION = 0,
+  FX_ARG_FLOWRES_DATA_PROMPT,
+  FX_ARG_FLOWRES_DATA_METADATA,
+  FX_ARG_FLOWRES_DATA_COUNT,
+  FX_ARG_FLOWRES_DATA_POSITION_DESTINATION = 0,
+  FX_ARG_FLOWRES_DATA_POSITION_SETTINGS,
+  FX_ARG_FLOWRES_DATA_POSITION_COUNT,
+
+  // Settings masks
   __BITMASK_TYPE_SHIFT = 0,
   __BITMASK_TYPE_BITS = 6,
   __BITMASK_TYPE_MASK = ((1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1) << DIALOG_FX.__BITMASK_TYPE_SHIFT,
   __BITMASK_TRIGGER_SHIFT = DIALOG_FX.__BITMASK_TYPE_SHIFT + DIALOG_FX.__BITMASK_TYPE_BITS,
   __BITMASK_TRIGGER_BITS = 3,
   __BITMASK_TRIGGER_MASK = ((1 << DIALOG_FX.__BITMASK_TRIGGER_BITS) - 1) << DIALOG_FX.__BITMASK_TRIGGER_SHIFT,
-  __BITMASK_CHOICE_TAG_SHIFT = 0,
-  __BITMASK_CHOICE_TAG_BITS = 3,
-  __BITMASK_CHOICE_TAG_MASK = ((1 << DIALOG_FX.__BITMASK_CHOICE_TAG_BITS) - 1) << DIALOG_FX.__BITMASK_CHOICE_TAG_SHIFT,
+  __BITMASK_SIGNAL_SHIFT = DIALOG_FX.__BITMASK_TRIGGER_SHIFT + DIALOG_FX.__BITMASK_TRIGGER_BITS,
+  __BITMASK_SIGNAL_BITS = 3,
+  __BITMASK_SIGNAL_MASK = ((1 << DIALOG_FX.__BITMASK_SIGNAL_BITS) - 1) << DIALOG_FX.__BITMASK_SIGNAL_SHIFT,
+  __BITMASK_TAG_SHIFT = DIALOG_FX.__BITMASK_SIGNAL_SHIFT + DIALOG_FX.__BITMASK_SIGNAL_BITS,
+  __BITMASK_TAG_BITS = 4,
+  __BITMASK_TAG_MASK = ((1 << DIALOG_FX.__BITMASK_TAG_BITS) - 1) << DIALOG_FX.__BITMASK_TAG_SHIFT,
+
+  // Registering settings
+  REGISTER_FX_FUNC = 0,
+  REGISTER_FX_FUNC_INDEXER,
+  REGISTER_FX_FUNC_CONDITION,
+  __REGISTER_FX_FUNC_COUNT,
+  __BITMASK_REGISTER_SHIFT = 0,
+  __BITMASK_REGISTER_BITS = 2,
+  __BITMASK_REGISTER_MASK = ((1 << DIALOG_FX.__BITMASK_REGISTER_BITS) - 1) << DIALOG_FX.__BITMASK_REGISTER_SHIFT,
+  MASK_REGISTER_FX_FUNC = DIALOG_FX.REGISTER_FX_FUNC << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
+  MASK_REGISTER_FX_FUNC_INDEXER = DIALOG_FX.REGISTER_FX_FUNC_INDEXER << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
+  MASK_REGISTER_FX_FUNC_CONDITION = DIALOG_FX.REGISTER_FX_FUNC_CONDITION << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogRunner` constructor. Manages runtime state and position in the dialog graph.
+ * @param {Struct.DialogManager} manager The dialog manager instance to associate with this runner.
+ * @returns {Struct.DialogRunner}
+ */
+
+function DialogRunner(manager) constructor
+{
+  static CONSTRUCTOR_ARGC = argument_count;
+
+  self.manager = manager;
+
+  self.choice_index = DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED;
+  self.status = DIALOG_RUNNER.FLAG_STATUS_UNINITIALIZED;
+  self.position = DIALOG_MANAGER.POSITION_CODE_NONE;
+
+  self.seed = irandom(0x7FFFFFFF);
+  self.history = [];
+  self.vars = {};
+
+
+
+  /**
+   * @desc Changes the dialog runner position to the given one. [CHAINABLE]
+   * @param {Real|Constant.DialogManager|Struct.DialogLinkable} [position] The position to load.
+   * @param {Bool} [busy] Whether the dialog runner should execute jumps normally with effects (`true`) or not (`false`).
+   * @param {Array} [argv] The arguments to pass to eventual fallback effects (only if `busy` is `true`).
+   * @returns {Struct.DialogRunner}
+   */
+
+  static load = function(position = self.position, busy = false, argv = [])
+  {
+    self.status = 0;
+
+    self.position = busy
+      ? self.resolve(position, self.position, 0, argv)
+      : manager.__resolve_position_absolute(position, 0)
+    ;
+
+    self.status |= __status();
+
+    return self;
+  }
+
+
+
+
+  /**
+   * @desc Retrieves a scene given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
+   * @param {Real} [scene_idx] The index of the scene to get.
+   * @returns {Struct.DialogScene}
+   */
+
+  static scene = function(scene_idx = undefined)
+  {
+    return manager.scene(scene_idx ?? manager.__decode_scene_idx(self.position));
+  }
+
+
+
+  /**
+   * @desc Retrieves a sequence given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
+   * @param {Real} [sequence_idx] The index of the sequence to get.
+   * @param {Real} [scene_idx] The index of the scene to get the sequence from.
+   * @returns {Struct.DialogSequence}
+   */
+
+  static sequence = function(sequence_idx = undefined, scene_idx = undefined)
+  {
+    if (scene_idx == undefined && sequence_idx != undefined)
+      return manager.__get_sequence_relative(sequence_idx, 0, 0);
+
+    if (scene_idx != undefined && sequence_idx == undefined)
+      sequence_idx = 0;
+
+    sequence_idx ??= manager.__decode_sequence_idx(self.position);
+    scene_idx ??= manager.__decode_scene_idx(self.position);
+
+    return manager.sequence(sequence_idx, scene_idx);
+  }
+
+
+
+  /**
+   * @desc Retrieves a dialog given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
+   * @param {Real} [dialog_idx] The index of the dialog to get.
+   * @param {Real} [sequence_idx] The index of the sequence to get the dialog from.
+   * @param {Real} [scene_idx] The index of the scene to get the sequence from.
+   * @returns {Struct.Dialog}
+   */
+
+  static dialog = function(dialog_idx = undefined, sequence_idx = undefined, scene_idx = undefined)
+  {
+    var u = (scene_idx == undefined) + (sequence_idx == undefined) + (dialog_idx == undefined)
+      , position = self.position
+    ;
+
+    if (u == 2 && dialog_idx != undefined)
+      return manager.__get_dialog_relative(dialog_idx, 0, 0);
+
+    if (u && u < 3)
+    {
+      scene_idx ??= 0;
+      sequence_idx ??= 0;
+      dialog_idx ??= 0;
+    }
+
+    scene_idx ??= manager.__decode_scene_idx(position);
+    sequence_idx ??= manager.__decode_sequence_idx(position);
+    dialog_idx ??= manager.__decode_dialog_idx(position);
+
+    return manager.dialog(dialog_idx, sequence_idx, scene_idx);
+  }
+
+
+
+  /**
+   * @desc Retrieves a scene given a relative index. Negative indices will iterate backwards.
+   * @param {Real} [scene_shift] The relative index shift of the scene. Defaults to `0`.
+   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.DialogScene, status: Constant.DIALOG_RUNNER|Real }
+   */
+
+  static deltascene = function(scene_shift = 0, start_position = self.position, jump_settings = 0)
+  {
+    return manager.deltascene(scene_shift, start_position, jump_settings);
+  }
+
+
+
+  /**
+   * @desc Retrieves a sequence given a relative index. Negative indices will iterate backwards.
+   * @param {Real} [sequence_shift] The relative index shift of the sequence. Defaults to `0`.
+   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.DialogSequence, status: Constant.DIALOG_RUNNER|Real }
+   */
+
+  static deltasequence = function(sequence_shift = 0, start_position = self.position, jump_settings = 0)
+  {
+    return manager.deltasequence(sequence_shift, start_position, jump_settings);
+  }
+
+
+
+  /**
+   * @desc Retrieves a dialog given a relative index. Negative indices will iterate backwards.
+   * @param {Real} [dialog_shift] The relative index shift of the dialog. Defaults to `0`.
+   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.Dialog, status: Constant.DIALOG_RUNNER|Real }
+   */
+
+  static deltadialog = function(dialog_shift = 0, start_position = self.position, jump_settings = 0)
+  {
+    return manager.deltadialog(dialog_shift, start_position, jump_settings);
+  }
+
+
+
+  /**
+   * @desc Resolves a position given a shift and unit.
+   * @param {Real} [shift] The shift to apply.
+   * @param {Constant.DIALOG_MANAGER|Real} [unit] The unit of the shift.
+   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.DialogLinkable, status: Constant.DIALOG_RUNNER|Real }
+   */
+
+  static delta = function(shift = 0, unit = DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG, start_position = self.position, jump_settings = 0)
+  {
+    return manager.delta(shift, unit, start_position, jump_settings);
+  }
+
+
+
+  /**
+   * @desc Simulates advancing the dialog runner without state modifications.
+   * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
+   * @param {Constant.DIALOG_RUNNER|Real} [jump_settings] The settings mask for the jump.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [start_position] The starting position of the forecast. Defaults to the current one.
+   * @returns {Struct.DialogRunner}
+   */
+
+  static forecast = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, argv = undefined, start_position = self.position)
+  {
+    return variable_clone(self).advance(shift, jump_settings, argv, start_position);
+  }
+
+
+
+  /**
+   * @desc Makes the dialog runner advance of a specified shift. Produces side effects on dialog manager position and/or status. [CHAINABLE]
+   * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [prev_position] The starting position of the advancement. Defaults to the current one.
+   * @returns {Struct.DialogRunner}
+   */
+
+  static advance = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, argv = undefined, prev_position = self.position)
+  {
+    var manager = self.manager;
+    prev_position = manager.__to_position(prev_position);
+
+    self.status &= ~(
+      shift != 0
+        ? DIALOG_RUNNER.__BITMASK_STATUS_MASK
+        : DIALOG_RUNNER.__BITMASK_STATUS_AUTORESET_MASK
+    );
+
+    if (shift == 0 || !manager.scene_count)
+    {
+      manager.__to_dialog(prev_position).__fx_execute_all_of(function(fx) {
+        return fx.trigger() == DIALOG_FX.TRIGGER_ON_STAY;
+      });
+
+      return self;
+    }
+
+    shift *= !(jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_CHOICE);
+
+    var shift_sign = sign(shift)
+      , current_scene_idx = manager.__decode_scene_idx(prev_position)
+      , current_sequence_idx = manager.__decode_sequence_idx(prev_position)
+      , current_dialog_idx = manager.__decode_dialog_idx(prev_position)
+      , resolved = manager.__resolve_position_relative(shift, prev_position, jump_settings)
+      , target_position = self.resolve(
+          resolved.position,
+          prev_position,
+          jump_settings & DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_MASK,
+          argv
+        )
+    ;
+
+    self.position = target_position;
+    self.status |= __status(
+      target_position,
+      shift_sign * (current_scene_idx != manager.__decode_scene_idx(target_position)),
+      shift_sign * (current_sequence_idx != manager.__decode_sequence_idx(target_position)),
+      shift * (current_dialog_idx != manager.__decode_dialog_idx(target_position)),
+      resolved.status
+    );
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Executes the fx cycle, resolving all effects in sequence and following jumps until no more flow resolvers are triggered.
+   * @param {Real|Struct.DialogLinkable} [target_position] The target position of the runner.
+   * @param {Real|Struct.DialogLinkable} [position] The current position of the runner.
+   * @param {Constant.DIALOG_RUNNER|Real} [jump_settings] The settings of the jump.
+   * @param {Array} [argv] The arguments to pass to eventual DialogFX's.
+   */
+
+  static resolve = function(target_position = self.position, position = self.position, jump_settings = 0, argv = undefined)
+  {
+    var manager = self.manager
+      , ctx = new DialogCycleContext(self, position)
+      , target_dialog = manager.__to_dialog(target_position)
+      , current_dialog = manager.__to_dialog(position)
+      , flow = undefined
+      , _fx_cycle = function(condition, dialog, argv, ctx, trigger, filter_fn = undefined) {
+          return condition
+            ? dialog.__fx_execute_cycle(argv, ctx, trigger, filter_fn)
+            : undefined
+          ;
+        }
+    ;
+
+    for (var jumps = 0; flow || !jumps; ++jumps)
+    {
+      if (jumps > DIALOG_MANAGER.ERR_CHECK_INFINITE_LOOP_TRESHOLD) {
+        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
+      }
+
+      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_BYPASS_FX_ON_LEAVE), current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE);
+
+      if (flow) {
+        target_dialog = flow.target;
+      }
+
+      current_dialog = target_dialog;
+
+      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_BYPASS_FX_ON_ENTER), target_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER);
+
+      if (flow) {
+        target_dialog = flow.target;
+      }
+    }
+
+    return manager.__to_position(target_dialog);
+  }
+
+
+
+  /**
+   * @desc Updates the dialog runner's status based on the target position and movement diffs.
+   * @param {Real} [target_position] The position to check.
+   * @param {Real} [scene_diff] The signed amount of scenes traveled from the previous position.
+   * @param {Real} [sequence_diff] The signed amount of sequences traveled from the previous position.
+   * @param {Real} [dialog_diff] The signed amount of dialogs traveled from the previous position.
+   * @param {Bool} [maintained_status] The status flag for any maintained position.
+   * @returns {Real} A bitmask of status flags indicating position state and movement.
+   */
+
+  static __status = function(target_position = self.position, scene_diff = 0, sequence_diff = 0, dialog_diff = 0, maintained_status = 0)
+  {
+    var manager = self.manager
+      , target_scene_idx = manager.__decode_scene_idx(target_position)
+      , target_sequence_idx = manager.__decode_sequence_idx(target_position)
+      , target_dialog_idx = manager.__decode_dialog_idx(target_position)
+      , target_sequence_count = manager.scene(target_scene_idx).sequence_count
+      , target_dialog_count = manager.sequence(target_sequence_idx, target_scene_idx).dialog_count
+      , is_last_scene = target_scene_idx == manager.scene_count - 1
+      , is_last_of_scene = target_sequence_idx == target_sequence_count - 1
+      , is_last_of_sequence = target_dialog_idx == target_dialog_count - 1
+      , is_last_sequence = is_last_scene && is_last_of_scene
+      , maintained_dialog = maintained_status & DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
+      , maintained_sequence = maintained_status & DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE
+      , maintained_scene = maintained_status & DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE
+    ;
+
+    scene_diff *= !(maintained_scene || maintained_sequence || maintained_dialog);
+    sequence_diff *= !(maintained_sequence || maintained_dialog);
+    dialog_diff *= !maintained_dialog;
+
+    return maintained_status
+      | DIALOG_RUNNER.FLAG_STATUS_FIRST_DIALOG       * (target_position == 0                                                )
+      | DIALOG_RUNNER.FLAG_STATUS_FIRST_SEQUENCE     * (target_position < 1 << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS)
+      | DIALOG_RUNNER.FLAG_STATUS_FIRST_SCENE        * (target_scene_idx == 0                                               )
+      | DIALOG_RUNNER.FLAG_STATUS_FIRST_OF_SEQUENCE  * (target_dialog_idx == 0                                              )
+      | DIALOG_RUNNER.FLAG_STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                            )
+      | DIALOG_RUNNER.FLAG_STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1                       )
+      | DIALOG_RUNNER.FLAG_STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1                   )
+      | DIALOG_RUNNER.FLAG_STATUS_MIDDLE_SCENE       * (target_scene_idx == manager.scene_count >> 1                        )
+      | DIALOG_RUNNER.FLAG_STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                             )
+      | DIALOG_RUNNER.FLAG_STATUS_LAST_SEQUENCE      * (is_last_sequence                                                    )
+      | DIALOG_RUNNER.FLAG_STATUS_LAST_SCENE         * (is_last_scene                                                       )
+      | DIALOG_RUNNER.FLAG_STATUS_LAST_OF_SEQUENCE   * (is_last_of_sequence                                                 )
+      | DIALOG_RUNNER.FLAG_STATUS_LAST_OF_SCENE      * (is_last_of_scene                                                    )
+      | DIALOG_RUNNER.FLAG_STATUS_ADVANCED_DIALOG    * (dialog_diff > 0                                                     )
+      | DIALOG_RUNNER.FLAG_STATUS_ADVANCED_SEQUENCE  * (sequence_diff > 0                                                   )
+      | DIALOG_RUNNER.FLAG_STATUS_ADVANCED_SCENE     * (scene_diff > 0                                                      )
+      | DIALOG_RUNNER.FLAG_STATUS_RECEDED_DIALOG     * (dialog_diff < 0                                                     )
+      | DIALOG_RUNNER.FLAG_STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                                   )
+      | DIALOG_RUNNER.FLAG_STATUS_RECEDED_SCENE      * (scene_diff < 0                                                      )
+    ;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogCycleContext` constructor. Provides per-cycle caching for condition and indexer evaluations.
+ * @param {Struct.DialogRunner} runner The dialog runner instance.
+ * @param {Real} position The current position in the dialog graph.
+ * @returns {Struct.DialogCycleContext}
+ */
+
+function DialogCycleContext(runner, position) constructor
+{
+  self.runner = runner;
+  self.dialog = runner.manager.__to_dialog(position);
+
+  self.executed = 0;
+  self.resolved = false;
+  self.target = undefined;
+  self.cache = {
+    conditions: {},
+    indexers: {},
+  };
+
+
+
+  /**
+   * @desc Signals a successful flow resolution, setting the target position and updating runner status.
+   * @param {Array} jump_option_data The data for the jump option.
+   * @param {Real} [runner_status] Additional status flags to OR into the runner's status.
+   * @returns {Struct.Dialog}
+   */
+
+  static success = function(jump_option_data, runner_status = 0)
+  {
+    var runner = self.runner
+      , manager = runner.manager
+      , jump_position_data = jump_option_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION]
+      , jump_position = jump_position_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION_DESTINATION]
+      , jump_settings = jump_position_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION_SETTINGS] ?? 0
+      , target_position = manager.__to_dialog(manager.__resolve_position(jump_position, runner.position, jump_settings))
+    ;
+
+    runner.status |= runner_status;
+    self.target = target_position;
+
+    return target_position;
+  }
+
+
+
+  /**
+   * @desc Signals a failed flow resolution, returning the target position (mostly undefined).
+   * @param {Struct.Dialog} [target_position] Unused parameter for consistency.
+   * @param {Real} [runner_status] Unused parameter for consistency.
+   * @returns {Struct.Dialog}
+   */
+
+  static fail = function(target_position = undefined, runner_status = 0)
+  {
+    var runner = self.runner;
+
+    runner.status |= runner_status;
+    self.target = target_position;
+
+    return target_position;
+  }
+
+
+
+  /**
+   * @desc Evaluates a condition function with caching to ensure it's not re-evaluated multiple times per cycle.
+   * @param {Real} fx_condition_index The index of the condition function.
+   * @param {Array} fx_condition_argv The arguments for the condition function.
+   * @returns {Bool} The result of the condition evaluation.
+   */
+
+  static condition = function(fx_condition_index, fx_condition_argv)
+  {
+    return __eval_cache(
+      self.cache.conditions,
+      DialogFX.data.fx_condition_map,
+      fx_condition_index,
+      fx_condition_argv,
+      DIALOG_FX.FUNC_CONDITION_TRUE
+    );
+  }
+
+
+
+  /**
+   * @desc Evaluates an indexer function with caching to ensure it's not re-evaluated multiple times per cycle.
+   * @param {Real} fx_indexer_index The index of the indexer function.
+   * @param {Array} fx_indexer_argv The arguments for the indexer function.
+   * @returns {Real} The result of the indexer evaluation, or unselected if invalid.
+   */
+
+  static indexer = function(fx_indexer_index, fx_indexer_argv)
+  {
+    return __eval_cache(
+      self.cache.indexers,
+      DialogFX.data.fx_indexer_map,
+      fx_indexer_index,
+      fx_indexer_argv,
+      DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED
+    );
+  }
+
+
+
+  /**
+   * @desc Evaluates and caches a function result to avoid repeated computations within a cycle.
+   * @param {Struct} storage The cache storage struct.
+   * @param {Struct} map The function map containing funcs array.
+   * @param {Real} key The function index key.
+   * @param {Array} argv The arguments to pass to the function.
+   * @param {Any} defaultret The default return value if key is invalid.
+   * @returns {Any} The cached or newly computed result.
+   */
+
+  static __eval_cache = function(storage, map, key, argv, defaultret)
+  {
+    if ((key ?? DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED) < 0)
+      return defaultret;
+
+    if (struct_exists(storage, key))
+      return storage[$ key];
+
+    var result = map.funcs[key](argv, self);
+    storage[$ key] = result;
+
+    return result;
+  }
 }
 
 
@@ -416,39 +1568,9 @@ function DialogManager(data_string, is_file) constructor
 {
   static CONSTRUCTOR_ARGC = argument_count;
 
-
-
-  var __map_manager_data = function(size, shift, mask)
-  {
-    var array = array_create(size);
-
-    for (var i = 0; i < size; ++i)
-      array[i] = i << shift & mask;
-
-    return array;
-  }
-
-  self.data = {
-    dialog_scene_bg       : __map_manager_data(DIALOG_SCENE.BG_COUNT     , DIALOG_SCENE.__BITMASK_BG_SHIFT     , DIALOG_SCENE.__BITMASK_BG_MASK     ),
-    dialog_scene_bgm      : __map_manager_data(DIALOG_SCENE.BGM_COUNT    , DIALOG_SCENE.__BITMASK_BGM_SHIFT    , DIALOG_SCENE.__BITMASK_BGM_MASK    ),
-    dialog_scene_bgs      : __map_manager_data(DIALOG_SCENE.BGS_COUNT    , DIALOG_SCENE.__BITMASK_BGS_SHIFT    , DIALOG_SCENE.__BITMASK_BGS_MASK    ),
-    dialog_scene_tags     : __map_manager_data(DIALOG_SCENE.TAG_COUNT    , DIALOG_SCENE.__BITMASK_TAG_SHIFT    , DIALOG_SCENE.__BITMASK_TAG_MASK    ),
-    dialog_sequence_tags  : __map_manager_data(DIALOG_SEQUENCE.TAG_COUNT , DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT , DIALOG_SEQUENCE.__BITMASK_TAG_MASK ),
-    dialog_speakers       : __map_manager_data(DIALOG.SPEAKER_COUNT      , DIALOG.__BITMASK_SPEAKER_SHIFT      , DIALOG.__BITMASK_SPEAKER_MASK      ),
-    dialog_emotions       : __map_manager_data(DIALOG.EMOTION_COUNT      , DIALOG.__BITMASK_EMOTION_SHIFT      , DIALOG.__BITMASK_EMOTION_MASK      ),
-    dialog_anchors        : __map_manager_data(DIALOG.ANCHOR_COUNT       , DIALOG.__BITMASK_ANCHOR_SHIFT       , DIALOG.__BITMASK_ANCHOR_MASK       ),
-    dialog_textboxes      : __map_manager_data(DIALOG.TEXTBOX_COUNT      , DIALOG.__BITMASK_TEXTBOX_SHIFT      , DIALOG.__BITMASK_TEXTBOX_MASK      ),
-    dialog_tags           : __map_manager_data(DIALOG.TAG_COUNT          , DIALOG.__BITMASK_TAG_SHIFT          , DIALOG.__BITMASK_TAG_MASK          ),
-    dialog_fx_types       : __map_manager_data(DIALOG_FX.TYPE_COUNT      , DIALOG_FX.__BITMASK_TYPE_SHIFT      , DIALOG_FX.__BITMASK_TYPE_MASK      ),
-    dialog_fx_triggers    : __map_manager_data(DIALOG_FX.TRIGGER_COUNT   , DIALOG_FX.__BITMASK_TRIGGER_SHIFT   , DIALOG_FX.__BITMASK_TRIGGER_MASK   ),
-    dialog_fx_choice_tags : __map_manager_data(DIALOG_FX.CHOICE_TAG_COUNT, DIALOG_FX.__BITMASK_CHOICE_TAG_SHIFT, DIALOG_FX.__BITMASK_CHOICE_TAG_MASK),
-  };
-
   self.scene_count = 0;
   self.scenes = [];
-  self.position = 0;
-  self.status = 0;
-  self.jumps = -1;
+  self.data = {};
 
 
 
@@ -479,7 +1601,7 @@ function DialogManager(data_string, is_file) constructor
         "USED CONTAINER OBJECT OF TYPE \{Struct.{0}\} SHOULD NOT BE EMPTY",
         "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
         "INFINITE LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
-        "DIALOG TEXT POTENTIAL OVERFLOW DETECTED (W: {0}/{1}): SPLIT TEXT INTO MULTIPLE DIALOG OBJECTS\n\nCRASH POSITION DATA: {2}",
+        "POTENTIAL TEXT OVERFLOW DETECTED (W: {0}/{1}): SPLIT INTO MULTIPLE DIALOG OBJECTS\n\nVIOLATOR DATA: {2}",
       ][type],
       argv
     );
@@ -490,36 +1612,12 @@ function DialogManager(data_string, is_file) constructor
 
 
   /**
-   * @desc Changes the dialog manager position to the given one. [CHAINABLE]
-   * @param {Real|Constant.DialogManager|Struct.DialogLinkable} [position] The position to load.
-   * @param {Bool} [lazy] Whether the dialog manager should avoid executing jumps normally with effects (`true`) or not (`false`).
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects (only if `lazy` is `false`).
-   * @returns {Struct.DialogManager}
-   */
-
-  static load = function(position = self.position, lazy = true, argv = [])
-  {
-    self.status = 0;
-
-    if (lazy)
-      self.position = __resolve_position(position);
-    else
-      __jump(position, argv);
-
-    self.status |= __status();
-
-    return self;
-  }
-
-
-
-  /**
    * @desc Retrieves a scene given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
-   * @param {Real} [scene_idx] The index of the scene to get.
+   * @param {Real} scene_idx The index of the scene to get.
    * @returns {Struct.DialogScene}
    */
 
-  static scene = function(scene_idx = __decode_scene_idx(self.position))
+  static scene = function(scene_idx)
   {
     try {
       return self.scenes[scene_idx + self.scene_count * (scene_idx < 0)];
@@ -533,25 +1631,15 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Retrieves a sequence given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
-   * @param {Real} [sequence_idx] The index of the sequence to get.
-   * @param {Real} [scene_idx] The index of the scene to get the sequence from.
+   * @param {Real} sequence_idx The index of the sequence to get.
+   * @param {Real} scene_idx The index of the scene to get the sequence from.
    * @returns {Struct.DialogSequence}
    */
 
-  static sequence = function(sequence_idx = undefined, scene_idx = undefined)
+  static sequence = function(sequence_idx, scene_idx)
   {
-    if (scene_idx == undefined && sequence_idx != undefined)
-      return __get_sequence_relative(sequence_idx, 0);
-
-    if (scene_idx != undefined && sequence_idx == undefined)
-      sequence_idx = 0;
-
-    sequence_idx ??= __decode_sequence_idx(self.position);
-
-    var scene = self.scene(scene_idx ?? __decode_scene_idx(self.position));
-
     try {
-      return scene.sequence(sequence_idx);
+      return self.scene(scene_idx).sequence(sequence_idx);
     }
     catch (ex) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INVALID_POSITION, [scene_idx, sequence_idx, 0]);
@@ -562,30 +1650,14 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Retrieves a dialog given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
-   * @param {Real} [dialog_idx] The index of the dialog to get.
-   * @param {Real} [sequence_idx] The index of the sequence to get the dialog from.
-   * @param {Real} [scene_idx] The index of the scene to get the sequence from.
+   * @param {Real} dialog_idx The index of the dialog to get.
+   * @param {Real} sequence_idx The index of the sequence to get the dialog from.
+   * @param {Real} scene_idx The index of the scene to get the sequence from.
    * @returns {Struct.Dialog}
    */
 
-  static dialog = function(dialog_idx = undefined, sequence_idx = undefined, scene_idx = undefined)
+  static dialog = function(dialog_idx, sequence_idx, scene_idx)
   {
-    var u = (scene_idx == undefined) + (sequence_idx == undefined) + (dialog_idx == undefined);
-
-    if (u == 2 && dialog_idx != undefined)
-      return __get_dialog_relative(dialog_idx, 0);
-
-    if (u && u < 3)
-    {
-      scene_idx ??= 0;
-      sequence_idx ??= 0;
-      dialog_idx ??= 0;
-    }
-
-    scene_idx ??= __decode_scene_idx(self.position);
-    sequence_idx ??= __decode_sequence_idx(self.position);
-    dialog_idx ??= __decode_dialog_idx(self.position);
-
     try {
       return self.sequence(sequence_idx, scene_idx).dialog(dialog_idx);
     }
@@ -598,57 +1670,61 @@ function DialogManager(data_string, is_file) constructor
 
   /**
    * @desc Retrieves a scene given a relative index. Negative indices will iterate backwards.
-   * @param {Real} [scene_shift] The relative index shift of the scene. Defaults to `0`.
-   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Real} scene_shift The relative index shift of the scene. Defaults to `0`.
+   * @param {Real|Struct.DialogLinkable} start_position The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
    * @returns {Struct.DialogScene}
    */
 
-  static deltascene = function(scene_shift = 0, start_position = self.position)
+  static deltascene = function(scene_shift, start_position, jump_settings)
   {
-    return __get_scene_relative(scene_shift, __resolve_position(start_position));
+    return __get_scene_relative(scene_shift, __resolve_position_absolute(start_position), jump_settings);
   }
 
 
 
   /**
    * @desc Retrieves a sequence given a relative index. Negative indices will iterate backwards.
-   * @param {Real} [sequence_shift] The relative index shift of the sequence. Defaults to `0`.
-   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Real} sequence_shift The relative index shift of the sequence. Defaults to `0`.
+   * @param {Real|Struct.DialogLinkable} start_position The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
    * @returns {Struct.DialogSequence}
    */
 
-  static deltasequence = function(sequence_shift = 0, start_position = self.position)
+  static deltasequence = function(sequence_shift, start_position, jump_settings)
   {
-    return __get_sequence_relative(sequence_shift, __resolve_position(start_position));
+    return __get_sequence_relative(sequence_shift, __resolve_position_absolute(start_position), jump_settings);
   }
 
 
 
   /**
    * @desc Retrieves a dialog given a relative index. Negative indices will iterate backwards.
-   * @param {Real} [dialog_shift] The relative index shift of the dialog. Defaults to `0`.
-   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Real} dialog_shift The relative index shift of the dialog. Defaults to `0`.
+   * @param {Real|Struct.DialogLinkable} start_position The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
    * @returns {Struct.Dialog}
    */
 
-  static deltadialog = function(dialog_shift = 0, start_position = self.position)
+  static deltadialog = function(dialog_shift, start_position, jump_settings)
   {
-    return __get_dialog_relative(dialog_shift, __resolve_position(start_position));
+    return __get_dialog_relative(dialog_shift, __resolve_position_absolute(start_position), jump_settings);
   }
 
 
 
   /**
    * @desc Resolves a position given a shift and unit.
-   * @param {Real} [shift] The shift to apply.
-   * @param {Constant.DIALOG_MANAGER|Real} [unit] The unit of the shift.
-   * @param {Real|Struct.DialogLinkable} [start_position] The starting position of the iteration. Defaults to the current one.
+   * @param {Real} shift The shift to apply.
+   * @param {Constant.DIALOG_MANAGER|Real} unit The unit of the shift.
+   * @param {Real|Struct.DialogLinkable} start_position The starting position of the iteration. Defaults to the current one.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
    * @returns {Struct.DialogLinkable}
    */
 
-  static delta = function(shift = 0, unit = DIALOG_MANAGER.JUMP_UNIT_DIALOG, start_position = self.position)
+  static delta = function(shift, unit, start_position, jump_settings)
   {
-    return __resolve_position_relative(shift, __encode_jump_option_unit(unit), __resolve_position(start_position));
+    return __resolve_position_relative(shift, __resolve_position_absolute(start_position), jump_settings & ~DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_MASK | __encode_jump_setting_unit(unit));
   }
 
 
@@ -685,87 +1761,7 @@ function DialogManager(data_string, is_file) constructor
 
     self.scene_count += scene_count;
 
-    return self.advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
-  }
-
-
-
-  /**
-   * @desc Makes the dialog manager advance of a specified shift. Produces side effects on dialog manager position and/or status. [CHAINABLE]
-   * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
-   * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The settings mask for the jump.
-   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
-   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [prev_position] The starting position of the advancement. Defaults to the current one.
-   * @returns {Struct.DialogManager}
-   */
-
-  static advance = function(shift = 1, jump_options = 0, argv = undefined, prev_position = self.position)
-  {
-    self.status &= ~(
-      shift != 0
-        ? DIALOG_MANAGER.__BITMASK_STATUS_MASK
-        : DIALOG_MANAGER.__BITMASK_STATUS_AUTORESET_MASK
-    );
-
-    if (
-      shift == 0 && !(jump_options & DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED)
-      || !self.scene_count
-    )
-      return self;
-
-    if (jump_options & DIALOG_MANAGER.MASK_JUMP_CHOICE)
-      shift = 0;
-
-    var shift_sign = sign(shift)
-      , current_scene_idx = __decode_scene_idx(prev_position)
-      , current_sequence_idx = __decode_sequence_idx(prev_position)
-      , target_position = __next(
-          __resolve_position(shift, jump_options | DIALOG_MANAGER.MASK_JUMP_TYPE_RELATIVE, prev_position),
-          jump_options | DIALOG_MANAGER.MASK_JUMP_TYPE_RELATIVE,
-          prev_position,
-          argv
-        ).position()
-    ;
-
-    self.position = target_position;
-    self.status |= __status(
-      target_position,
-      shift_sign * (current_scene_idx != __decode_scene_idx(target_position)),
-      shift_sign * (current_sequence_idx != __decode_sequence_idx(target_position)),
-      shift
-    );
-
     return self;
-  }
-
-
-
-  /**
-   * @desc Simulates advancing the dialog manager without state modifications. Temporarily modifies position and status to compute the result to then reset them to their previous values.
-   * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
-   * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The settings mask for the jump.
-   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
-   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [start_position] The starting position of the forecast. Defaults to the current one.
-   * @returns {Struct} { dialog: Struct.Dialog, status: Real }
-   */
-
-  static forecast = function(shift = 1, jump_options = 0, argv = undefined, start_position = self.position)
-  {
-    var prev_position = self.position
-      , prev_status = self.status
-    ;
-
-    self.advance(shift, jump_options, argv, start_position);
-
-    var result = {
-      dialog: __get_dialog_from_position(self.position),
-      status: self.status,
-    };
-
-    self.position = prev_position;
-    self.status = prev_status;
-
-    return result;
   }
 
 
@@ -779,10 +1775,12 @@ function DialogManager(data_string, is_file) constructor
   static serialize = function(prettify = false)
   {
     try {
-      return json_stringify(
-        array_map(self.scenes, function(scene) {
-          return scene.__DIALOG_MANAGER_SERIALIZING_METHOD__();
-        }),
+      return json_stringify({
+          scenes: array_map(self.scenes, function(scene) {
+            return scene.__DIALOG_MANAGER_SERIALIZER_METHOD__();
+          }),
+          scene_count: int64(self.scene_count),
+        },
         prettify
       );
     }
@@ -809,7 +1807,8 @@ function DialogManager(data_string, is_file) constructor
         , autoclose = !is_numeric(file)
       ;
 
-      try {
+      try
+      {
         if (autoclose)
           file = file_text_open_read(filename);
 
@@ -827,46 +1826,31 @@ function DialogManager(data_string, is_file) constructor
     if (data_string == "")
       return self;
 
-    return self.parse(json_parse(data_string)).advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
+    return self.parse(json_parse(data_string));
   }
 
 
 
   /**
-   * @desc Converts an array of raw data into an array of `DialogScene` objects. Throws DIALOG_MANAGER.ERR_PARSING_FAILED if parsing fails. [CHAINABLE]
-   * @param {Array<Struct>} scenes The parsed scenes to convert and add.
+   * @desc Converts raw data into `DialogLinkable` objects. Throws DIALOG_MANAGER.ERR_PARSING_FAILED if parsing fails. [CHAINABLE]
+   * @param {Struct} data The parsed data to convert and add.
    * @returns {Struct.DialogManager}
    */
 
-  static parse = function(scenes)
+  static parse = function(data)
   {
     try {
-      self.scenes = array_map(scenes, function(scene) {
-        return DialogScene.__DIALOG_MANAGER_DESERIALIZING_METHOD__(scene);
-      });
+      self.scene_count = data.scene_count;
+
+      for (var i = 0; i < self.scene_count; ++i) {
+        var scene = DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(data.scenes[i]);
+        scene.manager = self;
+        scene.scene_idx = i;
+        self.scenes[i] = scene;
+      }
     }
     catch (ex) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_PARSING_FAILED);
-    }
-
-    return __update_scenes();
-  }
-
-
-
-  /**
-   * @desc Updates the scene indices. [CHAINABLE]
-   * @returns {Struct.DialogManager}
-   */
-
-  static __update_scenes = function()
-  {
-    self.scene_count = array_length(self.scenes);
-
-    for (var i = 0; i < self.scene_count; ++i) {
-      var scene = self.scenes[i];
-      scene.manager = self;
-      scene.scene_idx = i;
     }
 
     return self;
@@ -875,132 +1859,47 @@ function DialogManager(data_string, is_file) constructor
 
 
   /**
-   * @desc Returns a scene given its relative index from a position.
-   * @param {Real} [scene_shift] The relative index shift of the scene. Defaults to `0`. Negative indices will iterate backwards.
-   * @param {Real} [start_position] The position where to start the iteration. Defaults to current position.
-   * @returns {Struct.DialogScene}
-   */
-
-  static __get_scene_relative = function(scene_shift = 0, start_position = self.position)
-  {
-    return self.scene((__decode_scene_idx(start_position) + scene_shift) % self.scene_count);
-  }
-
-
-
-  /**
-   * @desc Returns a sequence given its relative index from a position.
-   * @param {Real} [sequence_shift] The relative index shift of the sequence. Defaults to `0`. Negative indices will iterate backwards.
-   * @param {Real} [start_position] The position where to start the iteration. Defaults to current position.
-   * @returns {Struct.DialogSequence}
-   */
-
-  static __get_sequence_relative = function(sequence_shift = 0, start_position = self.position)
-  {
-    var next_scene_idx = __decode_scene_idx(start_position)
-      , next_scene = self.scene(next_scene_idx)
-      , next_sequence_idx = __decode_sequence_idx(start_position)
-      , shift_sign = sign(sequence_shift)
-      , _in_range = function(val, min, max) {
-        return val >= min && val < max;
-      }
-    ;
-
-    if (_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
-      return self.sequence(next_sequence_idx + sequence_shift, next_scene_idx);
-
-    var sequence_diff = shift_sign ? next_sequence_idx + 1 : next_scene.sequence_count - next_sequence_idx;
-    next_sequence_idx = shift_sign ? -1 : next_scene.sequence_count;
-    sequence_shift += sequence_diff * shift_sign;
-
-    while (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
-    {
-      sequence_shift -= next_scene.sequence_count * shift_sign;
-      next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.scene_count);
-      next_scene = self.scene(next_scene_idx);
-      next_sequence_idx = shift_sign ? -1 : next_scene.sequence_count;
-    }
-
-    return self.sequence(next_sequence_idx + sequence_shift, next_scene_idx);
-  }
-
-
-
-  /**
-   * @desc Returns a dialog given its relative index from a position.
-   * @param {Real} [dialog_shift] The relative index shift of the dialog. Defaults to `0`. Negative indices will iterate backwards.
-   * @param {Real} [start_position] The position where to start the iteration. Defaults to current position.
-   * @returns {Struct.Dialog}
-   */
-
-  static __get_dialog_relative = function(dialog_shift = 0, start_position = self.position)
-  {
-    var next_scene_idx = __decode_scene_idx(start_position)
-      , next_scene = self.scene(next_scene_idx)
-      , next_sequence_idx = __decode_sequence_idx(start_position)
-      , next_sequence = self.sequence(next_sequence_idx, next_scene_idx)
-      , next_dialog_idx = __decode_dialog_idx(start_position)
-      , shift_sign = sign(dialog_shift)
-      , _in_range = function(val, low, high) {
-        return val >= low && val < high;
-      }
-    ;
-
-    if (_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
-      return self.dialog(next_dialog_idx + dialog_shift, next_sequence_idx, next_scene_idx);
-
-    var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
-    next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
-    dialog_shift += dialog_diff * shift_sign;
-
-    while (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
-    {
-      dialog_shift -= next_sequence.dialog_count * shift_sign;
-      next_sequence_idx += shift_sign;
-
-      if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count)) {
-        next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.scene_count);
-        next_scene = self.scene(next_scene_idx);
-        next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
-      }
-
-      next_sequence = self.sequence(next_sequence_idx, next_scene_idx);
-      next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
-    }
-
-    return self.dialog(next_dialog_idx + dialog_shift, next_sequence_idx, next_scene_idx);
-  }
-
-
-
-  /**
-   * @desc Returns a list of all scenes matching a tag.
-   * @param {Constant.DIALOG_SCENE|Real} [tag] The tag to filter the scenes with. Defaults to `DIALOG_SCENE.TAG_DEFAULT`.
-   * @returns {Array<Struct.DialogScene>}
-   */
-
-  static __get_scenes_by_tag = function(tag = DIALOG_SCENE.TAG_DEFAULT)
-  {
-    var scenes = [];
-
-    for (var i = 0; i < self.scene_count; ++i)
-      if (self.scenes[i].tag() == tag)
-        array_push(scenes, self.scenes[i]);
-
-    return scenes;
-  }
-
-
-
-  /**
    * @desc Returns a dialog given an encoded position.
-   * @param {Real} [position] The encoded position. Defaults to current position.
+   * @param {Real} position The encoded position.
    * @returns {Struct.Dialog}
    */
 
-  static __get_dialog_from_position = function(position = self.position)
+  static __get_dialog_from_position = function(position)
   {
     return self.dialog(__decode_dialog_idx(position), __decode_sequence_idx(position), __decode_scene_idx(position));
+  }
+
+
+
+  /**
+   * @desc Converts the argument into the corresponding Dialog object.
+   * @param {Real|Struct.DialogLinkable} [position] The position object to convert to the corresponding Dialog struct.
+   * @returns {Struct.Dialog}
+   */
+
+  static __to_dialog = function(position)
+  {
+    return __get_dialog_from_position(
+      is_instanceof(position, DialogLinkable)
+        ? position.position()
+        : position
+    );
+  }
+
+
+
+  /**
+   * @desc Converts the argument into the corresponding position value.
+   * @param {Real|Struct.DialogLinkable} [position] The position object to convert to the corresponding position value.
+   * @returns {Real}
+   */
+
+  static __to_position = function(position)
+  {
+    return is_numeric(position)
+      ? position
+      : position.position()
+    ;
   }
 
 
@@ -1028,7 +1927,7 @@ function DialogManager(data_string, is_file) constructor
 
   static __encode_scene_idx = function(scene_idx)
   {
-    return scene_idx << DIALOG.__BITMASK_POSITION_SCENE_SHIFT & DIALOG.__BITMASK_POSITION_SCENE_MASK;
+    return scene_idx << DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT & DIALOG_MANAGER.__BITMASK_POSITION_SCENE_MASK;
   }
 
 
@@ -1041,7 +1940,7 @@ function DialogManager(data_string, is_file) constructor
 
   static __encode_sequence_idx = function(sequence_idx)
   {
-    return sequence_idx << DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT & DIALOG.__BITMASK_POSITION_SEQUENCE_MASK;
+    return sequence_idx << DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT & DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_MASK;
   }
 
 
@@ -1054,21 +1953,21 @@ function DialogManager(data_string, is_file) constructor
 
   static __encode_dialog_idx = function(dialog_idx)
   {
-    return dialog_idx << DIALOG.__BITMASK_POSITION_DIALOG_SHIFT & DIALOG.__BITMASK_POSITION_DIALOG_MASK;
+    return dialog_idx << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT & DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK;
   }
 
 
 
   /**
-   * @desc Encodes jump options into a position.
+   * @desc Encodes jump settings into a position.
    * @param {Constant.DIALOG_MANAGER} jump_type The jump type to encode.
    * @param {Constant.DIALOG_MANAGER} jump_unit The jump unit to encode.
    * @returns {Real}
    */
 
-  static __encode_jump_options = function(jump_type, jump_unit)
+  static __encode_jump_settings = function(jump_type, jump_unit)
   {
-    return __encode_jump_option_type(jump_type) | __encode_jump_option_unit(jump_unit);
+    return __encode_jump_setting_type(jump_type) | __encode_jump_setting_unit(jump_unit);
   }
 
 
@@ -1079,9 +1978,9 @@ function DialogManager(data_string, is_file) constructor
    * @returns {Real}
    */
 
-  static __encode_jump_option_type = function(jump_type)
+  static __encode_jump_setting_type = function(jump_type)
   {
-    return jump_type << DIALOG_MANAGER.__BITMASK_JUMP_TYPE_SHIFT & DIALOG_MANAGER.__BITMASK_JUMP_TYPE_MASK;
+    return jump_type << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT & DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_MASK;
   }
 
 
@@ -1092,74 +1991,74 @@ function DialogManager(data_string, is_file) constructor
    * @returns {Real}
    */
 
-  static __encode_jump_option_unit = function(jump_unit)
+  static __encode_jump_setting_unit = function(jump_unit)
   {
-    return jump_unit << DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT & DIALOG_MANAGER.__BITMASK_JUMP_UNIT_MASK;
+    return jump_unit << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT & DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_MASK;
   }
 
 
 
   /**
    * @desc Returns the scene index given a position.
-   * @param {Real} [position] The position to decode. Defaults to current position.
+   * @param {Real} position The position to decode.
    * @returns {Real}
    */
 
-  static __decode_scene_idx = function(position = self.position)
+  static __decode_scene_idx = function(position)
   {
-    return (position & DIALOG.__BITMASK_POSITION_SCENE_MASK) >> DIALOG.__BITMASK_POSITION_SCENE_SHIFT;
+    return (position & DIALOG_MANAGER.__BITMASK_POSITION_SCENE_MASK) >> DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT;
   }
 
 
 
   /**
    * @desc Returns the sequence index given a position.
-   * @param {Real} [position] The position to decode. Defaults to current position.
+   * @param {Real} position The position to decode.
    * @returns {Real}
    */
 
-  static __decode_sequence_idx = function(position = self.position)
+  static __decode_sequence_idx = function(position)
   {
-    return (position & DIALOG.__BITMASK_POSITION_SEQUENCE_MASK) >> DIALOG.__BITMASK_POSITION_SEQUENCE_SHIFT;
+    return (position & DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_MASK) >> DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT;
   }
 
 
 
   /**
    * @desc Returns the dialog index given a position.
-   * @param {Real} [position] The position to decode. Defaults to current position.
+   * @param {Real} position The position to decode.
    * @returns {Real}
    */
 
-  static __decode_dialog_idx = function(position = self.position)
+  static __decode_dialog_idx = function(position)
   {
-    return (position & DIALOG.__BITMASK_POSITION_DIALOG_MASK) >> DIALOG.__BITMASK_POSITION_DIALOG_SHIFT;
+    return (position & DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK) >> DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT;
   }
 
 
 
   /**
    * @desc Returns the jump unit given a jump settings bitfield.
-   * @param {Real} [jump_options] The jump options decode from.
+   * @param {Real} [jump_settings] The jump settings decode from.
    * @returns {Constant.DIALOG_MANAGER|Real}
    */
 
-  static __decode_jump_option_type = function(jump_options)
+  static __decode_jump_setting_type = function(jump_settings)
   {
-    return (jump_options & DIALOG_MANAGER.__BITMASK_JUMP_TYPE_MASK) >> DIALOG_MANAGER.__BITMASK_JUMP_TYPE_SHIFT;
+    return (jump_settings & DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_MASK) >> DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT;
   }
 
 
 
   /**
    * @desc Returns the jump unit given a jump setting bitfield.
-   * @param {Real} [jump_options] The jump options to decode from.
+   * @param {Real} [jump_settings] The jump settings to decode from.
    * @returns {Constant.DIALOG_MANAGER|Real}
    */
 
-  static __decode_jump_option_unit = function(jump_options)
+  static __decode_jump_setting_unit = function(jump_settings)
   {
-    return (jump_options & DIALOG_MANAGER.__BITMASK_JUMP_UNIT_MASK) >> DIALOG_MANAGER.__BITMASK_JUMP_UNIT_SHIFT;
+    return (jump_settings & DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_MASK) >> DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT;
   }
 
 
@@ -1181,95 +2080,189 @@ function DialogManager(data_string, is_file) constructor
 
 
   /**
-   * @desc Performs a jump to a certain dialog given its position as argument.
-   * @param {Real} [position] The position where to jump. Default to current position.
-   * @param {Real} [jump_options] The jump info.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The last stacked absolute position. Defaults to current position.
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
-   * @returns {Struct.Dialog}
+   * @desc Returns a scene given its relative index from a position.
+   * @param {Real} scene_shift The relative index shift of the scene. Defaults to `0`. Negative indices will iterate backwards.
+   * @param {Real} start_position The position where to start the iteration. Defaults to current position.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.DialogScene, status: Constant.DIALOG_RUNNER|Real }
    */
 
-  static __next = function(position = self.position, jump_options = 0, prev_position = self.position, argv = undefined)
+  static __get_scene_relative = function(scene_shift, start_position, jump_settings)
   {
-    self.jumps = -1;
-
-    var dialog = __get_dialog_from_position(__resolve_position(prev_position))
-      , choice = dialog.choice()
+    var shift_cancelled = (jump_settings & DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_MASK) != 0
+      , status = (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SCENE) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE
+        | (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE
+        | (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
     ;
 
-    if (choice && jump_options & DIALOG_MANAGER.MASK_JUMP_CHOICE)
-      position = choice.__exec([choice.argv, is_array(argv) ? argv[0] : argv], dialog);
-
-    return __jump(position, argv, 0, prev_position);
+    return {
+      position: self.scene((__decode_scene_idx(start_position) + scene_shift * !status) % self.scene_count),
+      status,
+    };
   }
 
 
 
   /**
-   * @desc Resolves all effects and moves the dialog manager on the specified target position. Throws DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED if an infinite loop is detected.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [next_position] The position to jump to. Defaults to current position.
-   * @param {Array} [argv] The arguments to pass to eventual fallback effects.
-   * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The options of jump to perform.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The last stacked absolute position. Defaults to current position.
-   * @returns {Struct.Dialog}
+   * @desc Returns a sequence given its relative index from a position.
+   * @param {Real} sequence_shift The relative index shift of the sequence. Defaults to `0`. Negative indices will iterate backwards.
+   * @param {Real} start_position The position where to start the iteration. Defaults to current position.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.DialogSequence, status: Constant.DIALOG_RUNNER|Real }
    */
 
-  static __jump = function(next_position = self.position, argv = undefined, jump_options = 0, prev_position = self.position)
+  static __get_sequence_relative = function(sequence_shift, start_position, jump_settings)
   {
-    prev_position = __resolve_position(prev_position);
-    next_position = __resolve_position(next_position, jump_options, prev_position);
-
-    var current_dialog = __get_dialog_from_position(prev_position)
-      , target_dialog = __get_dialog_from_position(next_position)
+    var shift_cancelled = (jump_settings & (DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE | DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG)) != 0
+      , status = (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE
+        | (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
     ;
 
-    if (++self.jumps > DIALOG_MANAGER.ERR_CHECK_INFINITE_LOOP_TRESHOLD)
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED, [self.jumps, current_dialog.__struct()]);
+    sequence_shift *= !shift_cancelled;
 
-    current_dialog.__fx_execute_all_of(function(fx) {
-      return fx.trigger() == DIALOG_FX.TRIGGER_ON_LEAVE;
-    });
+    var next_scene_idx = __decode_scene_idx(start_position)
+      , next_scene = self.scene(next_scene_idx)
+      , next_sequence_idx = __decode_sequence_idx(start_position)
+      , shift_sign = sign(sequence_shift)
+      , _in_range = function(val, min, max) {
+        return val >= min && val < max;
+      }
+    ;
 
-    if (!target_dialog.choice())
+    if (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SCENE) {
+      var target_sequence_idx = next_sequence_idx + sequence_shift;
+      next_sequence_idx = clamp(target_sequence_idx, 0, next_scene.sequence_count - 1);
+      status |= DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE * !_in_range(target_sequence_idx, 0, next_scene.sequence_count);
+      sequence_shift = 0;
+    }
+    else if (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
     {
-      var fx = target_dialog.jump() ?? target_dialog.fallback(argv);
+      var sequence_diff = shift_sign ? next_sequence_idx + 1 : next_scene.sequence_count - next_sequence_idx;
+      next_sequence_idx = shift_sign ? -1 : next_scene.sequence_count;
+      sequence_shift += sequence_diff * shift_sign;
 
-      if (fx && prev_position == next_position)
-        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED, [self.jumps, target_dialog.__struct()]);
-      else if (fx)
-        return __jump(fx.__exec(undefined, target_dialog), argv, 0, next_position);
+      while (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
+      {
+        sequence_shift -= next_scene.sequence_count * shift_sign;
+        next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.scene_count);
+        next_scene = self.scene(next_scene_idx);
+        next_sequence_idx = shift_sign ? -1 : next_scene.sequence_count;
+      }
     }
 
-    target_dialog.__fx_execute_all_of(function(fx) {
-      return fx.trigger() == DIALOG_FX.TRIGGER_ON_ENTER;
-    });
+    return {
+      position: self.sequence(next_sequence_idx + sequence_shift, next_scene_idx),
+      status,
+    };
+  }
 
-    return target_dialog;
+
+
+  /**
+   * @desc Returns a dialog given its relative index from a position.
+   * @param {Real} dialog_shift The relative index shift of the dialog. Defaults to `0`. Negative indices will iterate backwards.
+   * @param {Real} start_position The position where to start the iteration. Defaults to current position.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
+   * @returns {Struct} { position: Struct.Dialog, status: Constant.DIALOG_RUNNER|Real }
+   */
+
+  static __get_dialog_relative = function(dialog_shift, start_position, jump_settings)
+  {
+    var shift_cancelled = (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG) != 0
+      , status = shift_cancelled * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
+    ;
+
+    dialog_shift *= !shift_cancelled;
+
+    var next_scene_idx = __decode_scene_idx(start_position)
+      , next_scene = self.scene(next_scene_idx)
+      , next_sequence_idx = __decode_sequence_idx(start_position)
+      , next_sequence = self.sequence(next_sequence_idx, next_scene_idx)
+      , next_dialog_idx = __decode_dialog_idx(start_position)
+      , shift_sign = sign(dialog_shift)
+      , _in_range = function(val, low, high) {
+        return val >= low && val < high;
+      }
+    ;
+
+    if (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE) {
+      var target_dialog_idx = next_dialog_idx + dialog_shift;
+      next_dialog_idx = clamp(target_dialog_idx, 0, next_sequence.dialog_count - 1);
+      status |= DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE * !_in_range(target_dialog_idx, 0, next_sequence.dialog_count);
+      dialog_shift = 0;
+    }
+    else if (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
+    {
+      var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
+      next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
+      dialog_shift += dialog_diff * shift_sign;
+
+      while (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
+      {
+        dialog_shift -= next_sequence.dialog_count * shift_sign;
+        next_sequence_idx += shift_sign;
+
+        if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count))
+        {
+          if (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SCENE) {
+            next_dialog_idx = shift_sign ? next_sequence.dialog_count - 1 : 0;
+            status |= DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE;
+            next_sequence_idx -= shift_sign;
+            dialog_shift = 0;
+            break;
+          }
+
+          next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.scene_count);
+          next_scene = self.scene(next_scene_idx);
+          next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
+        }
+
+        next_sequence = self.sequence(next_sequence_idx, next_scene_idx);
+        next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
+      }
+    }
+
+    return {
+      position: self.dialog(next_dialog_idx + dialog_shift, next_sequence_idx, next_scene_idx),
+      status,
+    };
   }
 
 
 
   /**
    * Evaluates a given position to determine the destination of a jump. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if the resolved position is out of bounds.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [position] The position to resolve. Defaults to current position.
-   * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The options of the jump to perform.
+   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} position The position to resolve. Defaults to current position.
    * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The last stacked absolute position. Defaults to current position.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
    * @returns {Real}
    */
 
-  static __resolve_position = function(position = self.position, jump_options = 0, prev_position = self.position)
+  static __resolve_position = function(position, prev_position = 0, jump_settings = 0)
   {
-    if (is_instanceof(prev_position, DialogLinkable))
-      prev_position = prev_position.position();
+    if (__decode_jump_setting_type(jump_settings) == DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE)
+      return self.__resolve_position_relative(position, prev_position, jump_settings).position;
 
-    if (__decode_jump_option_type(jump_options) == DIALOG_MANAGER.JUMP_TYPE_RELATIVE)
-      position = __resolve_position_relative(position, jump_options, prev_position);
+    return self.__resolve_position_absolute(position, jump_settings);
+  }
 
+
+
+  /**
+   * Evaluates a given position to determine the destination of a jump. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if the resolved position is out of bounds.
+   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} position The position to resolve.
+   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
+   * @returns {Real}
+   */
+
+  static __resolve_position_absolute = function(position, jump_settings = 0)
+  {
     if (is_instanceof(position, DialogLinkable))
       return position.position();
 
-    var sequence_idx = __decode_sequence_idx(prev_position)
-      , scene_idx = __decode_scene_idx(prev_position)
+    var dialog_idx = __decode_dialog_idx(self.position)
+      , sequence_idx = __decode_sequence_idx(self.position)
+      , scene_idx = __decode_scene_idx(self.position)
       , sequence = self.sequence(sequence_idx, scene_idx)
       , scene = self.scene(scene_idx)
     ;
@@ -1294,7 +2287,7 @@ function DialogManager(data_string, is_file) constructor
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_LAST:
         return __encode_position(self.scene_count - 1, self.scenes[self.scene_count - 1].sequence_count - 1, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_NEXT:
-        return __get_sequence_relative(1, prev_position).position();
+        return __get_sequence_relative(1, position, jump_settings).position.position();
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_END:
         return __encode_position(scene_idx, sequence_idx, sequence.dialog_count - 1);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_MIDDLE:
@@ -1302,11 +2295,10 @@ function DialogManager(data_string, is_file) constructor
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_START:
         return __encode_position(scene_idx, sequence_idx, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_PREVIOUS:
-        return __get_sequence_relative(-1, prev_position).position();
+        return __get_sequence_relative(-1, position, jump_settings).position.position();
     }
 
-    var dialog_idx = __decode_dialog_idx(position);
-
+    dialog_idx = __decode_dialog_idx(position);
     sequence_idx = __decode_sequence_idx(position);
     scene_idx = __decode_scene_idx(position);
 
@@ -1320,81 +2312,45 @@ function DialogManager(data_string, is_file) constructor
       ]);
     }
 
-    return position ?? 0;
+    return position ?? DIALOG_MANAGER.POSITION_CODE_NONE;
   }
 
 
 
   /**
    * @desc Evaluates a given position to determine the destination of a relative jump.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [position] The position to resolve. Defaults to current position.
-   * @param {Constant.DIALOG_MANAGER|Real} [jump_options] The options of the jump to perform.
-   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The last stacked absolute position. Defaults to current position.
-   * @returns {Struct.DialogLinkable}
+   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} position The position to resolve. Defaults to current position.
+   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} prev_position The last stacked absolute position. Defaults to current position.
+   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings of the jump to perform.
+   * @returns {Struct} { position: Real, status: Real }
    */
 
-  static __resolve_position_relative = function(position = self.position, jump_options = 0, prev_position = self.position)
+  static __resolve_position_relative = function(position, prev_position, jump_settings)
   {
     if (is_instanceof(prev_position, DialogLinkable))
       prev_position = prev_position.position();
 
-    switch (__decode_jump_option_unit(jump_options))
+    var target_position = DIALOG_MANAGER.POSITION_CODE_NONE;
+
+    switch (__decode_jump_setting_unit(jump_settings))
     {
-      case DIALOG_MANAGER.JUMP_UNIT_SCENE:
-        return __get_scene_relative(position, prev_position);
-      case DIALOG_MANAGER.JUMP_UNIT_SEQUENCE:
-        return __get_sequence_relative(position, prev_position);
-      case DIALOG_MANAGER.JUMP_UNIT_DIALOG:
-        return __get_dialog_relative(position, prev_position);
+      case DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE:
+        target_position = __get_scene_relative(position, prev_position, jump_settings);
+      break;
+
+      case DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE:
+        target_position = __get_sequence_relative(position, prev_position, jump_settings);
+      break;
+
+      case DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG:
+        target_position = __get_dialog_relative(position, prev_position, jump_settings);
+      break;
     }
 
-    return position;
-  }
-
-
-
-  /*
-   * @desc Updates the dialog manager's status.
-   * @param {Real} [target_position] The position to check.
-   * @param {Real} [scene_diff] The signed amount of scenes traveled from the previous position.
-   * @param {Real} [sequence_diff] The signed amount of sequences traveled from the previous position.
-   * @param {Real} [dialog_diff] The signed amount of dialogs traveled from the previous position.
-   * @returns {Real}
-   */
-
-  static __status = function(target_position = self.position, scene_diff = 0, sequence_diff = 0, dialog_diff = 0)
-  {
-    var target_scene_idx = __decode_scene_idx(target_position)
-      , target_sequence_idx = __decode_sequence_idx(target_position)
-      , target_dialog_idx = __decode_dialog_idx(target_position)
-      , target_sequence_count = self.scene(target_scene_idx).sequence_count
-      , target_dialog_count = self.sequence(target_sequence_idx).dialog_count
-      , is_last_scene = target_scene_idx == self.scene_count - 1
-      , is_last_of_scene = target_sequence_idx == target_sequence_count - 1
-      , is_last_of_sequence = target_dialog_idx == target_dialog_count - 1
-      , is_last_sequence = is_last_scene && is_last_of_scene
-    ;
-
-    return DIALOG_MANAGER.FLAG_STATUS_FIRST_DIALOG    * (target_position == 0                                        )
-      | DIALOG_MANAGER.FLAG_STATUS_FIRST_SEQUENCE     * (target_position < 1 << DIALOG.__BITMASK_POSITION_DIALOG_BITS)
-      | DIALOG_MANAGER.FLAG_STATUS_FIRST_SCENE        * (target_scene_idx == 0                                       )
-      | DIALOG_MANAGER.FLAG_STATUS_FIRST_OF_SEQUENCE  * (target_dialog_idx == 0                                      )
-      | DIALOG_MANAGER.FLAG_STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                    )
-      | DIALOG_MANAGER.FLAG_STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1               )
-      | DIALOG_MANAGER.FLAG_STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1           )
-      | DIALOG_MANAGER.FLAG_STATUS_MIDDLE_SCENE       * (target_scene_idx == self.scene_count >> 1                   )
-      | DIALOG_MANAGER.FLAG_STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                     )
-      | DIALOG_MANAGER.FLAG_STATUS_LAST_SEQUENCE      * (is_last_sequence                                            )
-      | DIALOG_MANAGER.FLAG_STATUS_LAST_SCENE         * (is_last_scene                                               )
-      | DIALOG_MANAGER.FLAG_STATUS_LAST_OF_SEQUENCE   * (is_last_of_sequence                                         )
-      | DIALOG_MANAGER.FLAG_STATUS_LAST_OF_SCENE      * (is_last_of_scene                                            )
-      | DIALOG_MANAGER.FLAG_STATUS_ADVANCED_DIALOG    * (dialog_diff > 0                                             )
-      | DIALOG_MANAGER.FLAG_STATUS_ADVANCED_SEQUENCE  * (sequence_diff > 0                                           )
-      | DIALOG_MANAGER.FLAG_STATUS_ADVANCED_SCENE     * (scene_diff > 0                                              )
-      | DIALOG_MANAGER.FLAG_STATUS_RECEDED_DIALOG     * (dialog_diff < 0                                             )
-      | DIALOG_MANAGER.FLAG_STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                           )
-      | DIALOG_MANAGER.FLAG_STATUS_RECEDED_SCENE      * (scene_diff < 0                                              )
-    ;
+    return {
+      position: target_position.position.position(),
+      status: target_position.status
+    };
   }
 
 
@@ -1408,19 +2364,13 @@ function DialogManager(data_string, is_file) constructor
   {
     self.scenes = [];
     self.scene_count = 0;
-    DialogScene.scene_id = 0;
-    DialogSequence.sequence_id = 0;
-
-    self.position = 0;
-    self.status = 0;
-    self.jumps = -1;
 
     return self;
   }
 
 
 
-  self.deserialize(data_string, is_file).advance(0, DIALOG_MANAGER.FLAG_STATUS_UNINITIALIZED);
+  self.deserialize(data_string, is_file);
 }
 
 
@@ -1492,30 +2442,10 @@ function DialogLinkable(settings_mask) constructor
 
 function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
-  static scene_id = 0;
-
-  self.manager = undefined;
-  self.scene_idx = 0;
-  self.scene_id = scene_id++;
   self.sequences = [];
+  self.scene_idx = 0;
   self.sequence_count = 0;
-
-
-
-  /**
-   * @desc Overrides this scene's unique ID with a custom one. [CHAINABLE]
-   * @param {Real} override_scene_id The new scene-identifier to force-set.
-   * @returns {Struct.DialogScene}
-   */
-
-  static __override_id = function(override_scene_id)
-  {
-    self.scene_id = override_scene_id;
-    --DialogScene.scene_id;
-
-    return self;
-  }
+  self.manager = undefined;
 
 
 
@@ -1686,26 +2616,6 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 
   /**
-   * @desc Renumbers every sequence to match its array position and refreshes the back-link to this scene. [CHAINABLE]
-   * @returns {Struct.DialogScene}
-   */
-
-  static __update_sequences = function()
-  {
-    self.sequence_count = array_length(self.sequences);
-
-    for (var i = 0; i < self.sequence_count; ++i) {
-      var sequence = self.sequences[i];
-      sequence.sequence_idx = i;
-      sequence.scene = self;
-    }
-
-    return self;
-  }
-
-
-
-  /**
    * @desc Retrieves the assigned manager object.
    * @returns {Struct.DialogManager}
    */
@@ -1744,11 +2654,11 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static __array = function()
   {
     return [
-      int64(self.scene_id),
       array_map(self.sequences, function(sequence) {
-        return sequence.__DIALOG_MANAGER_SERIALIZING_METHOD__();
+        return sequence.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       int64(self.settings_mask),
+      int64(self.sequence_count),
     ];
   }
 
@@ -1762,11 +2672,11 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static __struct = function()
   {
     return {
-      scene_id: int64(self.scene_id),
       sequences: array_map(self.sequences, function(sequence) {
-        return sequence.__DIALOG_MANAGER_SERIALIZING_METHOD__();
+        return sequence.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       settings_mask: int64(self.settings_mask),
+      sequence_count: int64(self.sequence_count),
     };
   }
 
@@ -1780,13 +2690,9 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __from_array = function(data)
   {
-    return new DialogScene(
-      array_map(data[1], function(sequence) {
-        return DialogSequence.__DIALOG_MANAGER_DESERIALIZING_METHOD__(sequence);
-      }),
-      data[2]
-    )
-    .__override_id(data[0]);
+    return new DialogScene([], data[DIALOG_SCENE.ARG_SETTINGS_MASK])
+      .__parse(data[DIALOG_SCENE.ARG_SEQUENCES], data[DIALOG_SCENE.ARG_SEQUENCE_COUNT])
+    ;
   }
 
 
@@ -1799,13 +2705,9 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __from_struct = function(data)
   {
-    return new DialogScene(
-      array_map(data.sequences, function(sequence) {
-        return DialogSequence.__DIALOG_MANAGER_DESERIALIZING_METHOD__(sequence);
-      }),
-      data.settings_mask
-    )
-    .__override_id(data.scene_id);
+    return new DialogScene([], data.settings_mask)
+      .__parse(data.sequences, data.sequence_count)
+    ;
   }
 
 
@@ -1818,7 +2720,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
+    return json_stringify(DialogScene.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
   }
 
 
@@ -1831,8 +2733,31 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __deserialize = function(data_string)
   {
-    var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data).__update_sequences();
+    return DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
+  }
+
+
+
+  /**
+   * @desc Prepares the data inside the DialogScene structure.
+   * @param {Array<Struct>} sequences The sequences to update.
+   * @param {Real} sequence_count The number of sequences.
+   * @returns {Struct.DialogScene}
+   */
+
+  static __parse = function(sequences, sequence_count)
+  {
+    for (var i = 0; i < sequence_count; ++i) {
+      var sequence = DialogSequence.__DIALOG_MANAGER_DESERIALIZER_METHOD__(sequences[i]);
+      sequence.sequence_idx = i;
+      sequence.scene = self;
+      sequences[i] = sequence;
+    }
+
+    self.sequence_count = sequence_count;
+    self.sequences = sequences;
+
+    return self;
   }
 
 
@@ -1874,31 +2799,11 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(settings_mask) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
-  static sequence_id = 0;
-
-  self.scene = undefined;
+  self.dialogs = [];
   self.speakers = speakers;
-  self.sequence_id = sequence_id++;
   self.sequence_idx = 0;
   self.dialog_count = 0;
-  self.dialogs = [];
-
-
-
-  /**
-   * @desc Overrides this sequence's unique ID with a custom one. [CHAINABLE]
-   * @param {Real} override_sequence_id The new sequence-identifier to force-set.
-   * @returns {Struct.DialogSequence}
-   */
-
-  static __override_id = function(override_sequence_id)
-  {
-    self.sequence_id = override_sequence_id;
-    --DialogSequence.sequence_id;
-
-    return self;
-  }
+  self.scene = undefined;
 
 
 
@@ -2058,26 +2963,6 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 
   /**
-   * @desc Renumbers every dialog to match its array position and refreshes the back-link to this sequence. [CHAINABLE]
-   * @returns {Struct.DialogSequence}
-   */
-
-  static __update_dialogs = function()
-  {
-    self.dialog_count = array_length(self.dialogs);
-
-    for (var i = 0; i < self.dialog_count; ++i) {
-      var dialog = self.dialogs[i];
-      dialog.sequence = self;
-      dialog.dialog_idx = i;
-    }
-
-    return self;
-  }
-
-
-
-  /**
    * @desc Retrieves the assigned manager object.
    * @returns {Struct.DialogManager}
    */
@@ -2116,14 +3001,14 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   static __array = function()
   {
     return [
-      int64(self.sequence_id),
       int64(self.settings_mask),
       array_map(self.dialogs, function(dialog) {
-        return dialog.__DIALOG_MANAGER_SERIALIZING_METHOD__();
+        return dialog.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       array_map(self.speakers, function(speaker) {
         return int64(speaker);
-      })
+      }),
+      int64(self.dialog_count),
     ];
   }
 
@@ -2137,14 +3022,14 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   static __struct = function()
   {
     return {
-      sequence_id: int64(self.sequence_id),
       settings_mask: int64(self.settings_mask),
       dialogs: array_map(self.dialogs, function(dialog) {
-        return dialog.__DIALOG_MANAGER_SERIALIZING_METHOD__();
+        return dialog.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       speakers: array_map(self.speakers, function(speaker) {
         return int64(speaker);
-      })
+      }),
+      dialog_count: int64(self.dialog_count),
     };
   }
 
@@ -2158,14 +3043,9 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __from_array = function(data)
   {
-    return new DialogSequence(
-      array_map(data[1], function(dialog) {
-        return Dialog.__DIALOG_MANAGER_DESERIALIZING_METHOD__(dialog);
-      }),
-      data[2],
-      data[3]
-    )
-    .__override_id(data[0]);
+    return new DialogSequence([], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS])
+      .__parse(data[DIALOG_SEQUENCE.ARG_DIALOGS], data[DIALOG_SEQUENCE.ARG_DIALOG_COUNT])
+    ;
   }
 
 
@@ -2178,14 +3058,9 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __from_struct = function(data)
   {
-    return new DialogSequence(
-      array_map(data.dialogs, function(dialog) {
-        return Dialog.__DIALOG_MANAGER_DESERIALIZING_METHOD__(dialog);
-      }),
-      data.settings_mask,
-      data.speakers
-    )
-    .__override_id(data.sequence_id);
+    return new DialogSequence([], data.settings_mask, data.speakers)
+      .__parse(data.dialogs, data.dialog_count)
+    ;
   }
 
 
@@ -2198,7 +3073,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
+    return json_stringify(DialogSequence.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
   }
 
 
@@ -2211,8 +3086,31 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __deserialize = function(data_string)
   {
-    var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data).__update_dialogs();
+    return DialogSequence.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
+  }
+
+
+
+  /**
+   * @desc Prepares the data inside the DialogSequence structure.
+   * @param {Array<Struct>} dialogs The dialogs to update.
+   * @param {Real} dialog_count The number of dialogs.
+   * @returns {Struct.DialogSequence}
+   */
+
+  static __parse = function(dialogs, dialog_count)
+  {
+    for (var i = 0; i < dialog_count; ++i) {
+      var dialog = Dialog.__DIALOG_MANAGER_DESERIALIZER_METHOD__(dialogs[i]);
+      dialog.dialog_idx = i;
+      dialog.sequence = self;
+      dialogs[i] = dialog;
+    }
+
+    self.dialog_count = dialog_count;
+    self.dialogs = dialogs;
+
+    return self;
   }
 
 
@@ -2254,21 +3152,24 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
-  static TEXT_MAXWIDTH = -1;
+  static TEXT_WIDTH_MAX = -1;
+  static TEXT_WIDTH_FUNC = function(dialog) {
+    return string_width(dialog.text);
+  }
 
-  self.dialog_idx = 0;
-  self.sequence = undefined;
   self.text = text;
-  self.fx_count = 0;
   self.fx_map = [];
+  self.dialog_idx = 0;
+  self.fx_count = 0;
+  self.sequence = undefined;
 
-  if (Dialog.TEXT_MAXWIDTH) {
-    var text_width = string_width(text);
+  if (Dialog.TEXT_WIDTH_MAX)
+  {
+    var text_width = Dialog.TEXT_WIDTH_FUNC(self);
 
-    if (text_width > Dialog.TEXT_MAXWIDTH) {
+    if (text_width > Dialog.TEXT_WIDTH_MAX) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_TEXT_OVERFLOW, [
-        text_width, Dialog.TEXT_MAXWIDTH, self.__struct()
+        text_width, Dialog.TEXT_WIDTH_MAX, self.__struct()
       ]);
     }
   }
@@ -2423,91 +3324,147 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   /**
    * @desc Retrieves a dialog fx given an index. Negative indices will iterate backwards.
+   * @param {Real} n The effect position to look for.
+   * @param {Function} [filter_fn] The predicate to test against each jump FX. Defaults to a function returning `true`.
+   * @param {Array} [argv] The arguments to pass to the effect.
    * @returns {Struct.DialogFX}
    */
 
-  static fx = function(fx_idx)
+  static fx = function(n, filter_fn = undefined, argv = undefined)
   {
-    return self.fx_map[fx_idx + self.fx_count * (fx_idx < 0)];
+    return filter_fn
+      ? __fx_get_nth_of(n, filter_fn, argv)
+      : self.fx_map[n + self.fx_count * (n < 0)]
+    ;
   }
 
 
 
   /**
-   * @desc Returns the final jump FX in this dialog, if one exists.
+   * @desc Returns the specified n-th flow resolver FX in this dialog, if one exists.
+   * @param {Real} [n] The effect position to look for.
+   * @param {Function} [filter_fn] The predicate to test against each flow resolver FX. Defaults to a function returning `true`.
+   * @param {Array} [argv] The arguments to pass to the effect.
    * @returns {Struct.DialogFX|undefined}
    */
 
-  static jump = function()
+  static flowresolver = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    for (var i = array_length(self.fx_map) - 1; i >= 0; --i)
-      if (self.fx_map[i].type() == DIALOG_FX.TYPE_JUMP)
-        return self.fx_map[i];
-
-    return undefined;
+    return __fx_get_nth_of(n, function(fx, argv) {
+      return fx.isflowresolver() && argv[0](fx, argv[1]);
+    }, [filter_fn, argv]);
   }
 
 
 
   /**
-   * @desc Returns the first fallback FX that evaluates truthfully, if any.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effect.
+   * @desc Returns the specified n-th jump FX in this dialog, if one exists.
+   * @param {Real} [n] The effect position to look for.
+   * @param {Function} [filter_fn] The predicate to test against each jump FX. Defaults to a function returning `true`.
+   * @param {Array} [argv] The arguments to pass to the effect.
    * @returns {Struct.DialogFX|undefined}
    */
 
-  static fallback = function(argv = undefined)
+  static jump = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    var fx_count = array_length(self.fx_map);
-
-    for (var i = 0; i < fx_count; ++i)
-      if (self.fx_map[i].type() == DIALOG_FX.TYPE_FALLBACK && __get_manager().fx_condition_map[self.fx_map[i].argv[DIALOG_FX.ARG_FALLBACK_CONDITION]](__get_manager(), argv))
-        return self.fx_map[i];
-
-    return undefined;
+    return __fx_get_nth_of(n, function(fx, argv) {
+      return fx.type() == DIALOG_FX.TYPE_FLOWRES_JUMP && argv[0](fx, argv[1]);
+    }, [filter_fn, argv]);
   }
 
 
 
   /**
-   * @desc Returns the first choice FX, if any.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effect.
+   * @desc Returns the specified n-th dispatch FX in this dialog, if one exists.
+   * @param {Real} [n] The effect position to look for.
+   * @param {Function} [filter_fn] The predicate to test against each dispatch FX. Defaults to a function returning `true`.
+   * @param {Array} [argv] The arguments to pass to the effect.
    * @returns {Struct.DialogFX|undefined}
    */
 
-  static choice = function(argv = undefined)
+  static dispatch = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    var fx_count = array_length(self.fx_map);
-
-    for (var i = 0; i < fx_count; ++i)
-      if (self.fx_map[i].type() == DIALOG_FX.TYPE_CHOICE)
-        return self.fx_map[i];
-
-    return undefined;
+    return __fx_get_nth_of(n, function(fx, argv) {
+      return fx.type() == DIALOG_FX.TYPE_FLOWRES_DISPATCH && argv[0](fx, argv[1]);
+    }, [filter_fn, argv]);
   }
 
 
 
   /**
-   * @desc Makes the current dialog derive from a specified choice fx. [CHAINABLE]
+   * @desc Returns the specified n-th fallback FX in this dialog, if one exists.
+   * @param {Real} [n] The effect position to look for.
+   * @param {Function} [filter_fn] The predicate to test against each fallback FX. Defaults to a function returning `true`.
+   * @param {Array} [argv] The arguments to pass to the effect.
+   * @returns {Struct.DialogFX|undefined}
+   */
+
+  static fallback = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
+  {
+    return __fx_get_nth_of(n, function(fx, argv) {
+      return fx.type() == DIALOG_FX.TYPE_FLOWRES_FALLBACK && argv[0](fx, argv[1]);
+    }, [filter_fn, argv]);
+  }
+
+
+
+  /**
+   * @desc Returns the specified n-th choice FX in this dialog, if one exists.
+   * @param {Real} [n] The effect position to look for.
+   * @param {Function} [filter_fn] The predicate to test against each choice FX. Defaults to a function returning `true`.
+   * @param {Array} [argv] The arguments to pass to the effect.
+   * @returns {Struct.DialogFX|undefined}
+   */
+
+  static choice = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
+  {
+    return __fx_get_nth_of(n, function(fx, argv) {
+      return fx.type() == DIALOG_FX.TYPE_FLOWRES_CHOICE && argv[0](fx, argv[1]);
+    }, [filter_fn, argv]);
+  }
+
+
+
+  /**
+   * @desc Makes the current dialog derive from a specified fx adding the calling dialog to the fx flow option list. [CHAINABLE]
    * @param {Struct.DialogFX} fx The effect derive the dialog from.
-   * @param {String} prompt The choice's option text.
-   * @param {Real} [index] The specific index where to insert the new option in the choice list. Defaults to list length.
-   * @param {Constant.DIALOG_FX|Real} [choice_settings] The settings mask for the choice effect.
+   * @param {String} [prompt] The choice's option text.
+   * @param {Real} [index] The specific index where to insert the new option in the option list. Defaults to list length.
+   * @param {Constant.DIALOG_RUNNER|Real} [jump_metadata_settings] The settings mask for the flow option.
    * @returns {Struct.Dialog}
    */
 
-  static derive = function(fx, prompt, index = undefined, choice_settings = 0)
+  static from = function(fx, prompt = undefined, index = undefined, jump_metadata_settings = 0)
   {
-    var choice_count = array_length(fx.argv)
-      , choice = DialogFX.__create_choice_option(prompt, self, 0, choice_settings)
+    var type = fx.type();
+
+    if (!fx.isflowresolver(type))
+      return self;
+
+    var flow_option_list = fx.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA]
+      , flow_option_count = array_length(flow_option_list)
+      , flow_option = DialogFX.__create_option_flow(self, 0, prompt, jump_metadata_settings)
     ;
 
-    index ??= choice_count;
+    switch (type)
+    {
+      case DIALOG_FX.TYPE_FLOWRES_JUMP:
+      case DIALOG_FX.TYPE_FLOWRES_FALLBACK:
+        flow_option_list[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION] = flow_option;
+      break;
 
-    if (index >= choice_count || is_array(fx.argv[index]))
-      array_insert(fx.argv, index, choice);
-    else
-      fx.argv[index] = choice;
+      case DIALOG_FX.TYPE_FLOWRES_CHOICE:
+      case DIALOG_FX.TYPE_FLOWRES_DISPATCH:
+      {
+        index ??= flow_option_count;
+
+        if (index >= flow_option_count || is_array(flow_option_list[index]))
+          array_insert(flow_option_list, index, flow_option);
+        else
+          flow_option_list[index] = flow_option;
+      }
+      break;
+    }
 
     return self;
   }
@@ -2533,17 +3490,6 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
     self.fx_count += fx_count;
 
-    array_sort(self.fx_map, function(f1, f2) {
-      var f1_type = f1.type()
-        , f2_type = f2.type()
-      ;
-
-      return f1_type != f2_type
-        ? f1_type - f2_type
-        : f1.trigger() - f2.trigger()
-      ;
-    });
-
     return self;
   }
 
@@ -2563,7 +3509,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   /**
    * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects matching a specified criteria.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
    * @returns {Bool}
    */
@@ -2580,20 +3526,104 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
 
   /**
+   * @desc Retrieves the first dialog FX which matches a filter.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __fx_get_first_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
+  {
+    for (var i = 0; i < self.fx_count; ++i)
+      if (filter_fn(self.fx_map[i], argv))
+        return self.fx_map[i];
+
+    return undefined;
+  }
+
+
+
+  /**
+   * @desc Retrieves the last dialog FX which matches a filter.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __fx_get_last_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
+  {
+    var fx = undefined;
+
+    for (var i = 0; i < self.fx_count; ++i)
+      if (filter_fn(self.fx_map[i], argv))
+        fx = self.fx_map[i];
+
+    return fx;
+  }
+
+
+
+  /**
+   * @desc Retrieves the nth dialog FX which matches a filter.
+   * @param {Real} n The nth occurrence to look for.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+   * @returns {Struct.DialogFX|undefined}
+   */
+
+  static __fx_get_nth_of = function(n, filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
+  {
+    var fx = undefined;
+
+    for (var i = 0; n && i < self.fx_count; ++i)
+      if (filter_fn(self.fx_map[i], argv) && n--)
+        fx = self.fx_map[i];
+
+    return n ? undefined : fx;
+  }
+
+
+
+  /**
    * @desc Retrieves all dialog FX which match a filter.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
    * @returns {Array<Struct.DialogFX>}
    */
 
   static __fx_get_all_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
   {
-    var filtered = [];
-    var fx_count = array_length(self.fx_map);
+    return __fx_get_all_of_until(
+      function(fx, argv = undefined) { return false; },
+      filter_fn,
+      argv
+    );
+  }
 
-    for (var i = 0; i < fx_count; ++i)
-      if (filter_fn(self.fx_map[i], argv))
-        array_push(filtered, self.fx_map[i]);
+
+
+  /**
+   * @desc Retrieves all dialog FX until the filter is met.
+   * @param {Function} [stop_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+   * @returns {Array<Struct.DialogFX>}
+   */
+
+  static __fx_get_all_of_until = function(stop_fn = function(fx, argv = undefined) { return true; }, filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
+  {
+    var filtered = [];
+
+    for (var i = 0; i < self.fx_count; ++i)
+    {
+      var fx = self.fx_map[i];
+
+      if (stop_fn(fx, argv))
+        break;
+
+      if (filter_fn(fx, argv))
+        array_push(filtered, fx);
+    }
 
     return filtered;
   }
@@ -2602,20 +3632,75 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   /**
    * @desc Executes all dialog FX which match a filter. [CHAINABLE]
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
    * @returns {Struct.Dialog}
    */
 
   static __fx_execute_all_of = function(filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    var fx_count = array_length(self.fx_map);
+    return __fx_execute_all_of_until(
+      function (fx, argv = undefined) { return false; },
+      filter_fn,
+      argv
+    );
+  }
 
-    for (var i = 0; i < fx_count; ++i)
-      if (filter_fn(self.fx_map[i], argv))
-        self.fx_map[i].__exec(argv, self);
+
+
+  /**
+   * @desc Executes all dialog FX which match a filter. [CHAINABLE]
+   * @param {Function} [stop_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+   * @returns {Struct.Dialog}
+   */
+
+  static __fx_execute_all_of_until = function(stop_fn = function(fx, argv = undefined) { return true; }, filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
+  {
+    for (var i = 0; i < self.fx_count; ++i)
+    {
+      var fx = self.fx_map[i];
+
+      if (stop_fn(fx, argv))
+        return self;
+
+      if (filter_fn(fx, argv))
+        fx.execute(argv);
+    }
 
     return self;
+  }
+
+
+
+  /**
+   * @desc Executes dialog FX in sequence until a flow resolver is found. Returns the context after execution.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
+   * @param {Struct.DialogCycleContext} [ctx] The context to pass to the effects.
+   * @param {Constant.DIALOG_FX|Real} [trigger] The trigger causing the cycle execution.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @returns {Struct.DialogCycleContext}
+   */
+
+  static __fx_execute_cycle = function(argv = undefined, ctx = undefined, trigger = DIALOG_FX.TRIGGER_NONE, filter_fn = function(fx, argv = undefined) { return true; })
+  {
+    var resolved = false;
+
+    for (var i = 0; i < self.fx_count; ++i)
+    {
+      var fx = self.fx_map[i];
+
+      if (fx.trigger() != trigger || !filter_fn(fx, argv))
+        continue;
+
+      if (fx.execute(argv, ctx) && fx.iscyclebreaker(ctx)) {
+        resolved = true;
+        break;
+      }
+    }
+
+    return resolved ? ctx : undefined;
   }
 
 
@@ -2631,8 +3716,9 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       self.text,
       int64(self.settings_mask),
       array_map(self.fx_map, function(fx) {
-        return fx.__DIALOG_MANAGER_SERIALIZING_METHOD__();
-      })
+        return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
+      }),
+      int64(self.fx_count),
     ];
   }
 
@@ -2649,8 +3735,9 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       text: self.text,
       settings_mask: int64(self.settings_mask),
       fx_map: array_map(self.fx_map, function(fx) {
-        return fx.__DIALOG_MANAGER_SERIALIZING_METHOD__();
-      })
+        return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
+      }),
+      fx_count: int64(self.fx_count),
     };
   }
 
@@ -2664,13 +3751,17 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __from_array = function(data)
   {
-    return new Dialog(
-      data[0],
-      data[1],
-      array_map(data[2], function(fx) {
-        return DialogFX.__DIALOG_MANAGER_DESERIALIZING_METHOD__(fx);
+    var dialog = new Dialog(
+      data[DIALOG.ARG_TEXT],
+      data[DIALOG.ARG_SETTINGS_MASK],
+      array_map(data[DIALOG.ARG_FX_MAP], function(fx) {
+        return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
       })
     );
+
+    dialog.fx_count = data[DIALOG.ARG_FX_COUNT];
+
+    return dialog;
   }
 
 
@@ -2683,13 +3774,17 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __from_struct = function(data)
   {
-    return new Dialog(
+    var dialog = new Dialog(
       data.text,
       data.settings_mask,
       array_map(data.fx_map, function(fx) {
-        return DialogFX.__DIALOG_MANAGER_DESERIALIZING_METHOD__(fx);
+        return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
       })
     );
+
+    dialog.fx_count = data.fx_count;
+
+    return dialog;
   }
 
 
@@ -2702,7 +3797,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
+    return json_stringify(Dialog.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
   }
 
 
@@ -2715,8 +3810,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __deserialize = function(data_string)
   {
-    var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data);
+    return Dialog.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
   }
 
 
@@ -2752,49 +3846,51 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
  * `DialogFX` constructor.
  * @param {Constant.DIALOG_FX|Real} settings_mask The effect info.
  * @param {Array<Any>} argv The arguments of the mapped effect function.
- * @param {Function} func The function to add to the dialog manager (NOT SERIALIZED).
  * @returns {Struct.DialogFX}
  */
 
-function DialogFX(settings_mask, argv, func) constructor
+function DialogFX(settings_mask, argv) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
+  static data = {
+    initialized: false,
+    fx_map: {
+      funcs: [
+        /* Make and add behavior functions to index here */
+        function(argv, ctx) { },
+        function(argv, ctx) { return DialogFX.__fx_jump(argv, ctx);     },
+        function(argv, ctx) { return DialogFX.__fx_dispatch(argv, ctx); },
+        function(argv, ctx) { return DialogFX.__fx_fallback(argv, ctx); },
+        function(argv, ctx) { return DialogFX.__fx_choice(argv, ctx);   },
+      ],
+    },
+    fx_condition_map: {
+      funcs: [
+        /* Make and add condition functions to index here */
+        function(argv, ctx) { return false; },
+        function(argv, ctx) { return true; },
+      ],
+    },
+    fx_indexer_map: {
+      funcs: [
+        /* Make and add indexing functions to index here */
+        function(argv, ctx) { return ctx.runner.choice_index; }
+      ],
+    },
+  };
 
-  static fx_map = [
-    /* Make and add functions to index here */
-    function(argv, parent) { },
-    function(argv, parent) { return DialogFX.__fx_jump(argv, parent);     },
-    function(argv, parent) { return DialogFX.__fx_fallback(argv, parent); },
-    function(argv, parent) { return DialogFX.__fx_choice(argv, parent);   },
-  ];
+  var fxdata = DialogFX.data;
 
-  static fx_condition_map = [
-    /* Make and add condition functions to index here */
-    function(argv, parent) { return false; },
-    function(argv, parent) { return true; },
-  ];
+  if (!fxdata.initialized) {
+    fxdata.fx_map.count = array_length(fxdata.fx_map.funcs);
+    fxdata.fx_condition_map.count = array_length(fxdata.fx_condition_map.funcs);
+    fxdata.fx_indexer_map.count = array_length(fxdata.fx_indexer_map.funcs);
+    fxdata.initialized = true;
+  }
 
-  static fx_map_count = array_length(DialogFX.fx_map);
-  static fx_condition_count = array_length(DialogFX.fx_condition_map);
+
 
   self.settings_mask = settings_mask;
   self.argv = argv;
-
-
-
-  /**
-   * @desc Encodes/decodes the dialog FX trigger as a bitmask fragment.
-   * @param {Constant.DIALOG_FX|Real} [trigger_mask] The trigger identifier.
-   * @returns {Real}
-   */
-
-  static trigger = function(trigger_mask = undefined)
-  {
-    return trigger_mask == undefined
-      ? (self.settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK) >> DIALOG_FX.__BITMASK_TRIGGER_SHIFT
-      : trigger_mask << DIALOG_FX.__BITMASK_TRIGGER_SHIFT & DIALOG_FX.__BITMASK_TRIGGER_MASK
-    ;
-  }
 
 
 
@@ -2815,28 +3911,177 @@ function DialogFX(settings_mask, argv, func) constructor
 
 
   /**
-   * @desc Adds an indexed function to the global dialog fx data.
-   * @param {Function} func The function to bind.
-   * @param {Constant.DIALOG_FX|Real} type The effect type designating the index.
+   * @desc Encodes/decodes the dialog FX trigger as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [trigger_mask] The trigger identifier.
    * @returns {Real}
    */
 
-  static register = function(func, type = DialogFX.fx_map_count)
+  static trigger = function(trigger_mask = undefined)
   {
-    var index = type;
+    return trigger_mask == undefined
+      ? (self.settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK) >> DIALOG_FX.__BITMASK_TRIGGER_SHIFT
+      : trigger_mask << DIALOG_FX.__BITMASK_TRIGGER_SHIFT & DIALOG_FX.__BITMASK_TRIGGER_MASK
+    ;
+  }
 
-    if (type == DIALOG_FX.TYPE_FALLBACK) {
-      if (is_callable(self.argv[DIALOG_FX.ARG_FALLBACK_CONDITION])) {
-        self.argv[DIALOG_FX.ARG_FALLBACK_CONDITION] = DialogFX.fx_condition_count++;
-      }
 
-      index = self.argv[DIALOG_FX.ARG_FALLBACK_CONDITION];
-      DialogFX.fx_condition_map[index] = func;
-    }
-    else if (type >= DialogFX.fx_map_count) {
-      DialogFX.fx_map[index] = func;
-      ++DialogFX.fx_map_count;
-    }
+
+  /**
+   * @desc Encodes/decodes the dialog FX signal as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [signal_mask] The signal identifier.
+   * @returns {Real}
+   */
+
+  static signal = function(signal_mask = undefined)
+  {
+    return signal_mask == undefined
+      ? (self.settings_mask & DIALOG_FX.__BITMASK_SIGNAL_MASK) >> DIALOG_FX.__BITMASK_SIGNAL_SHIFT
+      : signal_mask << DIALOG_FX.__BITMASK_SIGNAL_SHIFT & DIALOG_FX.__BITMASK_SIGNAL_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog FX tag as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [tag_mask] The tag identifier.
+   * @returns {Real}
+   */
+
+  static tag = function(tag_mask = undefined)
+  {
+    return tag_mask == undefined
+      ? (self.settings_mask & DIALOG_FX.__BITMASK_TAG_MASK) >> DIALOG_FX.__BITMASK_TAG_SHIFT
+      : tag_mask << DIALOG_FX.__BITMASK_TAG_SHIFT & DIALOG_FX.__BITMASK_TAG_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the flow resolver options data.
+   * @returns {Array}
+   */
+
+  static options = function()
+  {
+    return self.isflowresolver()
+      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA]
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the flow resolver options data.
+   * @param {Real} [option_idx] The index of the option to retrieve.
+   * @returns {Array}
+   */
+
+  static option = function(option_idx = 0)
+  {
+    return self.isflowresolver()
+      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][option_idx]
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the flow resolver indexer index.
+   * @returns {Real}
+   */
+
+  static indexer = function()
+  {
+    return self.isflowresolver()
+      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_INDEXER_INDEX]
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the flow resolver condition index.
+   * @returns {Real}
+   */
+
+  static condition = function()
+  {
+    return self.isflowresolver()
+      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_CONDITION_INDEX]
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the flow resolver prompt text of a specified option.
+   * @param {Real} [option_idx] The index of the option to retrieve the prompt for.
+   * @returns {String}
+   */
+
+  static prompt = function(option_idx = 0)
+  {
+    return self.isflowresolver()
+      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][option_idx][DIALOG_FX.FX_ARG_FLOWRES_DATA_PROMPT]
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Checks whether the FX is a flow control effect.
+   * @param {Constant.DIALOG_FX|Real} [type] The type of the effect to check.
+   * @returns {Bool}
+   */
+
+  static isflowresolver = function(type = self.type())
+  {
+    return type && type <= DIALOG_FX.__TYPE_FLOWRES_COUNT;
+  }
+
+
+
+  /**
+   * @desc Checks whether the FX is a cycle-breaking flow control effect.
+   * @param {Struct.DialogCycleContext} [ctx] The context object with the environment data of for the effect.
+   * @returns {Bool}
+   */
+
+  static iscyclebreaker = function(ctx = undefined)
+  {
+    return ctx && self.isflowresolver();
+  }
+
+
+
+  /**
+   * @desc Adds an indexed function to the global dialog fx data.
+   * @param {Function} func The function to bind.
+   * @param {Constant.DIALOG_FX|Real} [register_settings] The settings of the registering call.
+   * @param {Constant.DIALOG_FX|Real} [type] The effect type designating the index.
+   * @returns {Real}
+   */
+
+  static register = function(func, register_settings = DIALOG_FX.MASK_REGISTER_FX_FUNC, type = undefined)
+  {
+    var mapdata = [
+        DialogFX.data.fx_map,
+        DialogFX.data.fx_indexer_map,
+        DialogFX.data.fx_condition_map,
+      ]
+      , map = mapdata[(register_settings & DIALOG_FX.__BITMASK_REGISTER_MASK) >> DIALOG_FX.__BITMASK_REGISTER_SHIFT]
+      , index = type ?? map.count
+    ;
+
+    map.count += index >= map.count;
+    map.funcs[index] = func;
 
     return index;
   }
@@ -2844,122 +4089,34 @@ function DialogFX(settings_mask, argv, func) constructor
 
 
   /**
-   * @desc `DialogFX` constructor.
-   * @param {Constant.DIALOG_FX|Real} settings_mask The effect info.
-   * @param {Array<Any>} argv The arguments of the mapped effect function.
-   * @param {Function} func The function to add to the dialog manager (NOT SERIALIZED).
-   * @returns {Struct.DialogFX}
-   */
-
-  static __create = function(settings_mask, argv, func)
-  {
-    return new DialogFX(settings_mask, argv, func);
-  }
-
-
-
-  /**
-   * @desc Creates a jump dialog effect.
-   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to.
-   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings mask for the jump effect.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __create_jump = function(jump_position, jump_settings)
-  {
-    return __create(
-      DialogFX.type(DIALOG_FX.TYPE_JUMP),
-      [[jump_position, jump_settings]],
-      undefined
-    );
-  }
-
-
-
-  /**
-   * @desc Creates a fallback dialog effect.
-   * @param {Function} fx_condition_function The condition function to evaluate.
-   * @param {Array} [argv] The additional arguments to pass to the condition function.
-   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
-   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings mask for the jump effect.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __create_fallback = function(fx_condition_function, argv, jump_position, jump_settings)
-  {
-    return __create(
-      DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
-      [[jump_position, jump_settings], fx_condition_function, argv],
-      undefined
-    );
-  }
-
-
-
-  /**
-   * @desc Creates a fallback dialog effect using a pre-defined condition index.
-   * @param {Real} fx_condition_index The index of the condition to evaluate.
-   * @param {Function} fx_condition_function The condition function to evaluate.
-   * @param {Array} [argv] The additional arguments to pass to the condition function.
-   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the condition is met.
-   * @param {Constant.DIALOG_MANAGER|Real} jump_settings The settings mask for the jump effect.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __create_fallback_indexed = function(fx_condition_index, fx_condition_function, argv, jump_position, jump_settings)
-  {
-    return __create(
-      DialogFX.type(DIALOG_FX.TYPE_FALLBACK),
-      [[jump_position, jump_settings], fx_condition_index, argv],
-      fx_condition_function
-    );
-  }
-
-
-
-  /**
-   * @desc Creates a choice dialog effect.
-   * @param {Array<Any>} choice_options The array of choice options.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __create_choice = function(choice_options)
-  {
-    return __create(
-      DialogFX.type(DIALOG_FX.TYPE_CHOICE),
-      choice_options,
-      undefined
-    );
-  }
-
-
-
-  /**
-   * @desc Creates a choice option for a choice dialog effect.
-   * @param {String} prompt The choice's option text.
-   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The position to jump to if the option is selected.
-   * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump data.
-   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask for the choice effect.
-   * @returns {Array<Any>}
-   */
-
-  static __create_choice_option = function(prompt, jump_position, jump_settings = 0, settings_mask = 0)
-  {
-    return [[jump_position, jump_settings], prompt, settings_mask];
-  }
-
-
-
-  /**
-   * @desc Executes the FX using the registered handlers.
+   * @desc Executes the FX using the registered handlers, incrementing the context's executed count if a context is provided.
    * @param {Array<Any>} [argv] The arguments to pass to the effect.
-   * @param {Struct.DialogLinkable} parent The parent object invoking the effect.
+   * @param {Struct.DialogCycleContext} [context] The context object with the environment data for the effect.
    * @returns {Any}
    */
 
-  static __exec = function(argv = self.argv, parent = undefined)
+  static execute = function(argv = self.argv, context = undefined)
   {
-    return DialogFX.fx_map[self.type()](argv, parent);
+    if (is_instanceof(context, DialogCycleContext))
+      ++context.executed;
+
+    return DialogFX.data.fx_map.funcs[self.type()](argv, context);
+  }
+
+
+
+  /**
+   * @desc Creates a flow option for a flow resolutor dialog effect.
+   * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} jump_position The jump option destination.
+   * @param {Constant.DIALOG_RUNNER|Real} [jump_settings] The settings mask for the jump data.
+   * @param {String} [prompt] The flow option's text.
+   * @param {Constant.DIALOG_FX|Real} [jump_metadata_settings] Extra bitmask data about the flow option.
+   * @returns {Array}
+   */
+
+  static __create_option_flow = function(jump_position, jump_settings = 0, prompt = undefined, jump_metadata_settings = 0)
+  {
+    return [[jump_position, jump_settings], prompt, jump_metadata_settings];
   }
 
 
@@ -2967,22 +4124,44 @@ function DialogFX(settings_mask, argv, func) constructor
   /**
    * @desc Executes the inconditional jump effect.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
-   * @param {Struct.DialogLinkable} parent The FX container object.
+   * @param {Struct.DialogCycleContext} ctx The context for the effect execution.
    * @returns {Struct.Dialog}
    */
 
-  static __fx_jump = function(argv, parent)
+  static __fx_jump = function(argv, ctx)
   {
-    var manager = parent.__get_manager()
-      , jump_data = argv[DIALOG_FX.ARG_JUMP_DATA]
-      , jump_position = jump_data[DIALOG_FX.ARG_JUMP_DATA_POSITION]
-      , jump_options = array_length(jump_data) < DIALOG_FX.ARG_JUMP_DATA_COUNT ? 0 : jump_data[DIALOG_FX.ARG_JUMP_DATA_OPTIONS]
-      , position = manager.__resolve_position(jump_position, jump_options, parent.position())
+    return ctx.success(
+      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0],
+      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_JUMP
+    );
+  }
+
+
+
+  /**
+   * @desc Executes the branching jump effect.
+   * @param {Array<Any>} argv The arguments to pass to the fx function.
+   * @param {Struct.DialogCycleContext} ctx The context for the effect execution.
+   * @returns {Struct.Dialog}
+   */
+
+  static __fx_dispatch = function(argv, ctx)
+  {
+    var fx_condition_index = argv[DIALOG_FX.FX_ARG_FLOWRES_CONDITION_INDEX]
+      , fx_condition_argv = argv[DIALOG_FX.FX_ARG_FLOWRES_CONDITION_ARGV]
+      , fx_indexer_index = argv[DIALOG_FX.FX_ARG_FLOWRES_INDEXER_INDEX]
+      , fx_indexer_argv = argv[DIALOG_FX.FX_ARG_FLOWRES_INDEXER_ARGV]
     ;
 
-    manager.status |= DIALOG_MANAGER.FLAG_STATUS_EXECUTED_JUMP;
+    if (!ctx.condition(fx_condition_index, fx_condition_argv))
+      return ctx.fail();
 
-    return manager.__get_dialog_from_position(position);
+    var idx = ctx.indexer(fx_indexer_index, fx_indexer_argv);
+
+    return ctx.success(
+      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx],
+      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_DISPATCH
+    );
   }
 
 
@@ -2990,26 +4169,23 @@ function DialogFX(settings_mask, argv, func) constructor
   /**
    * @desc Executes the conditional jump effect.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
-   * @param {Struct.DialogLinkable} parent The FX container object.
+   * @param {Struct.DialogCycleContext} ctx The context for the effect execution.
    * @returns {Struct.Dialog}
    */
 
-  static __fx_fallback = function(argv, parent)
+  static __fx_fallback = function(argv, ctx)
   {
-    var manager = parent.__get_manager()
-      , jump_data = argv[DIALOG_FX.ARG_JUMP_DATA]
-      , jump_position = jump_data[DIALOG_FX.ARG_JUMP_DATA_POSITION]
-      , jump_options = array_length(jump_data) < DIALOG_FX.ARG_JUMP_DATA_COUNT ? 0 : jump_data[DIALOG_FX.ARG_JUMP_DATA_OPTIONS]
-      , position = manager.position
+    var fx_condition_index = argv[DIALOG_FX.FX_ARG_FLOWRES_CONDITION_INDEX]
+      , fx_condition_argv = argv[DIALOG_FX.FX_ARG_FLOWRES_CONDITION_ARGV]
     ;
 
-    if (DialogFX.fx_condition_map[argv[DIALOG_FX.ARG_FALLBACK_CONDITION]](manager, argv))
-    {
-      position = manager.__resolve_position(jump_position, jump_options, parent.position());
-      manager.status |= DIALOG_MANAGER.FLAG_STATUS_EXECUTED_FALLBACK;
-    }
+    if (!ctx.condition(fx_condition_index, fx_condition_argv))
+      return ctx.fail();
 
-    return manager.__get_dialog_from_position(position);
+    return ctx.success(
+      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0],
+      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_FALLBACK
+    );
   }
 
 
@@ -3017,30 +4193,24 @@ function DialogFX(settings_mask, argv, func) constructor
   /**
    * @desc Executes the multi-option jump effect.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
-   * @param {Struct.DialogLinkable} parent The FX container object.
+   * @param {Struct.DialogCycleContext} ctx The context for the effect execution.
    * @returns {Struct.Dialog}
    */
 
-  static __fx_choice = function(argv, parent)
+  static __fx_choice = function(argv, ctx)
   {
-    var manager = parent.__get_manager()
-      , choice_index = argv[DIALOG_FX.ARG_CHOICE_INDEX]
-      , position = manager.position
+    var fx_indexer_index = argv[DIALOG_FX.FX_ARG_FLOWRES_INDEXER_INDEX]
+      , fx_indexer_argv = argv[DIALOG_FX.FX_ARG_FLOWRES_INDEXER_ARGV]
+      , idx = ctx.indexer(fx_indexer_index, fx_indexer_argv)
     ;
 
-    if (choice_index != DIALOG_FX.CHOICE_INDEX_UNSELECTED)
-    {
-      var choice = argv[DIALOG_FX.ARG_JUMP_DATA][choice_index]
-        , jump_position_array = choice[DIALOG_FX.ARG_JUMP_DATA]
-        , jump_position = jump_position_array[DIALOG_FX.ARG_JUMP_DATA_POSITION]
-        , jump_options = array_length(jump_position_array) < DIALOG_FX.ARG_JUMP_DATA_COUNT ? 0 : jump_position_array[DIALOG_FX.ARG_JUMP_DATA_OPTIONS]
-      ;
+    if (idx <= DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED)
+      return ctx.fail();
 
-      position = manager.__resolve_position(jump_position, jump_options, parent.position());
-      manager.status |= DIALOG_MANAGER.FLAG_STATUS_EXECUTED_CHOICE;
-    }
-
-    return manager.__get_dialog_from_position(position);
+    return ctx.success(
+      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx],
+      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_CHOICE
+    );
   }
 
 
@@ -3054,7 +4224,7 @@ function DialogFX(settings_mask, argv, func) constructor
   {
     return [
       int64(self.settings_mask),
-      __resolve_recursive(self.argv)
+      __resolve_recursive(self.argv),
     ];
   }
 
@@ -3069,7 +4239,7 @@ function DialogFX(settings_mask, argv, func) constructor
   {
     return {
       settings_mask: int64(self.settings_mask),
-      argv: __resolve_recursive(self.argv)
+      argv: __resolve_recursive(self.argv),
     };
   }
 
@@ -3083,7 +4253,7 @@ function DialogFX(settings_mask, argv, func) constructor
 
   static __from_array = function(data)
   {
-    return new DialogFX(data[0], data[1], undefined);
+    return new DialogFX(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV]);
   }
 
 
@@ -3096,7 +4266,7 @@ function DialogFX(settings_mask, argv, func) constructor
 
   static __from_struct = function(data)
   {
-    return new DialogFX(data.settings_mask, data.argv, undefined);
+    return new DialogFX(data.settings_mask, data.argv);
   }
 
 
@@ -3109,7 +4279,7 @@ function DialogFX(settings_mask, argv, func) constructor
 
   static __serialize = function(prettify = false)
   {
-    return json_stringify(__DIALOG_MANAGER_SERIALIZING_METHOD__(), prettify);
+    return json_stringify(DialogFX.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
   }
 
 
@@ -3122,27 +4292,22 @@ function DialogFX(settings_mask, argv, func) constructor
 
   static __deserialize = function(data_string)
   {
-    var data = json_parse(data_string);
-    return __DIALOG_MANAGER_DESERIALIZING_METHOD__(data);
+    return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
   }
 
 
-
-  var fx_type = self.type();
-
-  func ??= fx_type == DIALOG_FX.TYPE_FALLBACK && is_callable(self.argv[DIALOG_FX.ARG_FALLBACK_CONDITION])
-    ? self.argv[DIALOG_FX.ARG_FALLBACK_CONDITION]
-    : undefined
-  ;
-
-  if (func)
-    DialogFX.register(func, fx_type);
 
   // Recursive argument serializer function
   function __resolve_recursive(arg) {
     return is_array(arg)
       ? array_map(arg, __resolve_recursive)
-      : (is_instanceof(arg, DialogLinkable) ? arg.position() : arg)
+      : (is_instanceof(arg, DialogLinkable)
+        ? arg.position()
+        : (is_numeric(arg) && frac(arg) == 0
+          ? int64(arg)
+          : arg
+        )
+      )
     ;
   }
 }
