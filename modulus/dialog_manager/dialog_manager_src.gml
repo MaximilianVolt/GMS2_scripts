@@ -1839,8 +1839,9 @@ function DialogManager(data_string, is_file) constructor
 
   static parse = function(data)
   {
-    try {
-      self.scene_count = data.scene_count;
+    try
+    {
+      __reset_parser_state().scene_count = data.scene_count;
 
       for (var i = 0; i < self.scene_count; ++i) {
         var scene = DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(data.scenes[i]);
