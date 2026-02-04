@@ -535,13 +535,16 @@ gml_pragma(
 
 /**
  * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
- * @desc `FLAG_STATUS_*` flags refer to possible positioning/execution states of the dialog runner.
- * @desc `JUMP_SETTING_*` options refer to jump effect settings. Not to use with bitmasks.
- * @desc `MASK_JUMP_SETTING_*`/`FLAG_JUMP_SETTING_*` settings refer to jump settings masks and can be used to encode settings.
+ * @desc `STATUS_*` flags refer to possible positioning/execution states of the dialog runner.
+ * @desc `JUMP_SETTING_*` options refer to jump effect settings.
  */
 
 enum DIALOG_RUNNER // Should not edit
 {
+  // Argument positions
+  ARG_DIALOG_MANAGER = 0,
+  ARG_COUNT,
+
   // Status info indices
   __BITMASK_FLAG_INDEX_STATUS_UNINITIALIZED = 0,
   __BITMASK_FLAG_INDEX_STATUS_FIRST_DIALOG,
@@ -574,33 +577,33 @@ enum DIALOG_RUNNER // Should not edit
   FLAG_STATUS_COUNT,
 
   // Status info values
-  FLAG_STATUS_UNINITIALIZED       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_UNINITIALIZED,
-  FLAG_STATUS_FIRST_DIALOG        = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_DIALOG,
-  FLAG_STATUS_FIRST_SEQUENCE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_SEQUENCE,
-  FLAG_STATUS_FIRST_SCENE         = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_SCENE,
-  FLAG_STATUS_FIRST_OF_SEQUENCE   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SEQUENCE,
-  FLAG_STATUS_FIRST_OF_SCENE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SCENE,
-  FLAG_STATUS_MIDDLE_OF_SEQUENCE  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SEQUENCE,
-  FLAG_STATUS_MIDDLE_OF_SCENE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SCENE,
-  FLAG_STATUS_MIDDLE_SCENE        = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_SCENE,
-  FLAG_STATUS_LAST_DIALOG         = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_DIALOG,
-  FLAG_STATUS_LAST_SEQUENCE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_SEQUENCE,
-  FLAG_STATUS_LAST_SCENE          = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_SCENE,
-  FLAG_STATUS_LAST_OF_SEQUENCE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_OF_SEQUENCE,
-  FLAG_STATUS_LAST_OF_SCENE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_OF_SCENE,
-  FLAG_STATUS_ADVANCED_DIALOG     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_DIALOG,
-  FLAG_STATUS_ADVANCED_SEQUENCE   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_SEQUENCE,
-  FLAG_STATUS_ADVANCED_SCENE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_SCENE,
-  FLAG_STATUS_RECEDED_DIALOG      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_DIALOG,
-  FLAG_STATUS_RECEDED_SEQUENCE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_SEQUENCE,
-  FLAG_STATUS_RECEDED_SCENE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_SCENE,
-  FLAG_STATUS_MAINTAINED_DIALOG   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_DIALOG,
-  FLAG_STATUS_MAINTAINED_SEQUENCE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SEQUENCE,
-  FLAG_STATUS_MAINTAINED_SCENE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SCENE,
-  FLAG_STATUS_EXECUTED_JUMP       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_JUMP,
-  FLAG_STATUS_EXECUTED_DISPATCH   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_DISPATCH,
-  FLAG_STATUS_EXECUTED_FALLBACK   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_FALLBACK,
-  FLAG_STATUS_EXECUTED_CHOICE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_CHOICE,
+  STATUS_UNINITIALIZED       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_UNINITIALIZED,
+  STATUS_FIRST_DIALOG        = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_DIALOG,
+  STATUS_FIRST_SEQUENCE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_SEQUENCE,
+  STATUS_FIRST_SCENE         = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_SCENE,
+  STATUS_FIRST_OF_SEQUENCE   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SEQUENCE,
+  STATUS_FIRST_OF_SCENE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_FIRST_OF_SCENE,
+  STATUS_MIDDLE_OF_SEQUENCE  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SEQUENCE,
+  STATUS_MIDDLE_OF_SCENE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_OF_SCENE,
+  STATUS_MIDDLE_SCENE        = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MIDDLE_SCENE,
+  STATUS_LAST_DIALOG         = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_DIALOG,
+  STATUS_LAST_SEQUENCE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_SEQUENCE,
+  STATUS_LAST_SCENE          = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_SCENE,
+  STATUS_LAST_OF_SEQUENCE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_OF_SEQUENCE,
+  STATUS_LAST_OF_SCENE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_LAST_OF_SCENE,
+  STATUS_ADVANCED_DIALOG     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_DIALOG,
+  STATUS_ADVANCED_SEQUENCE   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_SEQUENCE,
+  STATUS_ADVANCED_SCENE      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_ADVANCED_SCENE,
+  STATUS_RECEDED_DIALOG      = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_DIALOG,
+  STATUS_RECEDED_SEQUENCE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_SEQUENCE,
+  STATUS_RECEDED_SCENE       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_RECEDED_SCENE,
+  STATUS_MAINTAINED_DIALOG   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_DIALOG,
+  STATUS_MAINTAINED_SEQUENCE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SEQUENCE,
+  STATUS_MAINTAINED_SCENE    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_MAINTAINED_SCENE,
+  STATUS_EXECUTED_JUMP       = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_JUMP,
+  STATUS_EXECUTED_DISPATCH   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_DISPATCH,
+  STATUS_EXECUTED_FALLBACK   = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_FALLBACK,
+  STATUS_EXECUTED_CHOICE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_STATUS_EXECUTED_CHOICE,
 
   // Status masks
   __BITMASK_STATUS_AUTORESET_COUNT = DIALOG_RUNNER.FLAG_STATUS_COUNT - DIALOG_RUNNER.__BITMASK_STATUS_NO_AUTORESET_COUNT,
@@ -609,45 +612,45 @@ enum DIALOG_RUNNER // Should not edit
   __BITMASK_STATUS_MASK = (1 << DIALOG_RUNNER.FLAG_STATUS_COUNT) - 1,
 
   // Jump settings
-  JUMP_SETTING_TYPE_ABSOLUTE = 0,
-  JUMP_SETTING_TYPE_RELATIVE,
+  JUMP_TYPE_ABSOLUTE = 0,
+  JUMP_TYPE_RELATIVE,
   __BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT = 0,
   __BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT,
   __BITMASK_MASK_JUMP_SETTING_TYPE_BITS = 1,
   __BITMASK_MASK_JUMP_SETTING_TYPE_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
-  MASK_JUMP_SETTING_TYPE_ABSOLUTE = DIALOG_RUNNER.JUMP_SETTING_TYPE_ABSOLUTE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
-  MASK_JUMP_SETTING_TYPE_RELATIVE = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
-  JUMP_SETTING_UNIT_DIALOG = 0,
-  JUMP_SETTING_UNIT_SEQUENCE,
-  JUMP_SETTING_UNIT_SCENE,
+  JUMP_SETTING_TYPE_ABSOLUTE = DIALOG_RUNNER.JUMP_TYPE_ABSOLUTE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
+  JUMP_SETTING_TYPE_RELATIVE = DIALOG_RUNNER.JUMP_TYPE_RELATIVE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT,
+  JUMP_UNIT_DIALOG = 0,
+  JUMP_UNIT_SEQUENCE,
+  JUMP_UNIT_SCENE,
   __BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_SHIFT + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS,
   __BITMASK_MASK_JUMP_SETTING_UNIT_BITS = 2,
   __BITMASK_MASK_JUMP_SETTING_UNIT_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT,
-  MASK_JUMP_SETTING_UNIT_DIALOG = DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE,
-  MASK_JUMP_SETTING_UNIT_SEQUENCE = DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE,
-  MASK_JUMP_SETTING_UNIT_SCENE = DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.MASK_JUMP_SETTING_TYPE_RELATIVE,
+  JUMP_SETTING_UNIT_DIALOG = DIALOG_RUNNER.JUMP_UNIT_DIALOG << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE,
+  JUMP_SETTING_UNIT_SEQUENCE = DIALOG_RUNNER.JUMP_UNIT_SEQUENCE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE,
+  JUMP_SETTING_UNIT_SCENE = DIALOG_RUNNER.JUMP_UNIT_SCENE << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE,
   __BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_BITS,
   __BITMASK_MASK_JUMP_SETTING_RESOLUTION_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT,
   __BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE = DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT,
-  __BITMASK_FLAG_INDEX_JUMP_SETTING_EXEC_FX_ON_ENTER,
-  __BITMASK_FLAG_INDEX_JUMP_SETTING_EXEC_FX_ON_LEAVE,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
+  __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_STAY,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SEQUENCE,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SCENE,
   __BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT,
+  __BITMASK_JUMP_SETTINGS_BEHAVIOUR_MASK = ((1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT) - 1) << DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT,
   __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
   __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_BITS = DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT - DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT,
   __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT,
-  __BITMASK_JUMP_SETTINGS_BEHAVIOUR_MASK = ((1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT) - 1) << DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT,
-  FLAG_JUMP_SETTING_CHOICE             = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE,
-  FLAG_JUMP_SETTING_BYPASS_FX_ON_ENTER = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
-  FLAG_JUMP_SETTING_BYPASS_FX_ON_LEAVE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
-  FLAG_JUMP_SETTING_MAINTAIN_DIALOG    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
-  FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SEQUENCE,
-  FLAG_JUMP_SETTING_MAINTAIN_SCENE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SCENE,
+  JUMP_SETTING_CHOICE             = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE,
+  JUMP_SETTING_BYPASS_FX_ON_ENTER = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
+  JUMP_SETTING_BYPASS_FX_ON_STAY  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_STAY,
+  JUMP_SETTING_BYPASS_FX_ON_LEAVE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
+  JUMP_SETTING_MAINTAIN_DIALOG    = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
+  JUMP_SETTING_MAINTAIN_SEQUENCE  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SEQUENCE,
+  JUMP_SETTING_MAINTAIN_SCENE     = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_SCENE,
 }
 
 
@@ -660,6 +663,11 @@ enum DIALOG_RUNNER // Should not edit
 
 enum DIALOG_MANAGER // Should not edit
 {
+  // Argument positions
+  ARG_DATA_STRING = 0,
+  ARG_IS_FILE,
+  ARG_COUNT,
+
   // Positioning codes
   POSITION_CODE_SCENE_LAST = -14,
   POSITION_CODE_SCENE_NEXT,
@@ -677,11 +685,6 @@ enum DIALOG_MANAGER // Should not edit
   POSITION_CODE_SEQUENCE_FIRST,
   POSITION_CODE_NONE,
   POSITION_CODE_COUNT = -DIALOG_MANAGER.POSITION_CODE_SCENE_LAST + 1,
-
-  // Argument positions
-  ARG_DATA_STRING = 0,
-  ARG_IS_FILE,
-  ARG_COUNT,
 
   // Positioning masks
   __BITMASK_POSITION_DIALOG_SHIFT = 0,
@@ -705,10 +708,11 @@ enum DIALOG_MANAGER // Should not edit
   ERR_INVALID_POSITION,
   ERR_INFINITE_LOOP_DETECTED,
   ERR_TEXT_OVERFLOW,
+  ERR_MAX_FX_CAPACITY_REACHED,
   ERR_COUNT,
 
   // Error checks
-  ERR_CHECK_INFINITE_LOOP_TRESHOLD = 32,
+  ERRCHECK_INFINITE_LOOP_TRESHOLD = 32,
 }
 
 
@@ -724,6 +728,13 @@ enum DIALOG_MANAGER // Should not edit
 
 enum DIALOG_SCENE // Edit as needed
 {
+  // Argument positions
+  ARG_SEQUENCES = 0,
+  ARG_SETTINGS_MASK,
+  ARG_COUNT,
+  ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARG_COUNT,
+  ARG_COUNT_DESERIALIZATION,
+
   // Scene bg
   BG_NONE = 0,
     // ...
@@ -747,13 +758,6 @@ enum DIALOG_SCENE // Edit as needed
     // ...
   TAG_COUNT,
   TAG_DEFAULT = DIALOG_SCENE.TAG_NONE,
-
-  // Argument positions
-  ARG_SEQUENCES = 0,
-  ARG_SETTINGS_MASK,
-  ARG_COUNT,
-  ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARG_COUNT,
-  ARG_COUNT_DESERIALIZATION,
 
   // Settings masks
   __BITMASK_BG_SHIFT = 0,
@@ -780,12 +784,6 @@ enum DIALOG_SCENE // Edit as needed
 
 enum DIALOG_SEQUENCE // Edit as needed
 {
-  // Sequence tags
-  TAG_NONE = 0,
-    // ...
-  TAG_COUNT,
-  TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
-
   // Argument positions
   ARG_DIALOGS = 0,
   ARG_SETTINGS_MASK,
@@ -793,6 +791,12 @@ enum DIALOG_SEQUENCE // Edit as needed
   ARG_COUNT,
   ARG_DIALOG_COUNT = DIALOG_SEQUENCE.ARG_COUNT,
   ARG_COUNT_DESERIALIZATION,
+
+  // Sequence tags
+  TAG_NONE = 0,
+    // ...
+  TAG_COUNT,
+  TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
 
   // Settings masks
   __BITMASK_TAG_SHIFT = 0,
@@ -814,6 +818,14 @@ enum DIALOG_SEQUENCE // Edit as needed
 
 enum DIALOG // Edit as needed
 {
+  // Argument positions
+  ARG_TEXT = 0,
+  ARG_SETTINGS_MASK,
+  ARG_FX_MAP,
+  ARG_COUNT,
+  ARG_FX_COUNT = DIALOG.ARG_COUNT,
+  ARG_COUNT_DESERIALIZATION,
+
   // Speakers
   SPEAKER_NONE = 0,
   SPEAKER_SYSTEM,
@@ -848,14 +860,6 @@ enum DIALOG // Edit as needed
   TAG_COUNT,
   TAG_DEFAULT = DIALOG.TAG_NONE,
 
-  // Argument positions
-  ARG_TEXT = 0,
-  ARG_SETTINGS_MASK,
-  ARG_FX_MAP,
-  ARG_COUNT,
-  ARG_FX_COUNT = DIALOG.ARG_COUNT,
-  ARG_COUNT_DESERIALIZATION,
-
   // Settings masks
   __BITMASK_SPEAKER_SHIFT = 0,
   __BITMASK_SPEAKER_BITS = 8,
@@ -887,12 +891,36 @@ enum DIALOG // Edit as needed
  * @desc `[FX_TYPE_NAME]_*` options refer to particular values for that type of fx.
  * @desc `ARG_*` options refer to the positions of the arguments passed to the fx.
  * @desc `FX_ARG_FLOWRES_*` options refer to the positions of the arguments passed to the flow resolver fx.
- * @desc `FLAG_REGISTER_*` options refer to where a function should be registered.
+ * @desc `REGISTER_SETTING_*` options refer to where a function should be registered.
  * @desc `__BITMASK_*` settings are used to manage bitmasks and should not be referenced directly.
  */
 
 enum DIALOG_FX // Edit as needed
 {
+  // Argument positions
+  ARG_SETTINGS_MASK = 0,
+  ARG_ARGV,
+  ARG_FUNC,
+  ARG_COUNT,
+
+  // FX flowres argument positions
+  FX_ARG_FLOWRES_DATA = 0,
+  FX_ARG_FLOWRES_INDEXER_INDEX,
+  FX_ARG_FLOWRES_CONDITION_INDEX,
+  FX_ARG_FLOWRES_INDEXER_ARGV,
+  FX_ARG_FLOWRES_CONDITION_ARGV,
+  FX_ARG_FLOWRES_SETTINGS,
+  FX_ARG_FLOWRES_INDEX_UNSELECTED = -1,
+
+  // FX flowres subargument positions
+  FX_ARG_FLOWRES_DATA_POSITION = 0,
+  FX_ARG_FLOWRES_DATA_PROMPT,
+  FX_ARG_FLOWRES_DATA_METADATA,
+  FX_ARG_FLOWRES_DATA_COUNT,
+  FX_ARG_FLOWRES_DATA_POSITION_DESTINATION = 0,
+  FX_ARG_FLOWRES_DATA_POSITION_SETTINGS,
+  FX_ARG_FLOWRES_DATA_POSITION_COUNT,
+
   // FX types
   TYPE_ANY = 0,
   TYPE_FLOWRES_JUMP,
@@ -937,45 +965,22 @@ enum DIALOG_FX // Edit as needed
   TAG_COUNT,
   TAG_DEFAULT = DIALOG_FX.TAG_NONE,
 
-  // FX conditions
+  // FX condition indices
   FUNC_CONDITION_FALSE = 0,
   FUNC_CONDITION_TRUE,
     // ...
   FUNC_CONDITION_COUNT,
 
-  // FX indexers
+  // FX indexers indices
   FUNC_INDEXER_RUNNER_CHOICE_INDEX = 0,
     // ...
   FUNC_INDEXER_COUNT,
 
-  // Argument positions
-  ARG_SETTINGS_MASK = 0,
-  ARG_ARGV,
-  ARG_FUNC,
-  ARG_COUNT,
-
-  // FX flowres arguments positions
-  FX_ARG_FLOWRES_DATA = 0,
-  FX_ARG_FLOWRES_INDEXER_INDEX,
-  FX_ARG_FLOWRES_CONDITION_INDEX,
-  FX_ARG_FLOWRES_INDEXER_ARGV,
-  FX_ARG_FLOWRES_CONDITION_ARGV,
-  FX_ARG_FLOWRES_SETTINGS,
-  FX_ARG_FLOWRES_INDEX_UNSELECTED = -1,
-
-  // FX flowres subarguments positions
-  FX_ARG_FLOWRES_DATA_POSITION = 0,
-  FX_ARG_FLOWRES_DATA_PROMPT,
-  FX_ARG_FLOWRES_DATA_METADATA,
-  FX_ARG_FLOWRES_DATA_COUNT,
-  FX_ARG_FLOWRES_DATA_POSITION_DESTINATION = 0,
-  FX_ARG_FLOWRES_DATA_POSITION_SETTINGS,
-  FX_ARG_FLOWRES_DATA_POSITION_COUNT,
-
   // Settings masks
   __BITMASK_TYPE_SHIFT = 0,
-  __BITMASK_TYPE_BITS = 6,
-  __BITMASK_TYPE_MASK = ((1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1) << DIALOG_FX.__BITMASK_TYPE_SHIFT,
+  __BITMASK_TYPE_BITS = 10,
+  __BITMASK_TYPE_MAX_COUNT = (1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1,
+  __BITMASK_TYPE_MASK = DIALOG_FX.__BITMASK_TYPE_MAX_COUNT << DIALOG_FX.__BITMASK_TYPE_SHIFT,
   __BITMASK_TRIGGER_SHIFT = DIALOG_FX.__BITMASK_TYPE_SHIFT + DIALOG_FX.__BITMASK_TYPE_BITS,
   __BITMASK_TRIGGER_BITS = 3,
   __BITMASK_TRIGGER_MASK = ((1 << DIALOG_FX.__BITMASK_TRIGGER_BITS) - 1) << DIALOG_FX.__BITMASK_TRIGGER_SHIFT,
@@ -987,16 +992,16 @@ enum DIALOG_FX // Edit as needed
   __BITMASK_TAG_MASK = ((1 << DIALOG_FX.__BITMASK_TAG_BITS) - 1) << DIALOG_FX.__BITMASK_TAG_SHIFT,
 
   // Registering settings
-  REGISTER_FX_FUNC = 0,
-  REGISTER_FX_FUNC_INDEXER,
-  REGISTER_FX_FUNC_CONDITION,
-  __REGISTER_FX_FUNC_COUNT,
+  __REGISTER_SETTING_FX_FUNC = 0,
+  __REGISTER_SETTING_FX_FUNC_INDEXER,
+  __REGISTER_SETTING_FX_FUNC_CONDITION,
+  __REGISTER_SETTING_FX_FUNC_TYPE_COUNT,
   __BITMASK_REGISTER_SHIFT = 0,
   __BITMASK_REGISTER_BITS = 2,
   __BITMASK_REGISTER_MASK = ((1 << DIALOG_FX.__BITMASK_REGISTER_BITS) - 1) << DIALOG_FX.__BITMASK_REGISTER_SHIFT,
-  MASK_REGISTER_FX_FUNC = DIALOG_FX.REGISTER_FX_FUNC << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
-  MASK_REGISTER_FX_FUNC_INDEXER = DIALOG_FX.REGISTER_FX_FUNC_INDEXER << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
-  MASK_REGISTER_FX_FUNC_CONDITION = DIALOG_FX.REGISTER_FX_FUNC_CONDITION << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
+  REGISTER_SETTING_FX_FUNC = DIALOG_FX.__REGISTER_SETTING_FX_FUNC << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
+  REGISTER_SETTING_FX_FUNC_INDEXER = DIALOG_FX.__REGISTER_SETTING_FX_FUNC_INDEXER << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
+  REGISTER_SETTING_FX_FUNC_CONDITION = DIALOG_FX.__REGISTER_SETTING_FX_FUNC_CONDITION << DIALOG_FX.__BITMASK_REGISTER_SHIFT & DIALOG_FX.__BITMASK_REGISTER_MASK,
 }
 
 
@@ -1031,12 +1036,12 @@ enum DIALOG_FX // Edit as needed
 
 function DialogRunner(manager) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
+  static __CONSTRUCTOR_ARGC = argument_count;
 
   self.manager = manager;
 
   self.choice_index = DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED;
-  self.status = DIALOG_RUNNER.FLAG_STATUS_UNINITIALIZED;
+  self.status = DIALOG_RUNNER.STATUS_UNINITIALIZED;
   self.position = DIALOG_MANAGER.POSITION_CODE_NONE;
 
   self.seed = irandom(0x7FFFFFFF);
@@ -1053,12 +1058,12 @@ function DialogRunner(manager) constructor
    * @returns {Struct.DialogRunner}
    */
 
-  static load = function(position = self.position, busy = false, argv = [])
+  static load = function(position = self.position, busy = false, argv = undefined)
   {
     self.status = 0;
 
     self.position = busy
-      ? self.resolve(position, self.position, 0, argv)
+      ? __resolve(position, self.position, 0, argv)
       : manager.__resolve_position_absolute(position, 0)
     ;
 
@@ -1204,14 +1209,14 @@ function DialogRunner(manager) constructor
    * @desc Simulates advancing the dialog runner without state modifications.
    * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
    * @param {Constant.DIALOG_RUNNER|Real} [jump_settings] The settings mask for the jump.
-   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
    * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [start_position] The starting position of the forecast. Defaults to the current one.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
    * @returns {Struct.DialogRunner}
    */
 
-  static forecast = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, argv = undefined, start_position = self.position)
+  static predict = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, start_position = self.position, argv = undefined)
   {
-    return variable_clone(self).advance(shift, jump_settings, argv, start_position);
+    return variable_clone(self).advance(shift, jump_settings, start_position, argv);
   }
 
 
@@ -1220,12 +1225,12 @@ function DialogRunner(manager) constructor
    * @desc Makes the dialog runner advance of a specified shift. Produces side effects on dialog manager position and/or status. [CHAINABLE]
    * @param {Real} [shift] The number of units to advance of. Defaults to `1`.
    * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings mask for the jump.
-   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
    * @param {Constant.DIALOG_MANAGER|Real|Struct.DialogLinkable} [prev_position] The starting position of the advancement. Defaults to the current one.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to eventual dialog effects.
    * @returns {Struct.DialogRunner}
    */
 
-  static advance = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, argv = undefined, prev_position = self.position)
+  static advance = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, prev_position = self.position, argv = undefined)
   {
     var manager = self.manager;
     prev_position = manager.__to_position(prev_position);
@@ -1238,21 +1243,23 @@ function DialogRunner(manager) constructor
 
     if (shift == 0 || !manager.scene_count)
     {
-      manager.__to_dialog(prev_position).__fx_execute_all_of(function(fx) {
-        return fx.trigger() == DIALOG_FX.TRIGGER_ON_STAY;
-      });
+      if (!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_STAY)) {
+        manager.__to_dialog(prev_position).__fx_execute_all_of(function(fx) {
+          return fx.trigger() == DIALOG_FX.TRIGGER_ON_STAY;
+        });
+      }
 
       return self;
     }
 
-    shift *= !(jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_CHOICE);
+    shift *= !(jump_settings & DIALOG_RUNNER.JUMP_SETTING_CHOICE);
 
     var shift_sign = sign(shift)
       , current_scene_idx = manager.__decode_scene_idx(prev_position)
       , current_sequence_idx = manager.__decode_sequence_idx(prev_position)
       , current_dialog_idx = manager.__decode_dialog_idx(prev_position)
       , resolved = manager.__resolve_position_relative(shift, prev_position, jump_settings)
-      , target_position = self.resolve(
+      , target_position = __resolve(
           resolved.position,
           prev_position,
           jump_settings & DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_MASK,
@@ -1282,7 +1289,7 @@ function DialogRunner(manager) constructor
    * @param {Array} [argv] The arguments to pass to eventual DialogFX's.
    */
 
-  static resolve = function(target_position = self.position, position = self.position, jump_settings = 0, argv = undefined)
+  static __resolve = function(target_position = self.position, position = self.position, jump_settings = 0, argv = undefined)
   {
     var manager = self.manager
       , ctx = new DialogCycleContext(self, position)
@@ -1299,11 +1306,11 @@ function DialogRunner(manager) constructor
 
     for (var jumps = 0; flow || !jumps; ++jumps)
     {
-      if (jumps > DIALOG_MANAGER.ERR_CHECK_INFINITE_LOOP_TRESHOLD) {
+      if (jumps > DIALOG_MANAGER.ERRCHECK_INFINITE_LOOP_TRESHOLD) {
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
       }
 
-      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_BYPASS_FX_ON_LEAVE), current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE);
+      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE), current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE);
 
       if (flow) {
         target_dialog = flow.target;
@@ -1311,7 +1318,7 @@ function DialogRunner(manager) constructor
 
       current_dialog = target_dialog;
 
-      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_BYPASS_FX_ON_ENTER), target_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER);
+      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER), target_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER);
 
       if (flow) {
         target_dialog = flow.target;
@@ -1345,9 +1352,9 @@ function DialogRunner(manager) constructor
       , is_last_of_scene = target_sequence_idx == target_sequence_count - 1
       , is_last_of_sequence = target_dialog_idx == target_dialog_count - 1
       , is_last_sequence = is_last_scene && is_last_of_scene
-      , maintained_dialog = maintained_status & DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
-      , maintained_sequence = maintained_status & DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE
-      , maintained_scene = maintained_status & DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE
+      , maintained_dialog = maintained_status & DIALOG_RUNNER.STATUS_MAINTAINED_DIALOG
+      , maintained_sequence = maintained_status & DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE
+      , maintained_scene = maintained_status & DIALOG_RUNNER.STATUS_MAINTAINED_SCENE
     ;
 
     scene_diff *= !(maintained_scene || maintained_sequence || maintained_dialog);
@@ -1355,25 +1362,25 @@ function DialogRunner(manager) constructor
     dialog_diff *= !maintained_dialog;
 
     return maintained_status
-      | DIALOG_RUNNER.FLAG_STATUS_FIRST_DIALOG       * (target_position == 0                                                )
-      | DIALOG_RUNNER.FLAG_STATUS_FIRST_SEQUENCE     * (target_position < 1 << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS)
-      | DIALOG_RUNNER.FLAG_STATUS_FIRST_SCENE        * (target_scene_idx == 0                                               )
-      | DIALOG_RUNNER.FLAG_STATUS_FIRST_OF_SEQUENCE  * (target_dialog_idx == 0                                              )
-      | DIALOG_RUNNER.FLAG_STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                            )
-      | DIALOG_RUNNER.FLAG_STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1                       )
-      | DIALOG_RUNNER.FLAG_STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1                   )
-      | DIALOG_RUNNER.FLAG_STATUS_MIDDLE_SCENE       * (target_scene_idx == manager.scene_count >> 1                        )
-      | DIALOG_RUNNER.FLAG_STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                             )
-      | DIALOG_RUNNER.FLAG_STATUS_LAST_SEQUENCE      * (is_last_sequence                                                    )
-      | DIALOG_RUNNER.FLAG_STATUS_LAST_SCENE         * (is_last_scene                                                       )
-      | DIALOG_RUNNER.FLAG_STATUS_LAST_OF_SEQUENCE   * (is_last_of_sequence                                                 )
-      | DIALOG_RUNNER.FLAG_STATUS_LAST_OF_SCENE      * (is_last_of_scene                                                    )
-      | DIALOG_RUNNER.FLAG_STATUS_ADVANCED_DIALOG    * (dialog_diff > 0                                                     )
-      | DIALOG_RUNNER.FLAG_STATUS_ADVANCED_SEQUENCE  * (sequence_diff > 0                                                   )
-      | DIALOG_RUNNER.FLAG_STATUS_ADVANCED_SCENE     * (scene_diff > 0                                                      )
-      | DIALOG_RUNNER.FLAG_STATUS_RECEDED_DIALOG     * (dialog_diff < 0                                                     )
-      | DIALOG_RUNNER.FLAG_STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                                   )
-      | DIALOG_RUNNER.FLAG_STATUS_RECEDED_SCENE      * (scene_diff < 0                                                      )
+      | DIALOG_RUNNER.STATUS_FIRST_DIALOG       * (target_position == 0                                                )
+      | DIALOG_RUNNER.STATUS_FIRST_SEQUENCE     * (target_position < 1 << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS)
+      | DIALOG_RUNNER.STATUS_FIRST_SCENE        * (target_scene_idx == 0                                               )
+      | DIALOG_RUNNER.STATUS_FIRST_OF_SEQUENCE  * (target_dialog_idx == 0                                              )
+      | DIALOG_RUNNER.STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                            )
+      | DIALOG_RUNNER.STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1                       )
+      | DIALOG_RUNNER.STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1                   )
+      | DIALOG_RUNNER.STATUS_MIDDLE_SCENE       * (target_scene_idx == manager.scene_count >> 1                        )
+      | DIALOG_RUNNER.STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                             )
+      | DIALOG_RUNNER.STATUS_LAST_SEQUENCE      * (is_last_sequence                                                    )
+      | DIALOG_RUNNER.STATUS_LAST_SCENE         * (is_last_scene                                                       )
+      | DIALOG_RUNNER.STATUS_LAST_OF_SEQUENCE   * (is_last_of_sequence                                                 )
+      | DIALOG_RUNNER.STATUS_LAST_OF_SCENE      * (is_last_of_scene                                                    )
+      | DIALOG_RUNNER.STATUS_ADVANCED_DIALOG    * (dialog_diff > 0                                                     )
+      | DIALOG_RUNNER.STATUS_ADVANCED_SEQUENCE  * (sequence_diff > 0                                                   )
+      | DIALOG_RUNNER.STATUS_ADVANCED_SCENE     * (scene_diff > 0                                                      )
+      | DIALOG_RUNNER.STATUS_RECEDED_DIALOG     * (dialog_diff < 0                                                     )
+      | DIALOG_RUNNER.STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                                   )
+      | DIALOG_RUNNER.STATUS_RECEDED_SCENE      * (scene_diff < 0                                                      )
     ;
   }
 }
@@ -1411,6 +1418,8 @@ function DialogRunner(manager) constructor
 
 function DialogCycleContext(runner, position) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
+
   self.runner = runner;
   self.dialog = runner.manager.__to_dialog(position);
 
@@ -1566,7 +1575,7 @@ function DialogCycleContext(runner, position) constructor
 
 function DialogManager(data_string, is_file) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
+  static __CONSTRUCTOR_ARGC = argument_count;
 
   self.scene_count = 0;
   self.scenes = [];
@@ -1602,6 +1611,7 @@ function DialogManager(data_string, is_file) constructor
         "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
         "INFINITE LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
         "POTENTIAL TEXT OVERFLOW DETECTED (W: {0}/{1}): SPLIT INTO MULTIPLE DIALOG OBJECTS\n\nVIOLATOR DATA: {2}",
+        "FX LIMIT EXCEEDED - MAX FX MAP CAPACITY REACHED WHILE REGISTERING FX {0}\n(TOTAL CAPACITY: {1})",
       ][type],
       argv
     );
@@ -2091,9 +2101,9 @@ function DialogManager(data_string, is_file) constructor
   static __get_scene_relative = function(scene_shift, start_position, jump_settings)
   {
     var shift_cancelled = (jump_settings & DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_MASK) != 0
-      , status = (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SCENE) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE
-        | (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE
-        | (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
+      , status = (shift_cancelled && jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE) * DIALOG_RUNNER.STATUS_MAINTAINED_SCENE
+        | (shift_cancelled && jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE) * DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE
+        | (shift_cancelled && jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG) * DIALOG_RUNNER.STATUS_MAINTAINED_DIALOG
     ;
 
     return {
@@ -2114,9 +2124,9 @@ function DialogManager(data_string, is_file) constructor
 
   static __get_sequence_relative = function(sequence_shift, start_position, jump_settings)
   {
-    var shift_cancelled = (jump_settings & (DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE | DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG)) != 0
-      , status = (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE
-        | (shift_cancelled && jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG) * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
+    var shift_cancelled = (jump_settings & (DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE | DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG)) != 0
+      , status = (shift_cancelled && jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE) * DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE
+        | (shift_cancelled && jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG) * DIALOG_RUNNER.STATUS_MAINTAINED_DIALOG
     ;
 
     sequence_shift *= !shift_cancelled;
@@ -2130,10 +2140,10 @@ function DialogManager(data_string, is_file) constructor
       }
     ;
 
-    if (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SCENE) {
+    if (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE) {
       var target_sequence_idx = next_sequence_idx + sequence_shift;
       next_sequence_idx = clamp(target_sequence_idx, 0, next_scene.sequence_count - 1);
-      status |= DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE * !_in_range(target_sequence_idx, 0, next_scene.sequence_count);
+      status |= DIALOG_RUNNER.STATUS_MAINTAINED_SCENE * !_in_range(target_sequence_idx, 0, next_scene.sequence_count);
       sequence_shift = 0;
     }
     else if (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
@@ -2169,8 +2179,8 @@ function DialogManager(data_string, is_file) constructor
 
   static __get_dialog_relative = function(dialog_shift, start_position, jump_settings)
   {
-    var shift_cancelled = (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_DIALOG) != 0
-      , status = shift_cancelled * DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_DIALOG
+    var shift_cancelled = (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG) != 0
+      , status = shift_cancelled * DIALOG_RUNNER.STATUS_MAINTAINED_DIALOG
     ;
 
     dialog_shift *= !shift_cancelled;
@@ -2186,10 +2196,10 @@ function DialogManager(data_string, is_file) constructor
       }
     ;
 
-    if (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SEQUENCE) {
+    if (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE) {
       var target_dialog_idx = next_dialog_idx + dialog_shift;
       next_dialog_idx = clamp(target_dialog_idx, 0, next_sequence.dialog_count - 1);
-      status |= DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SEQUENCE * !_in_range(target_dialog_idx, 0, next_sequence.dialog_count);
+      status |= DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE * !_in_range(target_dialog_idx, 0, next_sequence.dialog_count);
       dialog_shift = 0;
     }
     else if (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
@@ -2205,9 +2215,9 @@ function DialogManager(data_string, is_file) constructor
 
         if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count))
         {
-          if (jump_settings & DIALOG_RUNNER.FLAG_JUMP_SETTING_MAINTAIN_SCENE) {
+          if (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE) {
             next_dialog_idx = shift_sign ? next_sequence.dialog_count - 1 : 0;
-            status |= DIALOG_RUNNER.FLAG_STATUS_MAINTAINED_SCENE;
+            status |= DIALOG_RUNNER.STATUS_MAINTAINED_SCENE;
             next_sequence_idx -= shift_sign;
             dialog_shift = 0;
             break;
@@ -2335,15 +2345,15 @@ function DialogManager(data_string, is_file) constructor
 
     switch (__decode_jump_setting_unit(jump_settings))
     {
-      case DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE:
+      case DIALOG_RUNNER.JUMP_UNIT_SCENE:
         target_position = __get_scene_relative(position, prev_position, jump_settings);
       break;
 
-      case DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE:
+      case DIALOG_RUNNER.JUMP_UNIT_SEQUENCE:
         target_position = __get_sequence_relative(position, prev_position, jump_settings);
       break;
 
-      case DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG:
+      case DIALOG_RUNNER.JUMP_UNIT_DIALOG:
         target_position = __get_dialog_relative(position, prev_position, jump_settings);
       break;
     }
@@ -2405,7 +2415,7 @@ function DialogManager(data_string, is_file) constructor
 
 function DialogLinkable(settings_mask) constructor
 {
-  static CONSTRUCTOR_ARGC = argument_count;
+  static __CONSTRUCTOR_ARGC = argument_count;
 
   self.settings_mask = settings_mask;
 }
@@ -2443,6 +2453,8 @@ function DialogLinkable(settings_mask) constructor
 
 function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
+
   self.sequences = [];
   self.scene_idx = 0;
   self.sequence_count = 0;
@@ -2800,6 +2812,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(settings_mask) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
+
   self.dialogs = [];
   self.speakers = speakers;
   self.sequence_idx = 0;
@@ -3153,6 +3167,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
   static TEXT_WIDTH_MAX = -1;
   static TEXT_WIDTH_FUNC = function(dialog) {
     return string_width(dialog.text);
@@ -3852,6 +3867,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
 function DialogFX(settings_mask, argv) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
   static data = {
     initialized: false,
     fx_map: {
@@ -3982,8 +3998,12 @@ function DialogFX(settings_mask, argv) constructor
 
   static option = function(option_idx = 0)
   {
+    var flow_options = self.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA]
+      , flow_option_count = array_length(flow_options)
+    ;
+
     return self.isflowresolver()
-      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][option_idx]
+      ? flow_options[option_idx + flow_option_count * (option_idx < 0)]
       : undefined
     ;
   }
@@ -4028,8 +4048,28 @@ function DialogFX(settings_mask, argv) constructor
 
   static prompt = function(option_idx = 0)
   {
-    return self.isflowresolver()
-      ? self.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][option_idx][DIALOG_FX.FX_ARG_FLOWRES_DATA_PROMPT]
+    var option = self.option(option_idx);
+    
+    return is_array(option)
+      ? option[DIALOG_FX.FX_ARG_FLOWRES_DATA_PROMPT]
+      : undefined
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the flow resolver metadata settings of a specified option.
+   * @param {Real} [option_idx] The index of the option to retrieve the metadata for.
+   * @returns {Constant.DIALOG_RUNNER|Real}
+   */
+
+  static metadata = function(option_idx = 0)
+  {
+    var option = self.option(option_idx);
+    
+    return is_array(option)
+      ? option[DIALOG_FX.FX_ARG_FLOWRES_DATA_METADATA]
       : undefined
     ;
   }
@@ -4063,14 +4103,14 @@ function DialogFX(settings_mask, argv) constructor
 
 
   /**
-   * @desc Adds an indexed function to the global dialog fx data.
+   * @desc Adds an indexed function to the global dialog fx data. Throws DIALOG_MANAGER.ERR_MAX_FX_CAPACITY_REACHED if the maximum number of normal fx functions has been reached.
    * @param {Function} func The function to bind.
    * @param {Constant.DIALOG_FX|Real} [register_settings] The settings of the registering call.
    * @param {Constant.DIALOG_FX|Real} [type] The effect type designating the index.
    * @returns {Real}
    */
 
-  static register = function(func, register_settings = DIALOG_FX.MASK_REGISTER_FX_FUNC, type = undefined)
+  static register = function(func, register_settings = DIALOG_FX.REGISTER_SETTING_FX_FUNC, type = undefined)
   {
     var mapdata = [
         DialogFX.data.fx_map,
@@ -4080,6 +4120,12 @@ function DialogFX(settings_mask, argv) constructor
       , map = mapdata[(register_settings & DIALOG_FX.__BITMASK_REGISTER_MASK) >> DIALOG_FX.__BITMASK_REGISTER_SHIFT]
       , index = type ?? map.count
     ;
+
+    if (register_settings == DIALOG_FX.REGISTER_SETTING_FX_FUNC && map.count >= DIALOG_FX.__BITMASK_TYPE_MAX_COUNT) {
+      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_MAX_FX_CAPACITY_REACHED, [
+        index, DIALOG_FX.__BITMASK_TYPE_MAX_COUNT
+      ]);
+    }
 
     map.count += index >= map.count;
     map.funcs[index] = func;
@@ -4133,7 +4179,7 @@ function DialogFX(settings_mask, argv) constructor
   {
     return ctx.success(
       argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0],
-      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_JUMP
+      DIALOG_RUNNER.STATUS_EXECUTED_JUMP
     );
   }
 
@@ -4161,7 +4207,7 @@ function DialogFX(settings_mask, argv) constructor
 
     return ctx.success(
       argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx],
-      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_DISPATCH
+      DIALOG_RUNNER.STATUS_EXECUTED_DISPATCH
     );
   }
 
@@ -4185,7 +4231,7 @@ function DialogFX(settings_mask, argv) constructor
 
     return ctx.success(
       argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0],
-      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_FALLBACK
+      DIALOG_RUNNER.STATUS_EXECUTED_FALLBACK
     );
   }
 
@@ -4210,7 +4256,7 @@ function DialogFX(settings_mask, argv) constructor
 
     return ctx.success(
       argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx],
-      DIALOG_RUNNER.FLAG_STATUS_EXECUTED_CHOICE
+      DIALOG_RUNNER.STATUS_EXECUTED_CHOICE
     );
   }
 
