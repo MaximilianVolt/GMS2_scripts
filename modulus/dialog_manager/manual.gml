@@ -527,7 +527,7 @@ var next_dialog_data = dialog_runner.predict(vk_enter); // Same parameters as Di
 
 
 // 1. Position status flag
-if (advance_key && dialog_runner.status & DIALOG_RUNNER.STATUS_LAST_OF_SEQUENCE) {
+if (advance_key && dialog_runner.status & DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE) {
   // E.g. hides textboxes
   is_active = false;
   exit;
