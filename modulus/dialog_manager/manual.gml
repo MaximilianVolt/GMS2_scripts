@@ -111,7 +111,7 @@ var flow_option_absolute = dialog_fx_create_flow_option(
 );
 
 var flow_option_relative = dialog_fx_create_flow_option(
-  DIALOG_MANAGER.POSITION_CODE_SCENE_FIRST,
+  +8,
   DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE | DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE,
   "Prompt text for relative flow option",
   0
@@ -335,12 +335,23 @@ var enc_fx_tag = DialogFX.tag(4);             // Encodes the dialog fx tag to th
 
 
 // --------------------------------------------------
+// Macros
+// --------------------------------------------------
+
+
+
+#macro __DIALOG_MANAGER_SERIALIZER_METHOD__       // Macro for choosing serialization method (JSON array / JSON struct). Must be <__array> or <__struct>
+#macro __DIALOG_MANAGER_DESERIALIZER_METHOD__     // Macro for choosing deserialization method (JSON array / JSON struct). Must be <__from_array> or <__from_struct>
+
+
+
+// --------------------------------------------------
 // Constants
 // --------------------------------------------------
 
 
 
-// Constant.DIALOG_RUNNER
+/// Constant.DIALOG_RUNNER
 
 DIALOG_RUNNER.STATUS_UNINITIALIZED                // Activates if runner is uninitialized
 DIALOG_RUNNER.STATUS_FIRST_DIALOG                 // Activates if position corresponds to the first dialog
@@ -389,7 +400,8 @@ DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG        // Encodes setting related to 
 DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE      // Encodes setting related to the maintainment of current sequence entity
 DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE         // Encodes setting related to the maintainment of current scene entity
 
-// Constant.DIALOG_MANAGER
+/// Constant.DIALOG_MANAGER
+
 DIALOG_MANAGER.POSITION_CODE_SCENE_LAST           // Position code for jumping to last scene
 DIALOG_MANAGER.POSITION_CODE_SCENE_NEXT           // Position code for jumping to next scene
 DIALOG_MANAGER.POSITION_CODE_SCENE_END            // Position code for jumping to end of scene (last sequence)
@@ -420,7 +432,7 @@ DIALOG_MANAGER.ERR_MAX_FX_CAPACITY_REACHED        // Error raised when dialog fx
 
 DIALOG_MANAGER.ERRCHECK_INFINITE_LOOP_TRESHOLD    // Safety check for triggering panicking error if manager is unable to reach a stable position
 
-// Constant.DIALOG_FX
+/// Constant.DIALOG_FX
 
 DIALOG_FX.REGISTER_SETTING_FX_FUNC                // Registering setting for normal fx map
 DIALOG_FX.REGISTER_SETTING_FX_FUNC_INDEXER        // Registering setting for indexer fx map
@@ -453,6 +465,54 @@ Dialog.TEXT_WIDTH_FUNC                            // Dialog width-checking funct
 // Struct.DialogFX
 DialogFX.__CONSTRUCTOR_ARGC                       // Dialog fx constructor function argument count
 
+
+
+// --------------------------------------------------
+// Instance properties
+// --------------------------------------------------
+
+
+
+// Struct.DialogRunner
+dialog_runner.manager                             // Reference to dialog manager
+dialog_runner.choice_index                        // Choice index for default choice indexer function
+dialog_runner.status                              // Runner status (position states, per-frame execution states)
+dialog_runner.position                            // Current cursor position
+dialog_runner.seed                                // Randomized value (unused by the system, but can be worked on)
+dialog_runner.history                             // List of previous positions (unused by the system, but can be worked on)
+dialog_runner.vars                                // Custom dialog runner variable map, can be worked on (eg for custom effects).
+
+// Struct.DialogManager
+dialog_manager.data                               // Custom dialog manager data
+dialog_manager.scenes                             // List of dialog scenes
+dialog_manager.scene_count                        // Scene count
+
+// Struct.DialogScene
+dialog_scene.manager                              // Back-reference to dialog manager
+dialog_scene.scene_idx                            // Relative index inside dialog manager
+dialog_scene.sequences                            // List of dialog sequences
+dialog_scene.sequence_count                       // Sequence count
+dialog_scene.settings_mask                        // The scene's encoded options
+
+// Struct.DialogSequence
+dialog_sequence.scene                             // Back-reference to dialog scene
+dialog_sequence.sequence_idx                      // Relative index inside dialog scene
+dialog_sequence.dialogs                           // List of dialogs
+dialog_sequence.dialog_count                      // Dialog count
+dialog_sequence.speakers                          // List of speakers (useful when speakers are dynamic)
+dialog_sequence.settings_mask                     // The sequence's encoded options
+
+// Struct.Dialog
+dialog.sequence                                   // Back-reference to dialog sequence
+dialog.dialog_idx                                 // Relative index inside dialog scene
+dialog.text                                       // Dialog text
+dialog.fx_map                                     // List of dialog effects
+dialog.fx_count                                   // Dialog effects count
+dialog.settings_mask                              // The dialog's encoded options
+
+// Struct.DialogFX
+dialog_fx.argv                                    // Dialog fx argument values
+dialog_fx.settings_mask                           // The dialog effect's encoded options
 
 
 
