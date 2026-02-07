@@ -2271,9 +2271,9 @@ function DialogManager(data_string, is_file) constructor
     if (is_instanceof(position, DialogLinkable))
       return position.position();
 
-    var dialog_idx = __decode_dialog_idx(self.position)
-      , sequence_idx = __decode_sequence_idx(self.position)
-      , scene_idx = __decode_scene_idx(self.position)
+    var dialog_idx = __decode_dialog_idx(position)
+      , sequence_idx = __decode_sequence_idx(position)
+      , scene_idx = __decode_scene_idx(position)
       , sequence = self.sequence(sequence_idx, scene_idx)
       , scene = self.scene(scene_idx)
     ;
