@@ -9,27 +9,27 @@
 
 
 
-// 1. Creates an empty dialog manager
-dialog_manager = dialog_manager_create();
+// 1. Creates an empty dialog manager assigning it a language
+dialog_manager = dialog_manager_create("en");
 
 
 
 // 2. Parses a JSON string passed as the first argument
 //    Ideal when you already loaded / composed the data elsewhere for deserialization
-dialog_manager = dialog_manager_create("{...}");
+dialog_manager = dialog_manager_create("en", "{...}");
 
 
 
 // 3a. Same behavior as 2., but from a file path
 //     The dialog manager will open, parse and close the file for you
-dialog_manager = dialog_manager_create("dialogs.json", /* is_file = */ true);
+dialog_manager = dialog_manager_create("en", "dialogs.json", /* is_file = */ true);
 
 
 
 // 3b. Parses the contents of a file handle
 //     You are responsible for opening & closing the file
 var file = file_text_open_read("dialogs.json");
-dialog_manager = dialog_manager_create(file, /* is_file = */ true);
+dialog_manager = dialog_manager_create("en", file, /* is_file = */ true);
 file_text_close(file);
 
 
@@ -112,7 +112,7 @@ var flow_option_absolute = dialog_fx_create_flow_option(
 
 var flow_option_relative = dialog_fx_create_flow_option(
   +8,
-  DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE | DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE,
+  DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE, // DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE is already encoded
   "Prompt text for relative flow option",
   0
 );
@@ -340,8 +340,8 @@ var enc_fx_tag = DialogFX.tag(4);             // Encodes the dialog fx tag to th
 
 
 
-#macro __DIALOG_MANAGER_SERIALIZER_METHOD__       // Macro for choosing serialization method (JSON array / JSON struct). Must be <__array> or <__struct>
-#macro __DIALOG_MANAGER_DESERIALIZER_METHOD__     // Macro for choosing deserialization method (JSON array / JSON struct). Must be <__from_array> or <__from_struct>
+#macro __DIALOG_MANAGER_SERIALIZER_METHOD__         // Macro for choosing serialization method (JSON array / JSON struct). Must be <__array> or <__struct>
+#macro __DIALOG_MANAGER_DESERIALIZER_METHOD__       // Macro for choosing deserialization method (JSON array / JSON struct). Must be <__from_array> or <__from_struct>
 
 
 
@@ -353,90 +353,110 @@ var enc_fx_tag = DialogFX.tag(4);             // Encodes the dialog fx tag to th
 
 /// Constant.DIALOG_RUNNER
 
-DIALOG_RUNNER.STATUS_UNINITIALIZED                // Activates if runner is uninitialized
-DIALOG_RUNNER.STATUS_FIRST_DIALOG                 // Activates if position corresponds to the first dialog
-DIALOG_RUNNER.STATUS_FIRST_SEQUENCE               // Activates if position corresponds to the first sequence
-DIALOG_RUNNER.STATUS_FIRST_SCENE                  // Activates if position corresponds to the first scene
-DIALOG_RUNNER.STATUS_FIRST_OF_SEQUENCE            // Activates if position corresponds to the first dialog of a sequence
-DIALOG_RUNNER.STATUS_FIRST_OF_SCENE               // Activates if position corresponds to the first sequence of a scene
-DIALOG_RUNNER.STATUS_MIDDLE_OF_SEQUENCE           // Activates if position corresponds to the middle dialog of a sequence
-DIALOG_RUNNER.STATUS_MIDDLE_OF_SCENE              // Activates if position corresponds to the middle sequence of a scene
-DIALOG_RUNNER.STATUS_MIDDLE_SCENE                 // Activates if position corresponds to the middle scene
-DIALOG_RUNNER.STATUS_LAST_DIALOG                  // Activates if position corresponds to the last dialog
-DIALOG_RUNNER.STATUS_LAST_SEQUENCE                // Activates if position corresponds to the last sequence
-DIALOG_RUNNER.STATUS_LAST_SCENE                   // Activates if position corresponds to the last scene
-DIALOG_RUNNER.STATUS_LAST_OF_SEQUENCE             // Activates if position corresponds to the last dialog of a sequence
-DIALOG_RUNNER.STATUS_LAST_OF_SCENE                // Activates if position corresponds to the last sequence of a scene
-DIALOG_RUNNER.STATUS_ADVANCED_DIALOG              // Activates if a positive-shift dialog advancement is made
-DIALOG_RUNNER.STATUS_ADVANCED_SEQUENCE            // Activates if a positive-shift sequence advancement is made
-DIALOG_RUNNER.STATUS_ADVANCED_SCENE               // Activates if a positive-shift scene advancement is made
-DIALOG_RUNNER.STATUS_RECEDED_DIALOG               // Activates if a negative-shift dialog advancement is made
-DIALOG_RUNNER.STATUS_RECEDED_SEQUENCE             // Activates if a negative-shift sequence advancement is made
-DIALOG_RUNNER.STATUS_RECEDED_SCENE                // Activates if a negative-shift scene advancement is made
-DIALOG_RUNNER.STATUS_MAINTAINED_DIALOG            // Activates if a dialog advancement is avoided
-DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE          // Activates if a sequence advancement is avoided
-DIALOG_RUNNER.STATUS_MAINTAINED_SCENE             // Activates if a scene advancement is avoided
-DIALOG_RUNNER.STATUS_EXECUTED_JUMP                // Activates if a jump effect is correctly executed
-DIALOG_RUNNER.STATUS_EXECUTED_DISPATCH            // Activates if a dispatch effect is correctly executed
-DIALOG_RUNNER.STATUS_EXECUTED_FALLBACK            // Activates if a fallback effect is correctly executed
-DIALOG_RUNNER.STATUS_EXECUTED_CHOICE              // Activates if a choice effect is correctly executed
+DIALOG_RUNNER.STATUS_UNINITIALIZED                    // Activates if runner is uninitialized
+DIALOG_RUNNER.STATUS_FIRST_DIALOG                     // Activates if position corresponds to the first dialog
+DIALOG_RUNNER.STATUS_FIRST_SEQUENCE                   // Activates if position corresponds to the first sequence
+DIALOG_RUNNER.STATUS_FIRST_SCENE                      // Activates if position corresponds to the first scene
+DIALOG_RUNNER.STATUS_FIRST_OF_SEQUENCE                // Activates if position corresponds to the first dialog of a sequence
+DIALOG_RUNNER.STATUS_FIRST_OF_SCENE                   // Activates if position corresponds to the first sequence of a scene
+DIALOG_RUNNER.STATUS_MIDDLE_OF_SEQUENCE               // Activates if position corresponds to the middle dialog of a sequence
+DIALOG_RUNNER.STATUS_MIDDLE_OF_SCENE                  // Activates if position corresponds to the middle sequence of a scene
+DIALOG_RUNNER.STATUS_MIDDLE_SCENE                     // Activates if position corresponds to the middle scene
+DIALOG_RUNNER.STATUS_LAST_DIALOG                      // Activates if position corresponds to the last dialog
+DIALOG_RUNNER.STATUS_LAST_SEQUENCE                    // Activates if position corresponds to the last sequence
+DIALOG_RUNNER.STATUS_LAST_SCENE                       // Activates if position corresponds to the last scene
+DIALOG_RUNNER.STATUS_LAST_OF_SEQUENCE                 // Activates if position corresponds to the last dialog of a sequence
+DIALOG_RUNNER.STATUS_LAST_OF_SCENE                    // Activates if position corresponds to the last sequence of a scene
+DIALOG_RUNNER.STATUS_ADVANCED_DIALOG                  // Activates if a positive-shift dialog advancement is made
+DIALOG_RUNNER.STATUS_ADVANCED_SEQUENCE                // Activates if a positive-shift sequence advancement is made
+DIALOG_RUNNER.STATUS_ADVANCED_SCENE                   // Activates if a positive-shift scene advancement is made
+DIALOG_RUNNER.STATUS_RECEDED_DIALOG                   // Activates if a negative-shift dialog advancement is made
+DIALOG_RUNNER.STATUS_RECEDED_SEQUENCE                 // Activates if a negative-shift sequence advancement is made
+DIALOG_RUNNER.STATUS_RECEDED_SCENE                    // Activates if a negative-shift scene advancement is made
+DIALOG_RUNNER.STATUS_MAINTAINED_DIALOG                // Activates if a dialog advancement is avoided
+DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE              // Activates if a sequence advancement is avoided
+DIALOG_RUNNER.STATUS_MAINTAINED_SCENE                 // Activates if a scene advancement is avoided
+DIALOG_RUNNER.STATUS_EXECUTED_JUMP                    // Activates if a jump effect is correctly executed
+DIALOG_RUNNER.STATUS_EXECUTED_DISPATCH                // Activates if a dispatch effect is correctly executed
+DIALOG_RUNNER.STATUS_EXECUTED_FALLBACK                // Activates if a fallback effect is correctly executed
+DIALOG_RUNNER.STATUS_EXECUTED_CHOICE                  // Activates if a choice effect is correctly executed
 
-DIALOG_RUNNER.JUMP_TYPE_ABSOLUTE                  // Defines a jump type index for absolute jumps. Not to use with option bitmasks.
-DIALOG_RUNNER.JUMP_TYPE_RELATIVE                  // Defines a jump type index for relative jumps. Not to use with option bitmasks.
-DIALOG_RUNNER.JUMP_UNIT_DIALOG                    // Defines a jump unit index for dialog units. Not to use with option bitmasks.
-DIALOG_RUNNER.JUMP_UNIT_SEQUENCE                  // Defines a jump unit index for sequence units. Not to use with option bitmasks.
-DIALOG_RUNNER.JUMP_UNIT_SCENE                     // Defines a jump unit index for scene units. Not to use with option bitmasks.
+DIALOG_RUNNER.JUMP_TYPE_ABSOLUTE                      // Defines a jump type index for absolute jumps. Not to use with option bitmasks.
+DIALOG_RUNNER.JUMP_TYPE_RELATIVE                      // Defines a jump type index for relative jumps. Not to use with option bitmasks.
+DIALOG_RUNNER.JUMP_UNIT_DIALOG                        // Defines a jump unit index for dialog units. Not to use with option bitmasks.
+DIALOG_RUNNER.JUMP_UNIT_SEQUENCE                      // Defines a jump unit index for sequence units. Not to use with option bitmasks.
+DIALOG_RUNNER.JUMP_UNIT_SCENE                         // Defines a jump unit index for scene units. Not to use with option bitmasks.
 
-DIALOG_RUNNER.JUMP_SETTING_TYPE_ABSOLUTE          // Encodes setting related to absolute jumps
-DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE          // Encodes setting related to relative jumps
-DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG            // Encodes setting related to dialog unit jumps
-DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE          // Encodes setting related to sequence unit jumps
-DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE             // Encodes setting related to scene unit jumps
-DIALOG_RUNNER.JUMP_SETTING_CHOICE                 // Encodes setting related to choice jumps
-DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER     // Encodes setting related to the bypassing of on-enter triggered dialog fx
-DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_STAY      // Encodes setting related to the bypassing of on-stay triggered dialog fx
-DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE     // Encodes setting related to the bypassing of on-leave triggered dialog fx
-DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG        // Encodes setting related to the maintainment of current dialog entity
-DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE      // Encodes setting related to the maintainment of current sequence entity
-DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE         // Encodes setting related to the maintainment of current scene entity
+DIALOG_RUNNER.JUMP_SETTING_TYPE_ABSOLUTE              // Encodes setting related to absolute jumps
+DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE              // Encodes setting related to relative jumps
+DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG                // Encodes setting related to dialog unit jumps
+DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE              // Encodes setting related to sequence unit jumps
+DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE                 // Encodes setting related to scene unit jumps
+DIALOG_RUNNER.JUMP_SETTING_CHOICE                     // Encodes setting related to choice jumps
+DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER         // Encodes setting related to the bypassing of on-enter triggered dialog fx
+DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_STAY          // Encodes setting related to the bypassing of on-stay triggered dialog fx
+DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE         // Encodes setting related to the bypassing of on-leave triggered dialog fx
+DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_DIALOG            // Encodes setting related to the maintainment of current dialog entity
+DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE          // Encodes setting related to the maintainment of current sequence entity
+DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE             // Encodes setting related to the maintainment of current scene entity
 
 /// Constant.DIALOG_MANAGER
 
-DIALOG_MANAGER.POSITION_CODE_SCENE_LAST           // Position code for jumping to last scene
-DIALOG_MANAGER.POSITION_CODE_SCENE_NEXT           // Position code for jumping to next scene
-DIALOG_MANAGER.POSITION_CODE_SCENE_END            // Position code for jumping to end of scene (last sequence)
-DIALOG_MANAGER.POSITION_CODE_SCENE_MIDDLE         // Position code for jumping to middle of scene (middle sequence)
-DIALOG_MANAGER.POSITION_CODE_SCENE_START          // Position code for jumping to start of scene (first sequence)
-DIALOG_MANAGER.POSITION_CODE_SCENE_PREVIOUS       // Position code for jumping to previous scene
-DIALOG_MANAGER.POSITION_CODE_SCENE_FIRST          // Position code for jumping to first scene
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_LAST        // Position code for jumping to last sequence
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_NEXT        // Position code for jumping to next sequence
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_END         // Position code for jumping to end of sequence (last dialog)
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_MIDDLE      // Position code for jumping to middle of sequence (middle dialog)
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_START       // Position code for jumping to start of sequence (first dialog)
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_PREVIOUS    // Position code for jumping to previous sequence
-DIALOG_MANAGER.POSITION_CODE_SEQUENCE_FIRST       // Position code for jumping to first sequence
-DIALOG_MANAGER.POSITION_CODE_NONE                 // Position code for jumping to position 0
+DIALOG_MANAGER.POSITION_CODE_SCENE_LAST               // Position code for jumping to last scene
+DIALOG_MANAGER.POSITION_CODE_SCENE_NEXT               // Position code for jumping to next scene
+DIALOG_MANAGER.POSITION_CODE_SCENE_END                // Position code for jumping to end of scene (last sequence)
+DIALOG_MANAGER.POSITION_CODE_SCENE_MIDDLE             // Position code for jumping to middle of scene (middle sequence)
+DIALOG_MANAGER.POSITION_CODE_SCENE_START              // Position code for jumping to start of scene (first sequence)
+DIALOG_MANAGER.POSITION_CODE_SCENE_PREVIOUS           // Position code for jumping to previous scene
+DIALOG_MANAGER.POSITION_CODE_SCENE_FIRST              // Position code for jumping to first scene
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_LAST            // Position code for jumping to last sequence
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_NEXT            // Position code for jumping to next sequence
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_END             // Position code for jumping to end of sequence (last dialog)
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_MIDDLE          // Position code for jumping to middle of sequence (middle dialog)
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_START           // Position code for jumping to start of sequence (first dialog)
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_PREVIOUS        // Position code for jumping to previous sequence
+DIALOG_MANAGER.POSITION_CODE_SEQUENCE_FIRST           // Position code for jumping to first sequence
+DIALOG_MANAGER.POSITION_CODE_NONE                     // Position code for jumping to position 0
 
-DIALOG_MANAGER.ERR_UNDEFINED_ERROR_TYPE           // Error raised when error type is unknown
-DIALOG_MANAGER.ERR_SERIALIZATION_FAILED           // Error raised when serialization fails (invalid dialogical structure)
-DIALOG_MANAGER.ERR_DESERIALIZATION_FAILED         // Error raised when deserialization fails (error occurring when reading file)
-DIALOG_MANAGER.ERR_PARSING_FAILED                 // Error raised when parsing fails (malformed deserialized data)
-DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1           // Error raised when dialog linkable is missing parent element
-DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L2           // Error raised when dialog linkable is missing grandparent element
-DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT         // Error raised when dialog manager contains an empty dialog linkable object
-DIALOG_MANAGER.ERR_INVALID_POSITION               // Error raised when access to position fails
-DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED         // Error raised when dialog runner executes too many jumps
-DIALOG_MANAGER.ERR_TEXT_OVERFLOW                  // Error raised when dialog text is potentially too long
-DIALOG_MANAGER.ERR_MAX_FX_CAPACITY_REACHED        // Error raised when dialog fx map reaches max capacity
+DIALOG_MANAGER.DIFF_LEVEL_SCENE                       // Level code for dialog scenes
+DIALOG_MANAGER.DIFF_LEVEL_SEQUENCE                    // Level code for dialog sequences
+DIALOG_MANAGER.DIFF_LEVEL_DIALOG                      // Level code for dialogs
+DIALOG_MANAGER.DIFF_LEVEL_FX                          // Level code for dialog effects
 
-DIALOG_MANAGER.ERRCHECK_INFINITE_LOOP_TRESHOLD    // Safety check for triggering panicking error if manager is unable to reach a stable position
+DIALOG_MANAGER.DIFF_SEVERITY_OK                       // Integrity violation null severity
+DIALOG_MANAGER.DIFF_SEVERITY_WARNING                  // Integrity violation warning severity (suspicious structural differences found)
+DIALOG_MANAGER.DIFF_SEVERITY_ERROR                    // Integrity violation error severity (extreme structural differences found)
+
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_MAX      // Diff algorithm tolerance for maximum insertion counts
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_MAX       // Diff algorithm tolerance for maximum deletion counts
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_MAX           // Diff algorithm tolerance for maximum move counts
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_WARNING  // Diff algorithm tolerance for warning-raising insertion counts
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_WARNING   // Diff algorithm tolerance for warning-raising deletion counts
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_WARNING       // Diff algorithm tolerance for warning-raising moves counts
+DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT               // Diff algorithm tolerance argoment count
+
+DIALOG_MANAGER.ERR_UNDEFINED_ERROR_TYPE               // Error raised when error type is unknown
+DIALOG_MANAGER.ERR_SERIALIZATION_FAILED               // Error raised when serialization fails (invalid dialogical structure)
+DIALOG_MANAGER.ERR_DESERIALIZATION_FAILED             // Error raised when deserialization fails (error occurring when reading file)
+DIALOG_MANAGER.ERR_PARSING_FAILED                     // Error raised when parsing fails (malformed deserialized data)
+DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1               // Error raised when dialog linkable is missing parent element
+DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L2               // Error raised when dialog linkable is missing grandparent element
+DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT             // Error raised when dialog manager contains an empty dialog linkable object
+DIALOG_MANAGER.ERR_INVALID_POSITION                   // Error raised when access to position fails
+DIALOG_MANAGER.ERR_INFINITE_JUMP_LOOP_DETECTED        // Error raised when dialog runner executes too many jumps
+DIALOG_MANAGER.ERR_TEXT_OVERFLOW                      // Error raised when dialog text is potentially too long
+DIALOG_MANAGER.ERR_MAX_FX_CAPACITY_REACHED            // Error raised when dialog fx map reaches max capacity
+DIALOG_MANAGER.ERR_INFINITE_FX_LOOP_DETECTED          // Error raised when dialog runner executes too many effects
+
+DIALOG_MANAGER.ERRCHECK_JUMP_INFINITE_LOOP_TRESHOLD   // Safety check for triggering panicking error if manager is unable to reach a stable position
+DIALOG_MANAGER.ERRCHECK_FX_INFINITE_LOOP_TRESHOLD     // Safety check for triggering panicking error if manager is unable to resolve an effect cycle
 
 /// Constant.DIALOG_FX
 
-DIALOG_FX.REGISTER_SETTING_FX_FUNC                // Registering setting for normal fx map
-DIALOG_FX.REGISTER_SETTING_FX_FUNC_INDEXER        // Registering setting for indexer fx map
-DIALOG_FX.REGISTER_SETTING_FX_FUNC_CONDITION      // Registering setting for condition fx map
+DIALOG_FX.REGISTER_SETTING_FX_FUNC                    // Registering setting for normal fx map
+DIALOG_FX.REGISTER_SETTING_FX_FUNC_INDEXER            // Registering setting for indexer fx map
+DIALOG_FX.REGISTER_SETTING_FX_FUNC_CONDITION          // Registering setting for condition fx map
+
 
 
 // --------------------------------------------------
@@ -453,17 +473,21 @@ DialogManager.__CONSTRUCTOR_ARGC                  // Dialog manager constructor 
 
 // Struct.DialogScene
 DialogScene.__CONSTRUCTOR_ARGC                    // Dialog scene constructor function argument count
+DialogScene.__ID                                  // Dialog scene global id
 
 // Struct.DialogSequence
 DialogSequence.__CONSTRUCTOR_ARGC                 // Dialog sequence onstructor function argument count
+DialogSequence.__ID                               // Dialog sequence global id
 
 // Struct.Dialog
 Dialog.__CONSTRUCTOR_ARGC                         // Dialog constructor function argument count
+Dialog.__ID                                       // Dialog global id
 Dialog.TEXT_WIDTH_MAX                             // Dialog text width max limit
 Dialog.TEXT_WIDTH_FUNC                            // Dialog width-checking function
 
 // Struct.DialogFX
 DialogFX.__CONSTRUCTOR_ARGC                       // Dialog fx constructor function argument count
+DialogFX.__ID                                     // Dialog fx global id
 
 
 
@@ -587,10 +611,8 @@ var next_dialog_data = dialog_runner.predict(vk_enter); // Same parameters as Di
 
 
 // 1. Position status flag
-if (advance_key && dialog_runner.status & DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE) {
-  // E.g. hides textboxes
-  is_active = false;
-  exit;
+if (dialog_manager.status & DIALOG_MANAGER.STATUS_LAST_SCENE) {
+  show_debug_message("Dialog cursor is currently in the last scene.");
 }
 
 
@@ -599,3 +621,33 @@ if (advance_key && dialog_runner.status & DIALOG_RUNNER.STATUS_MAINTAINED_SEQUEN
 if (dialog_runner.status & DIALOG_RUNNER.STATUS_EXECUTED_CHOICE) {
   show_debug_message("A choice has been executed this frame.");
 }
+
+if (dialog_runner.status & DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE) {
+  // E.g. hides textboxes
+  is_active = false;
+  exit;
+}
+
+
+
+// --------------------------------------------------
+// Multilanguage support
+// --------------------------------------------------
+
+// The dialog management system also has a built-in functionality to check structural differences between two managers,
+// allowing you to maintain integrity between two language versions, especially the bigger they become. You can use said
+// method to retrieve a struct with all data about the differences, also specifying tolerance parameters to allow you to ignore
+// minimal differences etc.
+
+// 0. Create tolerance parameters (if none are created, the diff will signal as error any minimal difference found)
+//    Each argument is an array of length DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT maximum. The arrays have the same formats for the levels, in order:
+//    1. FX   ->   2. Dialog   ->   3. DialogSequence   ->   4. DialogScene
+//    Use DIALOG_MANAGER.DIFF_ARG_TOLERANCE_* indices to correctly position your tolerance params if need be.
+diff_tolerance_params = dialog_manager_master_language.diff_tolerance_params_create(/* ... */);
+
+// 1a. Compare two managers
+diff_data = dialog_manager_1.diff(dialog_manager_2, diff_tolerance_params);
+
+// 1b. Deserialize and compare two managers (data_strings, is_file, diff_tolerance_params)
+diff_data_and_managers = DialogManager.diffstatic("en.json", "it.json", true, diff_tolerance_params);
+diff_data_and_managers = DialogManager.diffstatic("{...}", "{...}", false, diff_tolerance_params);

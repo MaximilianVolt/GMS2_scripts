@@ -2,13 +2,14 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.10.0
+ * @version 0.11.0
 */
 
 
 
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
+
 
 
 
@@ -70,14 +71,15 @@ function dialog_runner_create(dialog_manager)
 
 /**
  * @desc `DialogManager` constructor.
+ * @param {String} [lang] The language to load from the file. Overridden if deserialized otherwise. Defaults to `"en"`.
  * @param {String|Id.TextFile} [data_string] The data to parse.
  * @param {Bool} [is_file] Specifies whether `data_string` is a file (`true`) or not (`false`).
  * @returns {Struct.DialogManager}
  */
 
-function dialog_manager_create(data_string = "", is_file = false)
+function dialog_manager_create(lang = DialogManager.DATA.LANGS.ISO_639_1.english, data_string = "", is_file = false)
 {
-  return new DialogManager(data_string, is_file);
+  return new DialogManager(lang, data_string, is_file);
 }
 
 
@@ -410,7 +412,7 @@ function dialog_fx_create_flow_option(jump_position, jump_settings = 0, prompt =
 function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
 {
   return new DialogFX(
-    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP) | settings_mask,
+    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP) | settings_mask,
     [[flow_option], undefined, undefined, undefined, undefined]
   );
 }
@@ -431,7 +433,7 @@ function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
 function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_indexer_index = undefined, fx_condition_index = undefined,  fx_indexer_argv = [], fx_condition_argv = [])
 {
   return new DialogFX(
-    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH) | settings_mask,
+    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH) | settings_mask,
     [flow_options, fx_indexer_index, fx_condition_index, fx_indexer_argv, fx_condition_argv]
   );
 }
@@ -450,7 +452,7 @@ function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_inde
 function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, fx_condition_index = undefined, fx_condition_argv = [])
 {
   return new DialogFX(
-    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK) | settings_mask,
+    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK) | settings_mask,
     [[flow_option], undefined, fx_condition_index, undefined, fx_condition_argv]
   );
 }
@@ -469,7 +471,7 @@ function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, f
 function dialog_fx_create_choice(settings_mask = 0, flow_options = [], fx_indexer_index = DIALOG_FX.FUNC_INDEXER_RUNNER_CHOICE_INDEX, fx_indexer_argv = [])
 {
   return new DialogFX(
-    DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE) | settings_mask,
+    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE) | settings_mask,
     [flow_options, fx_indexer_index, undefined, fx_indexer_argv, undefined]
   );
 }
@@ -528,7 +530,7 @@ function dialog_fx_create_from_struct(data)
 // Self-initialization
 gml_pragma(
   "global",
-  "new DialogRunner(undefined); new DialogManager(\"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, []);"
+  "new DialogRunner(undefined); new DialogManager(0, \"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, []);"
 );
 
 
@@ -632,7 +634,6 @@ enum DIALOG_RUNNER // Should not edit
   __BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_TYPE_BITS + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_UNIT_BITS,
   __BITMASK_MASK_JUMP_SETTING_RESOLUTION_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT,
   __BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_SHIFT + DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_RESOLUTION_BITS,
-  __BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE = DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_SHIFT,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_STAY,
   __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
@@ -644,7 +645,6 @@ enum DIALOG_RUNNER // Should not edit
   __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_MAINTAIN_DIALOG,
   __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_BITS = DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_COUNT - DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT,
   __BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_MASK = ((1 << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_BITS) - 1) << DIALOG_RUNNER.__BITMASK_MASK_JUMP_SETTING_MAINTAIN_BEHAVIOUR_SHIFT,
-  JUMP_SETTING_CHOICE             = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_CHOICE,
   JUMP_SETTING_BYPASS_FX_ON_ENTER = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
   JUMP_SETTING_BYPASS_FX_ON_STAY  = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_STAY,
   JUMP_SETTING_BYPASS_FX_ON_LEAVE = 1 << DIALOG_RUNNER.__BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
@@ -686,6 +686,22 @@ enum DIALOG_MANAGER // Should not edit
   POSITION_CODE_NONE,
   POSITION_CODE_COUNT = -DIALOG_MANAGER.POSITION_CODE_SCENE_LAST + 1,
 
+  // Diff data codes
+  DIFF_LEVEL_SCENE = 0,
+  DIFF_LEVEL_SEQUENCE,
+  DIFF_LEVEL_DIALOG,
+  DIFF_LEVEL_FX,
+  DIFF_SEVERITY_OK = 0,
+  DIFF_SEVERITY_WARNING,
+  DIFF_SEVERITY_ERROR,
+  DIFF_ARG_TOLERANCE_INSERTIONS_MAX = 0,
+  DIFF_ARG_TOLERANCE_DELETIONS_MAX,
+  DIFF_ARG_TOLERANCE_MOVES_MAX,
+  DIFF_ARG_TOLERANCE_INSERTIONS_WARNING,
+  DIFF_ARG_TOLERANCE_DELETIONS_WARNING,
+  DIFF_ARG_TOLERANCE_MOVES_WARNING,
+  DIFF_ARG_TOLERANCE_COUNT,
+
   // Positioning masks
   __BITMASK_POSITION_DIALOG_SHIFT = 0,
   __BITMASK_POSITION_DIALOG_BITS = 12,
@@ -706,13 +722,15 @@ enum DIALOG_MANAGER // Should not edit
   ERR_UNDEFINED_BACKREF_L2,
   ERR_EMPTY_CONTAINER_OBJECT,
   ERR_INVALID_POSITION,
-  ERR_INFINITE_LOOP_DETECTED,
+  ERR_INFINITE_JUMP_LOOP_DETECTED,
   ERR_TEXT_OVERFLOW,
   ERR_MAX_FX_CAPACITY_REACHED,
+  ERR_INFINITE_FX_LOOP_DETECTED,
   ERR_COUNT,
 
   // Error checks
-  ERRCHECK_INFINITE_LOOP_TRESHOLD = 32,
+  ERRCHECK_JUMP_INFINITE_LOOP_TRESHOLD = 32,
+  ERRCHECK_FX_INFINITE_LOOP_TRESHOLD = 256,
 }
 
 
@@ -733,6 +751,7 @@ enum DIALOG_SCENE // Edit as needed
   ARG_SETTINGS_MASK,
   ARG_COUNT,
   ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARG_COUNT,
+  ARG_ID,
   ARG_COUNT_DESERIALIZATION,
 
   // Scene bg
@@ -760,6 +779,7 @@ enum DIALOG_SCENE // Edit as needed
   TAG_DEFAULT = DIALOG_SCENE.TAG_NONE,
 
   // Settings masks
+  __INITIAL_ID = 3999999,
   __BITMASK_BG_SHIFT = 0,
   __BITMASK_BG_BITS = 7,
   __BITMASK_BG_MASK = ((1 << DIALOG_SCENE.__BITMASK_BG_BITS) - 1) << DIALOG_SCENE.__BITMASK_BG_SHIFT,
@@ -790,6 +810,7 @@ enum DIALOG_SEQUENCE // Edit as needed
   ARG_SPEAKERS,
   ARG_COUNT,
   ARG_DIALOG_COUNT = DIALOG_SEQUENCE.ARG_COUNT,
+  ARG_ID,
   ARG_COUNT_DESERIALIZATION,
 
   // Sequence tags
@@ -799,6 +820,7 @@ enum DIALOG_SEQUENCE // Edit as needed
   TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
 
   // Settings masks
+  __INITIAL_ID = 1999999,
   __BITMASK_TAG_SHIFT = 0,
   __BITMASK_TAG_BITS = 5,
   __BITMASK_TAG_MASK = ((1 << DIALOG_SEQUENCE.__BITMASK_TAG_BITS) - 1) << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT,
@@ -824,6 +846,7 @@ enum DIALOG // Edit as needed
   ARG_FX_MAP,
   ARG_COUNT,
   ARG_FX_COUNT = DIALOG.ARG_COUNT,
+  ARG_ID,
   ARG_COUNT_DESERIALIZATION,
 
   // Speakers
@@ -861,6 +884,7 @@ enum DIALOG // Edit as needed
   TAG_DEFAULT = DIALOG.TAG_NONE,
 
   // Settings masks
+  __INITIAL_ID = -1,
   __BITMASK_SPEAKER_SHIFT = 0,
   __BITMASK_SPEAKER_BITS = 8,
   __BITMASK_SPEAKER_MASK = ((1 << DIALOG.__BITMASK_SPEAKER_BITS) - 1) << DIALOG.__BITMASK_SPEAKER_SHIFT,
@@ -902,6 +926,8 @@ enum DIALOG_FX // Edit as needed
   ARG_ARGV,
   ARG_FUNC,
   ARG_COUNT,
+  ARG_ID = DIALOG_FX.ARG_COUNT,
+  ARG_COUNT_DESERIALIZATION,
 
   // FX flowres argument positions
   FX_ARG_FLOWRES_DATA = 0,
@@ -952,8 +978,10 @@ enum DIALOG_FX // Edit as needed
 
   // Flow signals
   SIGNAL_NONE = 0,
-  SIGNAL_JUMP,
-  SIGNAL_SKIP_NEXT,
+  SIGNAL_REPEAT_CYCLE,
+  SIGNAL_REPEAT_PREVIOUS_FX,
+  SIGNAL_REPEAT_FX,
+  SIGNAL_SKIP_NEXT_FX,
   SIGNAL_STOP_CYCLE,
   SIGNAL_STOP_RESOLUTION,
   SIGNAL_COUNT,
@@ -977,6 +1005,7 @@ enum DIALOG_FX // Edit as needed
   FUNC_INDEXER_COUNT,
 
   // Settings masks
+  __INITIAL_ID = 5999999,
   __BITMASK_TYPE_SHIFT = 0,
   __BITMASK_TYPE_BITS = 10,
   __BITMASK_TYPE_MAX_COUNT = (1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1,
@@ -1252,10 +1281,7 @@ function DialogRunner(manager) constructor
       return self;
     }
 
-    shift *= !(jump_settings & DIALOG_RUNNER.JUMP_SETTING_CHOICE);
-
-    var shift_sign = sign(shift)
-      , current_scene_idx = manager.__decode_scene_idx(prev_position)
+    var current_scene_idx = manager.__decode_scene_idx(prev_position)
       , current_sequence_idx = manager.__decode_sequence_idx(prev_position)
       , current_dialog_idx = manager.__decode_dialog_idx(prev_position)
       , resolved = manager.__resolve_position_relative(shift, prev_position, jump_settings)
@@ -1265,6 +1291,7 @@ function DialogRunner(manager) constructor
           jump_settings & DIALOG_RUNNER.__BITMASK_JUMP_SETTINGS_BEHAVIOUR_MASK,
           argv
         )
+      , shift_sign = sign(shift * (target_position == resolved.position))
     ;
 
     self.position = target_position;
@@ -1272,7 +1299,7 @@ function DialogRunner(manager) constructor
       target_position,
       shift_sign * (current_scene_idx != manager.__decode_scene_idx(target_position)),
       shift_sign * (current_sequence_idx != manager.__decode_sequence_idx(target_position)),
-      shift * (current_dialog_idx != manager.__decode_dialog_idx(target_position)),
+      shift_sign * (current_dialog_idx != manager.__decode_dialog_idx(target_position)),
       resolved.status
     );
 
@@ -1292,40 +1319,37 @@ function DialogRunner(manager) constructor
   static __resolve = function(target_position = self.position, position = self.position, jump_settings = 0, argv = undefined)
   {
     var manager = self.manager
-      , ctx = new DialogCycleContext(self, position)
-      , target_dialog = manager.__to_dialog(target_position)
+      , ctx = new DialogCycleContext(self, position, target_position)
       , current_dialog = manager.__to_dialog(position)
-      , flow = undefined
-      , _fx_cycle = function(condition, dialog, argv, ctx, trigger, filter_fn = undefined) {
-          return condition
+      , flow = ctx
+      , _fx_cycle = function(jump_settings, bypass_mask, dialog, argv, ctx, trigger, filter_fn = undefined) {
+          return !(jump_settings & bypass_mask)
             ? dialog.__fx_execute_cycle(argv, ctx, trigger, filter_fn)
             : undefined
           ;
         }
     ;
 
-    for (var jumps = 0; flow || !jumps; ++jumps)
+    for (var jumps = 0; flow; ++jumps)
     {
-      if (jumps > DIALOG_MANAGER.ERRCHECK_INFINITE_LOOP_TRESHOLD) {
-        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
+      if (jumps > DIALOG_MANAGER.ERRCHECK_JUMP_INFINITE_LOOP_TRESHOLD) {
+        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_JUMP_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
       }
 
-      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE), current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE);
+      flow = _fx_cycle(jump_settings, DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE, current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE);
 
-      if (flow) {
-        target_dialog = flow.target;
-      }
+      if (flow && flow.signal >= DIALOG_FX.SIGNAL_STOP_RESOLUTION)
+        break;
 
-      current_dialog = target_dialog;
+      flow = _fx_cycle(jump_settings, DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER, ctx.target, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER);
 
-      flow = _fx_cycle(!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER), target_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER);
+      if (flow && flow.signal >= DIALOG_FX.SIGNAL_STOP_RESOLUTION)
+        break;
 
-      if (flow) {
-        target_dialog = flow.target;
-      }
+      current_dialog = ctx.target;
     }
 
-    return manager.__to_position(target_dialog);
+    return manager.__to_position(ctx.target);
   }
 
 
@@ -1413,19 +1437,22 @@ function DialogRunner(manager) constructor
  * @desc `DialogCycleContext` constructor. Provides per-cycle caching for condition and indexer evaluations.
  * @param {Struct.DialogRunner} runner The dialog runner instance.
  * @param {Real} position The current position in the dialog graph.
+ * @param {Real} target_position The target position of the current cycle.
  * @returns {Struct.DialogCycleContext}
  */
 
-function DialogCycleContext(runner, position) constructor
+function DialogCycleContext(runner, position, target_position) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
 
   self.runner = runner;
   self.dialog = runner.manager.__to_dialog(position);
+  self.target = runner.manager.__to_dialog(target_position);
 
+  self.fx = undefined;
   self.executed = 0;
   self.resolved = false;
-  self.target = undefined;
+  self.signal = DIALOG_FX.SIGNAL_NONE;
   self.cache = {
     conditions: {},
     indexers: {},
@@ -1435,23 +1462,20 @@ function DialogCycleContext(runner, position) constructor
 
   /**
    * @desc Signals a successful flow resolution, setting the target position and updating runner status.
-   * @param {Array} jump_option_data The data for the jump option.
+   * @param {Struct.Dialog} [target_position] The target position to set.
    * @param {Real} [runner_status] Additional status flags to OR into the runner's status.
    * @returns {Struct.Dialog}
    */
 
-  static success = function(jump_option_data, runner_status = 0)
+  static success = function(target_position = self.target, runner_status = 0)
   {
     var runner = self.runner
-      , manager = runner.manager
-      , jump_position_data = jump_option_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION]
-      , jump_position = jump_position_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION_DESTINATION]
-      , jump_settings = jump_position_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION_SETTINGS] ?? 0
-      , target_position = manager.__to_dialog(manager.__resolve_position(jump_position, runner.position, jump_settings))
+      , fx = self.fx
     ;
 
     runner.status |= runner_status;
     self.target = target_position;
+    self.signal = fx ? fx.signal() : DIALOG_FX.SIGNAL_NONE;
 
     return target_position;
   }
@@ -1465,12 +1489,13 @@ function DialogCycleContext(runner, position) constructor
    * @returns {Struct.Dialog}
    */
 
-  static fail = function(target_position = undefined, runner_status = 0)
+  static fail = function(target_position = self.target, runner_status = 0)
   {
     var runner = self.runner;
 
     runner.status |= runner_status;
     self.target = target_position;
+    self.signal = DIALOG_FX.SIGNAL_NONE;
 
     return target_position;
   }
@@ -1568,18 +1593,61 @@ function DialogCycleContext(runner, position) constructor
 
 /**
  * @desc `DialogManager` constructor.
+ * @param {String} [lang] The language to load from the file. Overridden if deserialized otherwise. Defaults to `"en"`.
  * @param {String|Id.TextFile} data_string The data to parse.
  * @param {Bool} is_file Specifies whether `data_string` is a file (`true`) or not (`false`).
  * @returns {Struct.DialogManager}
  */
 
-function DialogManager(data_string, is_file) constructor
+function DialogManager(lang, data_string, is_file) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
+  static DATA = {
+    LANGS: {
+      auto: 0,
+      ISO_639_1: {
+        afar: "aa", abkhazian: "ab", afrikaans: "af", akan: "ak", albanian: "sq", amharic: "am", arabic: "ar", aragonese: "an", armenian: "hy", assamese: "as", avaric: "av",
+        avestan: "ae", aymara: "ay", azerbaijani: "az", bashkir: "ba", basque: "eu", belarusian: "be", bengali: "bn", bihari_languages: "bh", bislama: "bi", bosnian: "bs", breton: "br",
+        bulgarian: "bg", burmese: "my", catalan: "ca", chamorro: "ch", chechen: "ce", chinese: "zh", church_slavic: "cu", chuvash: "cv", cornish: "kw", corsican: "co", cree: "cr", croatian: "hr", czech: "cs",
+        danish: "da", divehi: "dv", dutch: "nl", dzongkha: "dz", english: "en", esperanto: "eo", estonian: "et", ewe: "ee", faroese: "fo", fijian: "fj", finnish: "fi", french: "fr", fulah: "ff",
+        galician: "gl", ganda: "lg", georgian: "ka", german: "de", greek_modern: "el", kalaallisut: "kl", guarani: "gn", gujarati: "gu", haitian: "ht", hausa: "ha", hebrew: "he", herero: "hz", hindi: "hi", hiri_motu: "ho",
+        hungarian: "hu", icelandic: "is", ido: "io", igbo: "ig", indonesian: "id", interlingua: "ia", interlingue: "ie", inuktitut: "iu", inupiaq: "ik", irish: "ga", italian: "it", japanese: "ja", kalaallisut: "kl", kannada: "kn",
+        kashmiri: "ks", kazakh: "kk", khmer: "km", kikuyu: "ki", kinyarwanda: "rw", kirghiz: "ky", komi: "kv", kongo: "kg", korean: "ko", kuanyama: "kj", kurdish: "ku", lao: "lo", latin: "la", latvian: "lv",
+        limburgan: "li", lingala: "ln", lithuanian: "lt", luxembourgish: "lb", macedonian: "mk", malagasy: "mg", malay: "ms", malayalam: "ml", maltese: "mt", manx: "gv", maori: "mi", marathi: "mr", marshallese: "mh", mongolian: "mn",
+        nauru: "na", navajo: "nv", ndonga: "ng", nepali: "ne", north_ndebele: "nd", northern_sami: "se", norwegian: "no", norwegian_bokmal: "nb", norwegian_nynorsk: "nn", occitan: "oc", ojibwa: "oj", oriya: "or", oromo: "om", ossetian: "os",
+        pali: "pi", panjabi: "pa", persian: "fa", polish: "pl", portuguese: "pt", pushto: "ps", quechua: "qu", romansh: "rm", romanian: "ro", rundi: "rn", russian: "ru", samoan: "sm", sango: "sg", sanskrit: "sa",
+        sardinian: "sc", serbian: "sr", shona: "sn", sindhi: "sd", sinhala: "si", slovak: "sk", slovenian: "sl", somali: "so", sotho_southern: "st", spanish: "es", swahili: "sw", swati: "ss", swedish: "sv", tagalog: "tl", tahitian: "ty",
+        tajik: "tg", tamil: "ta", tatar: "tt", telugu: "te", thai: "th", tibetan: "bo", tigrinya: "ti", tonga_tonga_islands: "to", tsonga: "ts", tswana: "tn", turkish: "tr", turkmen: "tk", uighur: "ug", ukrainian: "uk",
+        urdu: "ur", uzbek: "uz", venda: "ve", vietnamese: "vi", volapuk: "vo", walloon: "wa", welsh: "cy", western_frisian: "fy", wolof: "wo", xhosa: "xh", yiddish: "yi", yoruba: "yo", zhuang: "za", zulu: "zu"
+      },
+      ISO_639_2: {
+        afar: "aar", abkhazian: "abk", achinese: "ace", acoli: "ach", adangme: "ada", adyghe: "ady", afro_asiatic_languages: "afa", afrihili: "afh", afrikaans: "afr", ainu: "ain", akan: "aka", akkadian: "akk", albanian: "sqi", aleut: "ale",
+        algonquian_languages: "alg", southern_altai: "alt", amharic: "amh", english_old: "ang", angika: "anp", apache_languages: "apa", arabic: "ara", aramaic_imperial: "arc", aragonese: "arg", armenian: "hye", artificial_languages: "art", assamese: "asm", asturian: "ast",
+        athapascan_languages: "ath", australian_languages: "aus", avaric: "ava", avestan: "ave", awadhi: "awa", aymara: "aym", azerbaijani: "aze", bantu_languages: "bnt", basque: "eus", belarusian: "bel", bengali: "ben", berber_languages: "ber", bhojpuri: "bho", bosnian: "bos",
+        breton: "bre", bulgarian: "bul", burmese: "mya", catalan: "cat", celtic_languages: "cel", central_khmer: "khm", chinese: "zho", church_slavic: "chu", corsican: "cos", croatian: "hrv", czech: "ces", danish: "dan", dutch: "nld", dzongkha: "dzo", english: "eng", esperanto: "epo",
+        estonian: "est", ewe: "ewe", faroese: "fao", fijian: "fij", finnish: "fin", french: "fra", friulian: "fur", galician: "glg", georgian: "kat", german: "deu", gothic: "got", greek_ancient: "grc", greek_modern: "ell", guarani: "grn",
+        gujarati: "guj", haitian: "hat", hausa: "hau", hebrew: "heb", hindi: "hin", hungarian: "hun", icelandic: "isl", igbo: "ibo", indonesian: "ind", iranian_languages: "ira", irish: "gle", italian: "ita", japanese: "jpn", kalaallisut: "kal",
+        kannada: "kan", kashmiri: "kas", kazakh: "kaz", kalaallisut: "kal", korean: "kor", kurdish: "kur", lao: "lao", latin: "lat", latvian: "lav", lithuanian: "lit", luxembourgish: "ltz", macedonian: "mkd", malagasy: "mlg", malay: "msa", malayalam: "mal",
+        maltese: "mlt", maori: "mri", marathi: "mar", mongolian: "mon", nepali: "nep", norwegian: "nor", occitan: "oci", persian: "fas", polish: "pol", portuguese: "por", romanian: "ron", russian: "rus", sanskrit: "san", serbian: "srp",
+        slovak: "slk", slovenian: "slv", somali: "som", spanish: "spa", swahili: "swa", swedish: "swe", tamil: "tam", telugu: "tel", thai: "tha", tibetan: "bod", turkish: "tur", ukrainian: "ukr", urdu: "urd", uzbek: "uzb",
+        vietnamese: "vie", welsh: "cym", yiddish: "yid", yoruba: "yor", zulu: "zul"
+      },
+    },
+    DIFF: {
+      LEVELS: ["scene", "sequence", "dialog", "fx"],
+      OPERATIONS: {
+        op_matched: "MATCHED",
+        op_inserted: "INSERTED",
+        op_deleted: "DELETED",
+        op_modified: "MODIFIED",
+        op_moved: "MOVED",
+      }
+    }
+  };
 
+  self.lang = lang;
   self.scene_count = 0;
   self.scenes = [];
-  self.data = {};
 
 
 
@@ -1609,14 +1677,39 @@ function DialogManager(data_string, is_file) constructor
         "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}\n\nCONTAINER STRUCTURE INFO: {5}",
         "USED CONTAINER OBJECT OF TYPE \{Struct.{0}\} SHOULD NOT BE EMPTY",
         "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
-        "INFINITE LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
+        "INFINITE JUMP LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
         "POTENTIAL TEXT OVERFLOW DETECTED (W: {0}/{1}): SPLIT INTO MULTIPLE DIALOG OBJECTS\n\nVIOLATOR DATA: {2}",
         "FX LIMIT EXCEEDED - MAX FX MAP CAPACITY REACHED WHILE REGISTERING FX {0}\n(TOTAL CAPACITY: {1})",
+        "INFINITE FX RESOLUTION LOOP DETECTED - ITERATION {0}: ENSURE FX SIGNALS ALLOW CORRECTNESS IN EXECUTION\n\nCRASH CONTEXT DATA: {1}",
       ][type],
       argv
     );
 
     return $"\n\n\n{msg}\n\n";
+  }
+
+
+
+  /**
+   * @desc Returns the contained items.
+   * @returns {Array<Struct.DialogScene}
+   */
+
+  static items = function()
+  {
+    return self.scenes;
+  }
+
+
+
+  /**
+   * @desc Returns the number of contained items.
+   * @returns {Real}
+   */
+
+  static itemcount = function()
+  {
+    return self.scene_count;
   }
 
 
@@ -1790,6 +1883,7 @@ function DialogManager(data_string, is_file) constructor
             return scene.__DIALOG_MANAGER_SERIALIZER_METHOD__();
           }),
           scene_count: int64(self.scene_count),
+          lang: self.lang,
         },
         prettify
       );
@@ -1851,6 +1945,7 @@ function DialogManager(data_string, is_file) constructor
   {
     try
     {
+      self.lang = data.lang;
       __reset_parser_state().scene_count = data.scene_count;
 
       for (var i = 0; i < self.scene_count; ++i) {
@@ -1865,6 +1960,524 @@ function DialogManager(data_string, is_file) constructor
     }
 
     return self;
+  }
+
+
+
+  /**
+   * @desc Deserializes and calculates all the structural differences between two SIMILAR managers. Should be used only as a quick one-time alternative. `DialogManager.diff()` is preferred if needed to compare multiple managers.
+   * @param {String|Id.TextFile} data_string_1 The data to parse of the first manager.
+   * @param {String|Id.TextFile} data_string_2 The data to parse of the second manager.
+   * @param {Bool} is_file Specifies whether the `data_string_*` params are files (`true`) or not (`false`).
+   * @param {Array<Struct>} [diff_tolerance_params] The parameters for which mark violating nodes as errors or warnings.
+   * @returns {Struct}
+   */
+
+  static diffstatic = function(data_string_1, data_string_2, is_file = false, diff_tolerance_params = diff_tolerance_params_create())
+  {
+    var manager_1 = new DialogManager(DialogManager.DATA.LANGS.auto, data_string_1, is_file)
+      , manager_2 = new DialogManager(DialogManager.DATA.LANGS.auto, data_string_2, is_file)
+    ;
+
+    return {
+      diff: manager_1.diff(manager_2, diff_tolerance_params),
+      manager_1, manager_2,
+    };
+  }
+
+
+
+  /**
+   * @desc Calculates all the structural differences between two SIMILAR managers.
+   * @param {Struct.DialogManager} dialog_manager The manager to compare the structural difference with.
+   * @param {Array<Struct>} [diff_tolerance_params] The parameters for which mark violating nodes as errors or warnings.
+   * @returns {Struct}
+   */
+
+  static diff = function(dialog_manager, diff_tolerance_params = diff_tolerance_params_create())
+  {
+    var tree = __diff_level(self.items(), self.itemcount(), dialog_manager.items(), dialog_manager.itemcount());
+
+    return {
+      summary: __diff_stats_summary(tree, diff_tolerance_params),
+      tree,
+    };
+  }
+
+
+
+  /**
+   * @desc Creates an array with the per-level-indexed tolerance parameters.
+   * @param {Array<Real>} [fx_params_ins_del_mov] The fx tolerance params. Defaults to all 0's.
+   * @param {Array<Real>} [dialog_params_ins_del_mov] The dialog tolerance params. Defaults to all 0's.
+   * @param {Array<Real>} [sequence_params_ins_del_mov] The sequence tolerance params. Defaults to all 0's.
+   * @param {Array<Real>} [scene_params_ins_del_mov] The scene tolerance params. Defaults to all 0's.
+   * @returns {Array<Struct>}
+   */
+
+  static diff_tolerance_params_create = function(fx_params_ins_del_mov = undefined, dialog_params_ins_del_mov = undefined, sequence_params_ins_del_mov = undefined, scene_params_ins_del_mov = undefined)
+  {
+    return [
+      __diff_tolerance_param_item(scene_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
+      __diff_tolerance_param_item(sequence_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
+      __diff_tolerance_param_item(dialog_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
+      __diff_tolerance_param_item(fx_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
+    ];
+  }
+
+
+
+  /**
+   * @desc Converts an array of parameters into a struct.
+   * @param {Array} [argv] The ordered arguments to convert to a struct.
+   * @returns {Struct}
+   */
+
+  static __diff_tolerance_param_item = function(argv = [])
+  {
+    var argc = array_length(argv)
+      , insertions_max = argc > DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_MAX ? argv[DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_MAX] : 0
+      , deletions_max = argc > DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_MAX ? argv[DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_MAX] : 0
+      , moves_max = argc > DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_MAX ? argv[DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_MAX] : 0
+      , insertions_warning = argc > DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_WARNING ? argv[DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_WARNING] : 0
+      , deletions_warning = argc > DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_WARNING ? argv[DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_WARNING] : 0
+      , moves_warning = argc > DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_WARNING ? argv[DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_WARNING] : 0
+    ;
+
+    return {
+      insertions_max, deletions_max, moves_max,
+      insertions_warning, deletions_warning, moves_warning,
+    };
+  }
+
+
+
+  /**
+   * @desc Calculates the differences between two lists of items, returning a tree of differences with stats and severity calculated based on the provided tolerance parameters.
+   * @param {Array} l1 The first list of items.
+   * @param {Real} n The number of items in the first list.
+   * @param {Array} l2 The second list of items.
+   * @param {Real} m The number of items in the second list.
+   * @param {Real} lv The current level of the recursion, used for path generation. Defaults to `0`.
+   * @param {String} path The current path in the tree, used for node identification. Defaults to `"DialogManager.{self.lang}"`.
+   * @param {Function} id_fn The function to extract the unique identifier from the items
+   * @returns {Struct}
+   */
+
+  static __diff_level = function(l1, n, l2, m, lv = 0, path = $"DialogManager\{{self.lang}\}", id_fn = function(e) { return e._id; })
+  {
+    var _diff_node = function(_id, level, type, index, index_match, path)
+      {
+        return {
+          _id, level, type, index, index_match, path,
+          items: [], stats: undefined, severity: 0,
+        };
+      }
+      , diffdata = __diff_list(l1, n, l2, m)
+      , subdiffcount = 0
+      , diffcount = 0
+      , result = []
+    ;
+
+    for (var i = 0; i < diffdata.count; ++i)
+    {
+      var op = diffdata.ops[i]
+        , node = _diff_node(id_fn(op), lv, op.type, op.index, op.index_match, $"{path}.{DialogManager.DATA.DIFF.LEVELS[lv]}({op.index})")
+      ;
+
+      if (op.type == DialogManager.DATA.DIFF.OPERATIONS.op_matched)
+      {
+        var sl1 = l1[op.index]
+          , sl2 = l2[op.index_match]
+          , recursion = is_instanceof(sl1, DialogLinkable)
+          , level_data = recursion
+            ? __diff_level(sl1.items(), sl1.itemcount(), sl2.items(), sl2.itemcount(), lv + 1, node.path)
+            : undefined
+        ;
+
+        if (recursion)
+        {
+          node.items = level_data.items;
+
+          // level_data.diffcount > 0 => level_data.subdiffcount > 0
+          if (level_data.diffcount) {
+            node.type = DialogManager.DATA.DIFF.OPERATIONS.op_modified;
+            ++diffcount;
+          }
+
+          subdiffcount += level_data.diffcount + level_data.subdiffcount;
+        }
+      }
+      else
+        ++diffcount;
+
+      result[i] = node;
+    }
+
+    return {
+      items: result,
+      subdiffcount,
+      diffcount,
+    };
+  }
+
+
+
+  /**
+   * @desc Calculates the longest common subsequence between two lists of items, returning a list of operations to transform the first list into the second list.
+    * @param {Array} l1 The first list of items.
+    * @param {Real} n The number of items in the first list.
+    * @param {Array} l2 The second list of items.
+    * @param {Real} m The number of items in the second list.
+    * @param {Function} id_fn The function to extract the unique identifier from the items
+    * @returns {Struct}
+   */
+
+  static __diff_list = function(l1, n, l2, m, id_fn = function(e) { return e._id; })
+  {
+    var w = m + 1
+      , dp = array_create((n + 1) * w, 0)
+      , _data = function(_id, type, index, index_match = undefined) {
+          return { _id, type, index, index_match };
+      }
+    ;
+
+    for (var i = 1; i <= n; ++i)
+      for (var j = 1; j <= m; ++j)
+        if (id_fn(l1[i - 1]) == id_fn(l2[j - 1]))
+          dp[i * w + j] = dp[(i - 1) * w + j - 1] + 1;
+        else
+          dp[i * w + j] = max(dp[(i - 1) * w + j], dp[i * w + j - 1]);
+
+    var i = n, j = m, f = 0
+      , operations = []
+    ;
+
+    for (f = 0; i || j; ++f)
+    {
+      var _l1 = i - 1, _l2 = j - 1;
+
+      if (i && j && id_fn(l1[_l1]) == id_fn(l2[_l2]))
+      {
+        var type = _l1 == _l2
+          ? DialogManager.DATA.DIFF.OPERATIONS.op_matched
+          : DialogManager.DATA.DIFF.OPERATIONS.op_moved
+        ;
+
+        operations[f] = _data(id_fn(l1[_l1]), type, _l1, _l2);
+        --i;
+        --j;
+      }
+      else if (j && (!i || dp[i * w + _l2] >= dp[_l1 * w + j])) {
+        operations[f] = _data(id_fn(l2[_l2]), DialogManager.DATA.DIFF.OPERATIONS.op_inserted, _l2);
+        --j;
+      }
+      else {
+        operations[f] = _data(id_fn(l1[_l1]), DialogManager.DATA.DIFF.OPERATIONS.op_deleted, _l1);
+        --i;
+      }
+    }
+
+    var ops_resolved = __diff_resolve_moves(array_reverse(operations), f);
+
+    return {
+      ops: ops_resolved.operations,
+      count: ops_resolved.count,
+    };
+  }
+
+
+
+  /**
+   * @desc Resolves move operations in a list of diff nodes.
+   * @param {Array} nodelist The list of diff nodes to resolve.
+   * @param {Function} id_fn The function to extract the unique identifier from the nodes
+   * @returns {Array}
+   */
+
+  static __diff_resolve_moves = function(nodelist, node_count = 0, id_fn = function(e) { return e._id; })
+  {
+    var insertions = {}, deletions = {};
+
+    for (var i = 0; i < node_count; ++i)
+    {
+      var node = nodelist[i];
+
+      switch (node.type)
+      {
+        case DialogManager.DATA.DIFF.OPERATIONS.op_inserted:
+          insertions[$ id_fn(node)] = i;
+        break;
+
+        case DialogManager.DATA.DIFF.OPERATIONS.op_deleted:
+          deletions[$ id_fn(node)] = i;
+        break;
+      }
+    }
+
+    var keys = variable_struct_get_names(insertions)
+      , to_remove = array_create(ceil(node_count / 64), 0)
+      , key_count = array_length(keys)
+    ;
+
+    for (var i = key_count - 1; i >= 0; --i)
+    {
+      var _id = int64(keys[i]);
+
+      if (variable_struct_exists(deletions, _id))
+      {
+        var index_ins = insertions[$ _id]
+          , index_del = deletions[$ _id]
+          , ins = nodelist[index_ins]
+          , del = nodelist[index_del]
+        ;
+
+        to_remove[i >> 6] |= 1 << (index_del & 0x3F);
+        ins.type = DialogManager.DATA.DIFF.OPERATIONS.op_moved;
+        ins.index_match = ins.index;
+        ins.index = del.index;
+      }
+    }
+
+    var resolved = []
+      , resolved_count = 0
+    ;
+
+    for (var i = 0; i < node_count; ++i)
+      if (!(to_remove[i >> 6] >> (i & 0x3F) & 1))
+        resolved[resolved_count++] = nodelist[i];
+
+    return {
+      operations: resolved,
+      count: resolved_count,
+    };
+  }
+
+
+
+  /**
+   * @desc Creates an empty stats struct.
+   * @returns {Struct}
+   */
+
+  static __diff_stats_empty = function()
+  {
+    return { insertions: 0, deletions: 0, moves: 0, modifications: 0, total: 0, };
+  }
+
+
+
+  /**
+   * @desc Computes the stats for each level of the diff tree, returning an array with the stats indexed by level.
+   * @param {Array} nodelist The list of diff nodes to compute the stats from.
+   * @param {Array} level_stats The array to store the stats in. If `undefined`, a new array will be created. Defaults to `undefined`.
+   * @returns {Array}
+   */
+
+  static __diff_stats_compute_level = function(nodelist, level_stats = undefined)
+  {
+    level_stats ??= array_create(array_length(DialogManager.DATA.DIFF.LEVELS), __diff_stats_empty());
+
+    var node_count = array_length(nodelist);
+
+    for (var i = 0; i < node_count; ++i)
+    {
+      var node = nodelist[i]
+        , lv = node.level
+      ;
+
+      level_stats[lv] = __diff_stats_merge(level_stats[lv], __diff_stats_compute_from_type(node.type));
+      __diff_stats_compute_level(node.items, level_stats);
+    }
+
+    return level_stats;
+  }
+
+
+
+  /**
+   * @desc Computes the total stats for a diff tree.
+   * @param {Array} nodelist The list of diff nodes to compute the stats from.
+   * @returns {Struct}
+   */
+
+  static __diff_stats_compute_tree = function(nodelist)
+  {
+    var node_count = array_length(nodelist)
+      , total = __diff_stats_empty()
+    ;
+
+    for (var i = 0; i < node_count; ++i)
+    {
+      var node = nodelist[i];
+
+      var stats_current = __diff_stats_compute_from_type(node.type)
+        , stats_child = __diff_stats_compute_tree(node.items)
+      ;
+
+      node.stats = __diff_stats_merge(stats_current, stats_child);
+      total = __diff_stats_merge(total, node.stats);
+    }
+
+    return total;
+  }
+
+
+
+  /**
+   * @desc Computes the stats for a diff node type, returning a stats struct with the corresponding counts set to 1 and the rest set to 0.
+   * @param {String} type The type of the diff node to compute the stats from.
+   * @returns {Struct}
+   */
+
+  static __diff_stats_compute_from_type = function(type)
+  {
+    var stats = __diff_stats_empty();
+
+    switch (type)
+    {
+      case DialogManager.DATA.DIFF.OPERATIONS.op_inserted:
+        ++stats.insertions;
+      break;
+
+      case DialogManager.DATA.DIFF.OPERATIONS.op_deleted:
+        ++stats.deletions;
+      break;
+
+      case DialogManager.DATA.DIFF.OPERATIONS.op_moved:
+        ++stats.moves;
+      break;
+
+      case DialogManager.DATA.DIFF.OPERATIONS.op_modified:
+        ++stats.modifications;
+      break;
+    }
+
+    stats.total = stats.insertions + stats.deletions + stats.moves + stats.modifications;
+
+    return stats;
+  }
+
+
+
+  /**
+   * @desc Merges two stats structs, summing the counts of each stat type.
+   * @param {Struct} dest The destination stats struct to merge into.
+   * @param {Struct} src The source stats struct to merge from.
+   * @returns {Struct}
+   */
+
+  static __diff_stats_merge = function(dest, src)
+  {
+    dest.insertions += src.insertions;
+    dest.deletions += src.deletions;
+    dest.modifications += src.modifications;
+    dest.moves += src.moves;
+    dest.total += src.total;
+
+    return dest;
+  }
+
+
+
+  /**
+   * @desc Computes a summary of the diff tree statistics and checks for violation of the specified tolerance parameters.
+   * @param {Struct.DialogManager.DiffNode} tree The diff tree to compute the summary from.
+   * @param {Array<Struct.DialogManager.DiffToleranceParam>} diff_tolerance_params
+   * @return {Struct}
+   */
+
+  static __diff_stats_summary = function(tree, diff_tolerance_params)
+  {
+    __diff_stats_compute_tree(tree.items);
+
+    var level_stats = __diff_stats_compute_level(tree.items)
+      , level_summary = []
+      , severity = 0
+    ;
+
+    for (var lv = array_length(level_stats) - 1; lv >= 0; --lv)
+    {
+      var stat = level_stats[lv]
+        , stat_level_tolerance = diff_tolerance_params[lv]
+      ;
+
+      stat.severity = __diff_stat_severity(stat, stat_level_tolerance);
+      severity = max(severity, stat.severity);
+      level_summary[lv] = {
+        level: DialogManager.DATA.DIFF.LEVELS[lv],
+        tolerance: stat_level_tolerance,
+        severity: stat.severity,
+        stats: stat,
+      };
+    }
+
+    var node_summary = __diff_stats_summary_update_severity(tree.items, diff_tolerance_params);
+
+    return {
+      level_summary, node_summary,
+      severity: max(severity, node_summary.severity),
+    };
+  }
+
+
+
+  /**
+   * @desc Updates the severity of each node in the diff tree based on the provided tolerance parameters, returning a summary of the number of violating nodes and the maximum severity found.
+   * @param {Array} nodelist The list of diff nodes to update the severity of.
+   * @param {Array} diff_tolerance_params The array with the tolerance parameters indexed by level.
+   * @returns {Struct}
+   */
+
+  static __diff_stat_severity = function(stat, level_stats)
+  {
+    var s_ins = stat.insertions, s_dels = stat.deletions, s_movs = stat.moves
+      , e_ins = level_stats.insertions_max, e_dels = level_stats.deletions_max, e_movs = level_stats.moves_max
+      , w_ins = level_stats.insertions_warning, w_dels = level_stats.deletions_warning, w_movs = level_stats.moves_warning
+    ;
+
+    return s_ins > e_ins || s_dels > e_dels || s_movs > e_movs
+      ? DIALOG_MANAGER.DIFF_SEVERITY_ERROR
+      : (
+        s_ins > w_ins || s_dels > w_dels || s_movs > w_movs
+        ? DIALOG_MANAGER.DIFF_SEVERITY_WARNING
+        : DIALOG_MANAGER.DIFF_SEVERITY_OK
+      )
+    ;
+  }
+
+
+
+  /**
+   * @desc Recursively updates the severity of each node in the diff tree based on the provided tolerance parameters, returning a summary of the number of violating nodes and the maximum severity found.
+   * @param {Array} nodelist The list of diff nodes to update the severity of.
+   * @param {Array} diff_tolerance_params The array with the tolerance parameters indexed by level.
+   * @returns {Struct}
+   */
+
+  static __diff_stats_summary_update_severity = function(nodelist, diff_tolerance_params)
+  {
+    var node_count = array_length(nodelist)
+      , violations = 0
+      , severity = 0
+    ;
+
+    for (var i = 0; i < node_count; ++i)
+    {
+      var node = nodelist[i]
+        , severity_current = __diff_stat_severity(node.stats, diff_tolerance_params[node.level])
+        , child_data = __diff_stats_summary_update_severity(node.items, diff_tolerance_params)
+      ;
+
+      node.severity = max(severity_current, child_data.severity);
+      node.violating = node.severity >= DIALOG_MANAGER.DIFF_SEVERITY_ERROR;
+      violations += node.violating + child_data.violations;
+      severity = max(node.severity, severity);
+    }
+
+    return {
+      severity, violations,
+    };
   }
 
 
@@ -2454,11 +3067,13 @@ function DialogLinkable(settings_mask) constructor
 function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
+  static __ID = DIALOG_SCENE.__INITIAL_ID;
 
   self.sequences = [];
   self.scene_idx = 0;
   self.sequence_count = 0;
   self.manager = undefined;
+  self._id = ++DialogScene.__ID;
 
 
 
@@ -2579,6 +3194,30 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 
   /**
+   * @desc Returns the contained items.
+   * @returns {Array<Struct.DialogSequence}
+   */
+
+  static items = function()
+  {
+    return self.sequences;
+  }
+
+
+
+  /**
+   * @desc Returns the number of contained items.
+   * @returns {Real}
+   */
+
+  static itemcount = function()
+  {
+    return self.sequence_count;
+  }
+
+
+
+  /**
    * @desc Retrieves a sequence given an index. Negative indices will iterate backwards.
    * @param {Real} [sequence_idx] The index of the sequence to get.
    * @returns {Struct.DialogSequence}
@@ -2629,6 +3268,22 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 
   /**
+   * @desc Sets the internal ID of the scene.
+   * @param {Real} _id The new ID to set.
+   * @returns {Struct.DialogScene}
+   */
+
+  static __id = function(_id)
+  {
+    DialogScene.__ID = max(DialogScene.__ID, _id);
+    self._id = _id;
+
+    return self;
+  }
+
+
+
+  /**
    * @desc Retrieves the assigned manager object.
    * @returns {Struct.DialogManager}
    */
@@ -2672,6 +3327,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
       }),
       int64(self.settings_mask),
       int64(self.sequence_count),
+      int64(self._id),
     ];
   }
 
@@ -2690,6 +3346,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
       }),
       settings_mask: int64(self.settings_mask),
       sequence_count: int64(self.sequence_count),
+      _id: int64(self._id),
     };
   }
 
@@ -2705,6 +3362,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   {
     return new DialogScene([], data[DIALOG_SCENE.ARG_SETTINGS_MASK])
       .__parse(data[DIALOG_SCENE.ARG_SEQUENCES], data[DIALOG_SCENE.ARG_SEQUENCE_COUNT])
+      .__id(data[DIALOG_SCENE.ARG_ID])
     ;
   }
 
@@ -2720,6 +3378,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   {
     return new DialogScene([], data.settings_mask)
       .__parse(data.sequences, data.sequence_count)
+      .__id(data._id)
     ;
   }
 
@@ -2746,7 +3405,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __deserialize = function(data_string)
   {
-    return DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
+     DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
   }
 
 
@@ -2813,12 +3472,14 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(settings_mask) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
+  static __ID = DIALOG_SEQUENCE.__INITIAL_ID;
 
   self.dialogs = [];
   self.speakers = speakers;
   self.sequence_idx = 0;
   self.dialog_count = 0;
   self.scene = undefined;
+  self._id = ++DialogSequence.__ID;
 
 
 
@@ -2894,6 +3555,30 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
       ? (self.settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK) >> DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT
       : tag_mask << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT & DIALOG_SEQUENCE.__BITMASK_TAG_MASK
     ;
+  }
+
+
+
+  /**
+   * @desc Returns the contained items.
+   * @returns {Array<Struct.Dialog}
+   */
+
+  static items = function()
+  {
+    return self.dialogs;
+  }
+
+
+
+  /**
+   * @desc Returns the number of contained items.
+   * @returns {Real}
+   */
+
+  static itemcount = function()
+  {
+    return self.dialog_count;
   }
 
 
@@ -2978,6 +3663,22 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 
   /**
+   * @desc Sets the internal ID of the sequence.
+   * @param {Real} _id The new ID to set.
+   * @returns {Struct.DialogSequence}
+   */
+
+  static __id = function(_id)
+  {
+    DialogSequence.__ID = max(DialogSequence.__ID, _id);
+    self._id = _id;
+
+    return self;
+  }
+
+
+
+  /**
    * @desc Retrieves the assigned manager object.
    * @returns {Struct.DialogManager}
    */
@@ -3024,6 +3725,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
         return int64(speaker);
       }),
       int64(self.dialog_count),
+      int64(self._id),
     ];
   }
 
@@ -3045,6 +3747,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
         return int64(speaker);
       }),
       dialog_count: int64(self.dialog_count),
+      _id: int64(self._id),
     };
   }
 
@@ -3060,6 +3763,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   {
     return new DialogSequence([], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS])
       .__parse(data[DIALOG_SEQUENCE.ARG_DIALOGS], data[DIALOG_SEQUENCE.ARG_DIALOG_COUNT])
+      .__id(data[DIALOG_SEQUENCE.ARG_ID])
     ;
   }
 
@@ -3075,6 +3779,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   {
     return new DialogSequence([], data.settings_mask, data.speakers)
       .__parse(data.dialogs, data.dialog_count)
+      .__id(data._id)
     ;
   }
 
@@ -3168,6 +3873,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
+  static __ID = DIALOG.__INITIAL_ID;
   static TEXT_WIDTH_MAX = -1;
   static TEXT_WIDTH_FUNC = function(dialog) {
     return string_width(dialog.text);
@@ -3178,6 +3884,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   self.dialog_idx = 0;
   self.fx_count = 0;
   self.sequence = undefined;
+  self._id = ++Dialog.__ID;
 
   if (Dialog.TEXT_WIDTH_MAX)
   {
@@ -3334,6 +4041,30 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       ? (self.settings_mask & DIALOG.__BITMASK_TAG_MASK) >> DIALOG.__BITMASK_TAG_SHIFT
       : tag_mask << DIALOG.__BITMASK_TAG_SHIFT & DIALOG.__BITMASK_TAG_MASK
     ;
+  }
+
+
+
+  /**
+   * @desc Returns the contained items.
+   * @returns {Array<Struct.DialogFX}
+   */
+
+  static items = function()
+  {
+    return self.fx_map;
+  }
+
+
+
+  /**
+   * @desc Returns the number of contained items.
+   * @returns {Real}
+   */
+
+  static itemcount = function()
+  {
+    return self.fx_count;
   }
 
 
@@ -3505,6 +4236,22 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       array_insert(self.fx_map, index + i, fxs[i]);
 
     self.fx_count += fx_count;
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Sets the internal ID of the dialog.
+   * @param {Real} _id The new ID to set.
+   * @returns {Struct.Dialog}
+   */
+
+  static __id = function(_id)
+  {
+    Dialog.__ID = max(Dialog.__ID, _id);
+    self._id = _id;
 
     return self;
   }
@@ -3701,19 +4448,71 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __fx_execute_cycle = function(argv = undefined, ctx = undefined, trigger = DIALOG_FX.TRIGGER_NONE, filter_fn = function(fx, argv = undefined) { return true; })
   {
-    var resolved = false;
+    var resolved = false
+      , fx_skip_next = false
+      , fx_first_exec_index = -1
+      , fx_last_exec_index = fx_first_exec_index
+      , fx_previous_exec_index = fx_last_exec_index
+      , loop_goto_next = false
+    ;
 
     for (var i = 0; i < self.fx_count; ++i)
     {
+      if (ctx.executed > DIALOG_MANAGER.ERRCHECK_FX_INFINITE_LOOP_TRESHOLD) {
+        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_FX_LOOP_DETECTED, [
+          ctx.executed, ctx.__struct()
+        ]);
+      }
+
       var fx = self.fx_map[i];
 
       if (fx.trigger() != trigger || !filter_fn(fx, argv))
         continue;
 
-      if (fx.execute(argv, ctx) && fx.iscyclebreaker(ctx)) {
-        resolved = true;
+      if (fx_first_exec_index < 0)
+        fx_first_exec_index = i;
+
+      if (fx_skip_next) {
+        fx_skip_next = false;
+        continue;
+      }
+
+      fx_previous_exec_index = fx_last_exec_index;
+      fx_last_exec_index = i;
+      fx.execute(argv, ctx);
+
+      switch (ctx.signal)
+      {
+        case DIALOG_FX.SIGNAL_STOP_CYCLE:
+        case DIALOG_FX.SIGNAL_STOP_RESOLUTION:
+          resolved = true;
+        break;
+
+        case DIALOG_FX.SIGNAL_REPEAT_CYCLE:
+          i = fx_first_exec_index - 1;
+          loop_goto_next = true;
+        break;
+
+        case DIALOG_FX.SIGNAL_REPEAT_PREVIOUS_FX:
+          i = (fx_previous_exec_index < 0 ? fx_last_exec_index : fx_previous_exec_index) - 1;
+          loop_goto_next = true;
+        break;
+
+        case DIALOG_FX.SIGNAL_REPEAT_FX:
+          i -= 1;
+          loop_goto_next = true;
         break;
       }
+
+      if (resolved)
+        break;
+
+      if (loop_goto_next) {
+        loop_goto_next = false;
+        continue;
+      }
+
+      fx_skip_next = ctx.signal == DIALOG_FX.SIGNAL_SKIP_NEXT_FX;
     }
 
     return resolved ? ctx : undefined;
@@ -3735,6 +4534,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
         return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       int64(self.fx_count),
+      int64(self._id),
     ];
   }
 
@@ -3754,6 +4554,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
         return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       fx_count: int64(self.fx_count),
+      _id: int64(self._id),
     };
   }
 
@@ -3768,12 +4569,14 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __from_array = function(data)
   {
     var dialog = new Dialog(
-      data[DIALOG.ARG_TEXT],
-      data[DIALOG.ARG_SETTINGS_MASK],
-      array_map(data[DIALOG.ARG_FX_MAP], function(fx) {
-        return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
-      })
-    );
+        data[DIALOG.ARG_TEXT],
+        data[DIALOG.ARG_SETTINGS_MASK],
+        array_map(data[DIALOG.ARG_FX_MAP], function(fx) {
+          return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
+        })
+      )
+      .__id(data[DIALOG.ARG_ID])
+    ;
 
     dialog.fx_count = data[DIALOG.ARG_FX_COUNT];
 
@@ -3791,12 +4594,14 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __from_struct = function(data)
   {
     var dialog = new Dialog(
-      data.text,
-      data.settings_mask,
-      array_map(data.fx_map, function(fx) {
-        return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
-      })
-    );
+        data.text,
+        data.settings_mask,
+        array_map(data.fx_map, function(fx) {
+          return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
+        })
+      )
+      .__id(data._id)
+    ;
 
     dialog.fx_count = data.fx_count;
 
@@ -3868,6 +4673,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 function DialogFX(settings_mask, argv) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
+  static __ID = DIALOG_FX.__INITIAL_ID;
   static data = {
     initialized: false,
     fx_map: {
@@ -3908,6 +4714,7 @@ function DialogFX(settings_mask, argv) constructor
 
   self.settings_mask = settings_mask;
   self.argv = argv;
+  self._id = ++DialogFX.__ID;
 
 
 
@@ -4049,7 +4856,7 @@ function DialogFX(settings_mask, argv) constructor
   static prompt = function(option_idx = 0)
   {
     var option = self.option(option_idx);
-    
+
     return is_array(option)
       ? option[DIALOG_FX.FX_ARG_FLOWRES_DATA_PROMPT]
       : undefined
@@ -4067,7 +4874,7 @@ function DialogFX(settings_mask, argv) constructor
   static metadata = function(option_idx = 0)
   {
     var option = self.option(option_idx);
-    
+
     return is_array(option)
       ? option[DIALOG_FX.FX_ARG_FLOWRES_DATA_METADATA]
       : undefined
@@ -4144,10 +4951,28 @@ function DialogFX(settings_mask, argv) constructor
 
   static execute = function(argv = self.argv, context = undefined)
   {
-    if (is_instanceof(context, DialogCycleContext))
+    if (is_instanceof(context, DialogCycleContext)) {
       ++context.executed;
+      context.fx = self;
+    }
 
     return DialogFX.data.fx_map.funcs[self.type()](argv, context);
+  }
+
+
+
+  /**
+   * @desc Sets the internal ID of the dialog fx.
+   * @param {Real} _id The new ID to set.
+   * @returns {Struct.DialogFX}
+   */
+
+  static __id = function(_id)
+  {
+    DialogFX.__ID = max(DialogFX.__ID, _id);
+    self._id = _id;
+
+    return self;
   }
 
 
@@ -4169,6 +4994,29 @@ function DialogFX(settings_mask, argv) constructor
 
 
   /**
+   * @param {Array} jump_option_data The data for the jump option.
+   * @param {Struct.DialogCycleContext} [context] The context object with the environment data for the effect.
+   * @returns {Struct.Dialog} The resolved position.
+   */
+
+  static __resolve_option_flow = function(option_flow, context = undefined)
+  {
+    if (!context)
+      return undefined;
+
+    var runner = context.runner
+      , manager = runner.manager
+      , jump_position_data = option_flow[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION]
+      , jump_position = jump_position_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION_DESTINATION]
+      , jump_settings = jump_position_data[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION_SETTINGS] ?? 0
+    ;
+
+    return manager.__to_dialog(manager.__resolve_position(jump_position, runner.position, jump_settings));
+  }
+
+
+
+  /**
    * @desc Executes the inconditional jump effect.
    * @param {Array<Any>} argv The arguments to pass to the fx function.
    * @param {Struct.DialogCycleContext} ctx The context for the effect execution.
@@ -4178,7 +5026,7 @@ function DialogFX(settings_mask, argv) constructor
   static __fx_jump = function(argv, ctx)
   {
     return ctx.success(
-      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0],
+      __resolve_option_flow(argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0], ctx),
       DIALOG_RUNNER.STATUS_EXECUTED_JUMP
     );
   }
@@ -4206,7 +5054,7 @@ function DialogFX(settings_mask, argv) constructor
     var idx = ctx.indexer(fx_indexer_index, fx_indexer_argv);
 
     return ctx.success(
-      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx],
+      __resolve_option_flow(argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx], ctx),
       DIALOG_RUNNER.STATUS_EXECUTED_DISPATCH
     );
   }
@@ -4230,7 +5078,7 @@ function DialogFX(settings_mask, argv) constructor
       return ctx.fail();
 
     return ctx.success(
-      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0],
+      __resolve_option_flow(argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][0], ctx),
       DIALOG_RUNNER.STATUS_EXECUTED_FALLBACK
     );
   }
@@ -4255,7 +5103,7 @@ function DialogFX(settings_mask, argv) constructor
       return ctx.fail();
 
     return ctx.success(
-      argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx],
+      __resolve_option_flow(argv[DIALOG_FX.FX_ARG_FLOWRES_DATA][idx], ctx),
       DIALOG_RUNNER.STATUS_EXECUTED_CHOICE
     );
   }
@@ -4272,6 +5120,7 @@ function DialogFX(settings_mask, argv) constructor
     return [
       int64(self.settings_mask),
       __resolve_recursive(self.argv),
+      int64(self._id),
     ];
   }
 
@@ -4287,6 +5136,7 @@ function DialogFX(settings_mask, argv) constructor
     return {
       settings_mask: int64(self.settings_mask),
       argv: __resolve_recursive(self.argv),
+      _id: int64(self._id),
     };
   }
 
@@ -4300,7 +5150,9 @@ function DialogFX(settings_mask, argv) constructor
 
   static __from_array = function(data)
   {
-    return new DialogFX(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV]);
+    return new DialogFX(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV])
+      .__id(data[DIALOG_FX.ARG_ID])
+    ;
   }
 
 
@@ -4313,7 +5165,9 @@ function DialogFX(settings_mask, argv) constructor
 
   static __from_struct = function(data)
   {
-    return new DialogFX(data.settings_mask, data.argv);
+    return new DialogFX(data.settings_mask, data.argv)
+      .__id(data._id)
+    ;
   }
 
 
