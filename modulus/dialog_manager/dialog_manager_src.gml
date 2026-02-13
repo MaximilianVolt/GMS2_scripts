@@ -2045,8 +2045,8 @@ function DialogManager(lang, data_string, is_file) constructor
     ;
 
     return {
-      insertions_max, deletions_max, moves_max,
-      insertions_warning, deletions_warning, moves_warning,
+      insertions_max: int64(insertions_max), deletions_max: int64(deletions_max), moves_max: int64(moves_max),
+      insertions_warning: int64(insertions_warning), deletions_warning: int64(deletions_warning), moves_warning: int64(moves_warning),
     };
   }
 
@@ -2069,8 +2069,8 @@ function DialogManager(lang, data_string, is_file) constructor
     var _diff_node = function(_id, level, type, index, index_match, path)
       {
         return {
-          _id, level, type, index, index_match, path,
-          items: [], stats: undefined, severity: 0,
+          _id: int64(_id), level: int64(level), type, index: int64(index), index_match: int64(index_match), path,
+          items: [], stats: undefined, severity: int64(0),
         };
       }
       , diffdata = __diff_list(l1, n, l2, m)
@@ -2116,8 +2116,8 @@ function DialogManager(lang, data_string, is_file) constructor
 
     return {
       items: result,
-      subdiffcount,
-      diffcount,
+      subdiffcount: int64(subdiffcount),
+      diffcount: int64(diffcount),
     };
   }
 
@@ -2138,7 +2138,7 @@ function DialogManager(lang, data_string, is_file) constructor
     var w = m + 1
       , dp = array_create((n + 1) * w, 0)
       , _data = function(_id, type, index, index_match = undefined) {
-          return { _id, type, index, index_match };
+          return { _id: int64(_id), type, index: int64(index), index_match: int64(index_match) };
       }
     ;
 
@@ -2182,7 +2182,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
     return {
       ops: ops_resolved.operations,
-      count: ops_resolved.count,
+      count: int64(ops_resolved.count),
     };
   }
 
@@ -2249,7 +2249,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
     return {
       operations: resolved,
-      count: resolved_count,
+      count: int64(resolved_count),
     };
   }
 
@@ -2262,7 +2262,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __diff_stats_empty = function()
   {
-    return { insertions: 0, deletions: 0, moves: 0, modifications: 0, total: 0, };
+    return { insertions: int64(0), deletions: int64(0), moves: int64(0), modifications: int64(0), total: int64(0), };
   }
 
 
@@ -2369,11 +2369,11 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __diff_stats_merge = function(dest, src)
   {
-    dest.insertions += src.insertions;
-    dest.deletions += src.deletions;
-    dest.modifications += src.modifications;
-    dest.moves += src.moves;
-    dest.total += src.total;
+    dest.insertions = int64(dest.insertions + src.insertions);
+    dest.deletions = int64(dest.deletions + src.deletions);
+    dest.modifications = int64(dest.modifications + src.modifications);
+    dest.moves = int64(dest.moves + src.moves);
+    dest.total = int64(dest.total + src.total);
 
     return dest;
   }
@@ -2416,7 +2416,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
     return {
       level_summary, node_summary,
-      severity: max(severity, node_summary.severity),
+      severity: int64(max(severity, node_summary.severity)),
     };
   }
 
@@ -2476,7 +2476,8 @@ function DialogManager(lang, data_string, is_file) constructor
     }
 
     return {
-      severity, violations,
+      severity: int64(severity),
+      violations: int64(violations),
     };
   }
 
