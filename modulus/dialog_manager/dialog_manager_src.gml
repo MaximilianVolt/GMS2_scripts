@@ -2095,7 +2095,7 @@ function DialogManager(lang, data_string, is_file) constructor
             : undefined
         ;
 
-        if (recursion)
+        if (recursion && level_data.subdiffcount)
         {
           node.items = level_data.items;
 
