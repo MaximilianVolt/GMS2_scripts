@@ -138,19 +138,13 @@ function dialog_manager_search_by_tag(collection, tag)
 
 function dialog_scene_create(sequences = [], settings_mask = 0)
 {
-  var bg = DialogScene.bg(settings_mask)
-    , bgm = DialogScene.bgm(settings_mask)
-    , bgs = DialogScene.bgs(settings_mask)
-    , tag = DialogScene.tag(settings_mask)
-  ;
-
   return new DialogScene(
     is_array(sequences) ? sequences : [sequences],
     settings_mask
-      | (bg ? 0 : DialogScene.bg(DIALOG_SCENE.BG_DEFAULT))
-      | (bgm ? 0 : DialogScene.bgm(DIALOG_SCENE.BGM_DEFAULT))
-      | (bgs ? 0 : DialogScene.bgs(DIALOG_SCENE.BGS_DEFAULT))
-      | (tag ? 0 : DialogScene.tag(DIALOG_SCENE.TAG_DEFAULT))
+      | (DialogScene.__bg(settings_mask) ? 0 : DialogScene.bg(DIALOG_SCENE.BG_DEFAULT))
+      | (DialogScene.__bgm(settings_mask) ? 0 : DialogScene.bgm(DIALOG_SCENE.BGM_DEFAULT))
+      | (DialogScene.__bgs(settings_mask) ? 0 : DialogScene.bgs(DIALOG_SCENE.BGS_DEFAULT))
+      | (DialogScene.__tag(settings_mask) ? 0 : DialogScene.tag(DIALOG_SCENE.TAG_DEFAULT))
   );
 }
 
@@ -214,12 +208,10 @@ function dialog_scene_create_from_struct(data)
 
 function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [])
 {
-  var tag = DialogSequence.tag(settings_mask);
-
   return new DialogSequence(
     is_array(dialogs) ? dialogs : [dialogs],
     settings_mask
-      | (tag ? 0 : DialogSequence.tag(DIALOG_SEQUENCE.TAG_DEFAULT)),
+      | (DialogSequence.__tag(settings_mask) ? 0 : DialogSequence.tag(DIALOG_SEQUENCE.TAG_DEFAULT)),
     is_array(speakers) ? speakers : [speakers]
   );
 }
@@ -284,21 +276,14 @@ function dialog_sequence_create_from_struct(data)
 
 function dialog_create(text, settings_mask = 0, fx_map = [])
 {
-  var speaker = Dialog.speaker(settings_mask)
-    , emotion = Dialog.emotion(settings_mask)
-    , anchor = Dialog.anchor(settings_mask)
-    , textbox = Dialog.textbox(settings_mask)
-    , tag = Dialog.tag(settings_mask)
-  ;
-
   return new Dialog(
     text,
     settings_mask
-      | (speaker ? 0 : Dialog.speaker(DIALOG.SPEAKER_DEFAULT))
-      | (emotion ? 0 : Dialog.emotion(DIALOG.EMOTION_DEFAULT))
-      | (anchor ? 0 : Dialog.anchor(DIALOG.ANCHOR_DEFAULT))
-      | (textbox ? 0 : Dialog.textbox(DIALOG.TEXTBOX_DEFAULT))
-      | (tag ? 0 : Dialog.tag(DIALOG.TAG_DEFAULT)),
+      | (Dialog.__speaker(settings_mask) ? 0 : Dialog.speaker(DIALOG.SPEAKER_DEFAULT))
+      | (Dialog.__emotion(settings_mask) ? 0 : Dialog.emotion(DIALOG.EMOTION_DEFAULT))
+      | (Dialog.__anchor(settings_mask) ? 0 : Dialog.anchor(DIALOG.ANCHOR_DEFAULT))
+      | (Dialog.__textbox(settings_mask) ? 0 : Dialog.textbox(DIALOG.TEXTBOX_DEFAULT))
+      | (Dialog.__tag(settings_mask) ? 0 : Dialog.tag(DIALOG.TAG_DEFAULT)),
     is_array(fx_map) ? fx_map : [fx_map]
   );
 }
@@ -406,18 +391,12 @@ function dialog_execute_fx_all_of(dialog, filter_fn = function(fx, argv) { retur
 
 function dialog_fx_create(settings_mask = 0, argv = [])
 {
-  var type = DialogFX.type(settings_mask)
-    , trigger = DialogFX.trigger(settings_mask)
-    , signal = DialogFX.signal(settings_mask)
-    , tag = DialogFX.tag(settings_mask)
-  ;
-
   return new DialogFX(
     settings_mask
-      | (type ? 0 : DialogFX.type(DIALOG_FX.TYPE_DEFAULT))
-      | (trigger ? 0 : DialogFX.trigger(DIALOG_FX.TRIGGER_DEFAULT))
-      | (signal ? 0 : DialogFX.signal(DIALOG_FX.SIGNAL_DEFAULT))
-      | (tag ? 0 : DialogFX.tag(DIALOG_FX.TAG_DEFAULT)),
+      | (DialogFX.__type(settings_mask) ? 0 : DialogFX.type(DIALOG_FX.TYPE_DEFAULT))
+      | (DialogFX.__trigger(settings_mask) ? 0 : DialogFX.trigger(DIALOG_FX.TRIGGER_DEFAULT))
+      | (DialogFX.__signal(settings_mask) ? 0 : DialogFX.signal(DIALOG_FX.SIGNAL_DEFAULT))
+      | (DialogFX.__tag(settings_mask) ? 0 : DialogFX.tag(DIALOG_FX.TAG_DEFAULT)),
     is_array(argv) ? argv : [argv]
   );
 }
@@ -450,7 +429,7 @@ function dialog_fx_create_flow_option(jump_position, jump_settings = 0, prompt =
 function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
 {
   return dialog_fx_create(
-    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP),
+    DialogFX.__tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.__trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP),
     [[flow_option], undefined, undefined, undefined, undefined]
   );
 }
@@ -471,7 +450,7 @@ function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
 function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_indexer_index = undefined, fx_condition_index = undefined,  fx_indexer_argv = [], fx_condition_argv = [])
 {
   return dialog_fx_create(
-    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH),
+    DialogFX.__tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.__trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH),
     [flow_options, fx_indexer_index, fx_condition_index, fx_indexer_argv, fx_condition_argv]
   );
 }
@@ -490,7 +469,7 @@ function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_inde
 function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, fx_condition_index = undefined, fx_condition_argv = [])
 {
   return dialog_fx_create(
-    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK),
+    DialogFX.__tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.__trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK),
     [[flow_option], undefined, fx_condition_index, undefined, fx_condition_argv]
   );
 }
@@ -509,7 +488,7 @@ function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, f
 function dialog_fx_create_choice(settings_mask = 0, flow_options = [], fx_indexer_index = DIALOG_FX.FUNC_INDEXER_RUNNER_CHOICE_INDEX, fx_indexer_argv = [])
 {
   return dialog_fx_create(
-    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE),
+    DialogFX.__tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.__trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE),
     [flow_options, fx_indexer_index, undefined, fx_indexer_argv, undefined]
   );
 }
@@ -3177,8 +3156,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static bg = function(bg_mask = undefined)
   {
     return bg_mask == undefined
-      ? (self.settings_mask & DIALOG_SCENE.__BITMASK_BG_MASK) >> DIALOG_SCENE.__BITMASK_BG_SHIFT
-      : bg_mask << DIALOG_SCENE.__BITMASK_BG_SHIFT & DIALOG_SCENE.__BITMASK_BG_MASK
+      ? __bg() >> DIALOG_SCENE.__BITMASK_BG_SHIFT
+      : __bg(bg_mask << DIALOG_SCENE.__BITMASK_BG_SHIFT)
     ;
   }
 
@@ -3193,8 +3172,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static bgm = function(bgm_mask = undefined)
   {
     return bgm_mask == undefined
-      ? (self.settings_mask & DIALOG_SCENE.__BITMASK_BGM_MASK) >> DIALOG_SCENE.__BITMASK_BGM_SHIFT
-      : bgm_mask << DIALOG_SCENE.__BITMASK_BGM_SHIFT & DIALOG_SCENE.__BITMASK_BGM_MASK
+      ? __bgm() >> DIALOG_SCENE.__BITMASK_BGM_SHIFT
+      : __bgm(bgm_mask << DIALOG_SCENE.__BITMASK_BGM_SHIFT)
     ;
   }
 
@@ -3209,8 +3188,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static bgs = function(bgs_mask = undefined)
   {
     return bgs_mask == undefined
-      ? (self.settings_mask & DIALOG_SCENE.__BITMASK_BGS_MASK) >> DIALOG_SCENE.__BITMASK_BGS_SHIFT
-      : bgs_mask << DIALOG_SCENE.__BITMASK_BGS_SHIFT & DIALOG_SCENE.__BITMASK_BGS_MASK
+      ? __bgs() >> DIALOG_SCENE.__BITMASK_BGS_SHIFT
+      : __bgs(bgs_mask << DIALOG_SCENE.__BITMASK_BGS_SHIFT)
     ;
   }
 
@@ -3225,8 +3204,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static tag = function(tag_mask = undefined)
   {
     return tag_mask == undefined
-      ? (self.settings_mask & DIALOG_SCENE.__BITMASK_TAG_MASK) >> DIALOG_SCENE.__BITMASK_TAG_SHIFT
-      : tag_mask << DIALOG_SCENE.__BITMASK_TAG_SHIFT & DIALOG_SCENE.__BITMASK_TAG_MASK
+      ? __tag() >> DIALOG_SCENE.__BITMASK_TAG_SHIFT
+      : __tag(tag_mask << DIALOG_SCENE.__BITMASK_TAG_SHIFT)
     ;
   }
 
@@ -3330,6 +3309,70 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static __get_manager = function()
   {
     return self.manager;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the scene bg as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __bg = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_SCENE.__BITMASK_BG_MASK
+      : settings_mask & DIALOG_SCENE.__BITMASK_BG_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the scene bgm as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __bgm = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_SCENE.__BITMASK_BGM_MASK
+      : settings_mask & DIALOG_SCENE.__BITMASK_BGM_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the scene bgs as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __bgs = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_SCENE.__BITMASK_BGS_MASK
+      : settings_mask & DIALOG_SCENE.__BITMASK_BGS_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the scene tag as a bitmask fragment.
+   * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __tag = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_SCENE.__BITMASK_TAG_MASK
+      : settings_mask & DIALOG_SCENE.__BITMASK_TAG_MASK
+    ;
   }
 
 
@@ -3591,8 +3634,8 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   static tag = function(tag_mask = undefined)
   {
     return tag_mask == undefined
-      ? (self.settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK) >> DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT
-      : tag_mask << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT & DIALOG_SEQUENCE.__BITMASK_TAG_MASK
+      ? __tag() >> DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT
+      : __tag(tag_mask << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT)
     ;
   }
 
@@ -3725,6 +3768,22 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   static __get_manager = function()
   {
     return self.scene.manager;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the sequence tag as a bitmask fragment.
+   * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __tag = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK
+      : settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK
+    ;
   }
 
 
@@ -4005,32 +4064,16 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
 
   /**
-   * @desc Encodes/decodes the dialog textbox as a bitmask fragment.
-   * @param {Constant.DIALOG|Real} [textbox_mask] The textbox identifier.
+   * @desc Encodes/decodes the dialog speaker as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [speaker_mask] The speaker identifier.
    * @returns {Real}
    */
 
-  static textbox = function(textbox_mask = undefined)
+  static speaker = function(speaker_mask = undefined)
   {
-    return textbox_mask == undefined
-      ? (self.settings_mask & DIALOG.__BITMASK_TEXTBOX_MASK) >> DIALOG.__BITMASK_TEXTBOX_SHIFT
-      : textbox_mask << DIALOG.__BITMASK_TEXTBOX_SHIFT & DIALOG.__BITMASK_TEXTBOX_MASK
-    ;
-  }
-
-
-
-  /**
-   * @desc Encodes/decodes the dialog anchor as a bitmask fragment.
-   * @param {Constant.DIALOG|Real} [anchor_mask] The anchor identifier.
-   * @returns {Real}
-   */
-
-  static anchor = function(anchor_mask = undefined)
-  {
-    return anchor_mask == undefined
-      ? (self.settings_mask & DIALOG.__BITMASK_ANCHOR_MASK) >> DIALOG.__BITMASK_ANCHOR_SHIFT
-      : anchor_mask << DIALOG.__BITMASK_ANCHOR_SHIFT & DIALOG.__BITMASK_ANCHOR_MASK
+    return speaker_mask == undefined
+      ? __speaker() >> DIALOG.__BITMASK_SPEAKER_SHIFT
+      : __speaker(speaker_mask << DIALOG.__BITMASK_SPEAKER_SHIFT)
     ;
   }
 
@@ -4045,24 +4088,40 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static emotion = function(emotion_mask = undefined)
   {
     return emotion_mask == undefined
-      ? (self.settings_mask & DIALOG.__BITMASK_EMOTION_MASK) >> DIALOG.__BITMASK_EMOTION_SHIFT
-      : emotion_mask << DIALOG.__BITMASK_EMOTION_SHIFT & DIALOG.__BITMASK_EMOTION_MASK
+      ? __emotion() >> DIALOG.__BITMASK_EMOTION_SHIFT
+      : __emotion(emotion_mask << DIALOG.__BITMASK_EMOTION_SHIFT)
     ;
   }
 
 
 
   /**
-   * @desc Encodes/decodes the dialog speaker as a bitmask fragment.
-   * @param {Constant.DIALOG|Real} [speaker_mask] The speaker identifier.
+   * @desc Encodes/decodes the dialog anchor as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [anchor_mask] The anchor identifier.
    * @returns {Real}
    */
 
-  static speaker = function(speaker_mask = undefined)
+  static anchor = function(anchor_mask = undefined)
   {
-    return speaker_mask == undefined
-      ? (self.settings_mask & DIALOG.__BITMASK_SPEAKER_MASK) >> DIALOG.__BITMASK_SPEAKER_SHIFT
-      : speaker_mask << DIALOG.__BITMASK_SPEAKER_SHIFT & DIALOG.__BITMASK_SPEAKER_MASK
+    return anchor_mask == undefined
+      ? __anchor() >> DIALOG.__BITMASK_ANCHOR_SHIFT
+      : __anchor(anchor_mask << DIALOG.__BITMASK_ANCHOR_SHIFT)
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog textbox as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [textbox_mask] The textbox identifier.
+   * @returns {Real}
+   */
+
+  static textbox = function(textbox_mask = undefined)
+  {
+    return textbox_mask == undefined
+      ? __textbox() >> DIALOG.__BITMASK_TEXTBOX_SHIFT
+      : __textbox(textbox_mask << DIALOG.__BITMASK_TEXTBOX_SHIFT)
     ;
   }
 
@@ -4077,8 +4136,8 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static tag = function(tag_mask = undefined)
   {
     return tag_mask == undefined
-      ? (self.settings_mask & DIALOG.__BITMASK_TAG_MASK) >> DIALOG.__BITMASK_TAG_SHIFT
-      : tag_mask << DIALOG.__BITMASK_TAG_SHIFT & DIALOG.__BITMASK_TAG_MASK
+      ? __tag() >> DIALOG.__BITMASK_TAG_SHIFT
+      : __tag(tag_mask << DIALOG.__BITMASK_TAG_SHIFT)
     ;
   }
 
@@ -4305,6 +4364,86 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __get_manager = function()
   {
     return self.sequence.scene.manager;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog speaker as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __speaker = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG.__BITMASK_SPEAKER_MASK
+      : settings_mask & DIALOG.__BITMASK_SPEAKER_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog emotion as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __emotion = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG.__BITMASK_EMOTION_MASK
+      : settings_mask & DIALOG.__BITMASK_EMOTION_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog anchor as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __anchor = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG.__BITMASK_ANCHOR_MASK
+      : settings_mask & DIALOG.__BITMASK_ANCHOR_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog textbox as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __textbox = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG.__BITMASK_TEXTBOX_MASK
+      : settings_mask & DIALOG.__BITMASK_TEXTBOX_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog tag as a bitmask fragment.
+   * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __tag = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG.__BITMASK_TAG_MASK
+      : settings_mask & DIALOG.__BITMASK_TAG_MASK
+    ;
   }
 
 
@@ -4766,8 +4905,8 @@ function DialogFX(settings_mask, argv) constructor
   static type = function(type_mask = undefined)
   {
     return type_mask == undefined
-      ? (self.settings_mask & DIALOG_FX.__BITMASK_TYPE_MASK) >> DIALOG_FX.__BITMASK_TYPE_SHIFT
-      : type_mask << DIALOG_FX.__BITMASK_TYPE_SHIFT & DIALOG_FX.__BITMASK_TYPE_MASK
+      ? __type() >> DIALOG_FX.__BITMASK_TYPE_SHIFT
+      : __type(type_mask << DIALOG_FX.__BITMASK_TYPE_SHIFT)
     ;
   }
 
@@ -4782,8 +4921,8 @@ function DialogFX(settings_mask, argv) constructor
   static trigger = function(trigger_mask = undefined)
   {
     return trigger_mask == undefined
-      ? (self.settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK) >> DIALOG_FX.__BITMASK_TRIGGER_SHIFT
-      : trigger_mask << DIALOG_FX.__BITMASK_TRIGGER_SHIFT & DIALOG_FX.__BITMASK_TRIGGER_MASK
+      ? __trigger() >> DIALOG_FX.__BITMASK_TRIGGER_SHIFT
+      : __trigger(trigger_mask << DIALOG_FX.__BITMASK_TRIGGER_SHIFT)
     ;
   }
 
@@ -4798,8 +4937,8 @@ function DialogFX(settings_mask, argv) constructor
   static signal = function(signal_mask = undefined)
   {
     return signal_mask == undefined
-      ? (self.settings_mask & DIALOG_FX.__BITMASK_SIGNAL_MASK) >> DIALOG_FX.__BITMASK_SIGNAL_SHIFT
-      : signal_mask << DIALOG_FX.__BITMASK_SIGNAL_SHIFT & DIALOG_FX.__BITMASK_SIGNAL_MASK
+      ? __signal() >> DIALOG_FX.__BITMASK_SIGNAL_SHIFT
+      : __signal(signal_mask << DIALOG_FX.__BITMASK_SIGNAL_SHIFT)
     ;
   }
 
@@ -4814,8 +4953,8 @@ function DialogFX(settings_mask, argv) constructor
   static tag = function(tag_mask = undefined)
   {
     return tag_mask == undefined
-      ? (self.settings_mask & DIALOG_FX.__BITMASK_TAG_MASK) >> DIALOG_FX.__BITMASK_TAG_SHIFT
-      : tag_mask << DIALOG_FX.__BITMASK_TAG_SHIFT & DIALOG_FX.__BITMASK_TAG_MASK
+      ? __tag() >> DIALOG_FX.__BITMASK_TAG_SHIFT
+      : __tag(tag_mask << DIALOG_FX.__BITMASK_TAG_SHIFT)
     ;
   }
 
@@ -5012,6 +5151,70 @@ function DialogFX(settings_mask, argv) constructor
     self._id = _id;
 
     return self;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog FX type as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __type = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_FX.__BITMASK_TYPE_MASK
+      : settings_mask & DIALOG_FX.__BITMASK_TYPE_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog FX trigger as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __trigger = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK
+      : settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog FX signal as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __signal = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_FX.__BITMASK_SIGNAL_MASK
+      : settings_mask & DIALOG_FX.__BITMASK_SIGNAL_MASK
+    ;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the dialog FX tag as a bitmask fragment.
+   * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
+   * @returns {Real}
+   */
+
+  static __tag = function(settings_mask = undefined)
+  {
+    return settings_mask == undefined
+      ? self.settings_mask & DIALOG_FX.__BITMASK_TAG_MASK
+      : settings_mask & DIALOG_FX.__BITMASK_TAG_MASK
+    ;
   }
 
 
