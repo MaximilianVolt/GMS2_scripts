@@ -2,7 +2,7 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.11.0
+ * @version 0.11.1
 */
 
 
@@ -138,9 +138,19 @@ function dialog_manager_search_by_tag(collection, tag)
 
 function dialog_scene_create(sequences = [], settings_mask = 0)
 {
+  var bg = DialogScene.bg(settings_mask)
+    , bgm = DialogScene.bgm(settings_mask)
+    , bgs = DialogScene.bgs(settings_mask)
+    , tag = DialogScene.tag(settings_mask)
+  ;
+
   return new DialogScene(
     is_array(sequences) ? sequences : [sequences],
     settings_mask
+      | (bg ? 0 : DialogScene.bg(DIALOG_SCENE.BG_DEFAULT))
+      | (bgm ? 0 : DialogScene.bgm(DIALOG_SCENE.BGM_DEFAULT))
+      | (bgs ? 0 : DialogScene.bgs(DIALOG_SCENE.BGS_DEFAULT))
+      | (tag ? 0 : DialogScene.tag(DIALOG_SCENE.TAG_DEFAULT))
   );
 }
 
@@ -204,9 +214,12 @@ function dialog_scene_create_from_struct(data)
 
 function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [])
 {
+  var tag = DialogSequence.tag(settings_mask);
+
   return new DialogSequence(
     is_array(dialogs) ? dialogs : [dialogs],
-    settings_mask,
+    settings_mask
+      | (tag ? 0 : DialogSequence.tag(DIALOG_SEQUENCE.TAG_DEFAULT)),
     is_array(speakers) ? speakers : [speakers]
   );
 }
@@ -271,9 +284,21 @@ function dialog_sequence_create_from_struct(data)
 
 function dialog_create(text, settings_mask = 0, fx_map = [])
 {
+  var speaker = Dialog.speaker(settings_mask)
+    , emotion = Dialog.emotion(settings_mask)
+    , anchor = Dialog.anchor(settings_mask)
+    , textbox = Dialog.textbox(settings_mask)
+    , tag = Dialog.tag(settings_mask)
+  ;
+
   return new Dialog(
     text,
-    settings_mask,
+    settings_mask
+      | (speaker ? 0 : Dialog.speaker(DIALOG.SPEAKER_DEFAULT))
+      | (emotion ? 0 : Dialog.emotion(DIALOG.EMOTION_DEFAULT))
+      | (anchor ? 0 : Dialog.anchor(DIALOG.ANCHOR_DEFAULT))
+      | (textbox ? 0 : Dialog.textbox(DIALOG.TEXTBOX_DEFAULT))
+      | (tag ? 0 : Dialog.tag(DIALOG.TAG_DEFAULT)),
     is_array(fx_map) ? fx_map : [fx_map]
   );
 }
@@ -381,7 +406,20 @@ function dialog_execute_fx_all_of(dialog, filter_fn = function(fx, argv) { retur
 
 function dialog_fx_create(settings_mask = 0, argv = [])
 {
-  return new DialogFX(settings_mask, is_array(argv) ? argv : [argv]);
+  var type = DialogFX.type(settings_mask)
+    , trigger = DialogFX.trigger(settings_mask)
+    , signal = DialogFX.signal(settings_mask)
+    , tag = DialogFX.tag(settings_mask)
+  ;
+
+  return new DialogFX(
+    settings_mask
+      | (type ? 0 : DialogFX.type(DIALOG_FX.TYPE_DEFAULT))
+      | (trigger ? 0 : DialogFX.trigger(DIALOG_FX.TRIGGER_DEFAULT))
+      | (signal ? 0 : DialogFX.signal(DIALOG_FX.SIGNAL_DEFAULT))
+      | (tag ? 0 : DialogFX.tag(DIALOG_FX.TAG_DEFAULT)),
+    is_array(argv) ? argv : [argv]
+  );
 }
 
 
@@ -411,8 +449,8 @@ function dialog_fx_create_flow_option(jump_position, jump_settings = 0, prompt =
 
 function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
 {
-  return new DialogFX(
-    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP) | settings_mask,
+  return dialog_fx_create(
+    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_JUMP),
     [[flow_option], undefined, undefined, undefined, undefined]
   );
 }
@@ -432,8 +470,8 @@ function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
 
 function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_indexer_index = undefined, fx_condition_index = undefined,  fx_indexer_argv = [], fx_condition_argv = [])
 {
-  return new DialogFX(
-    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH) | settings_mask,
+  return dialog_fx_create(
+    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_DISPATCH),
     [flow_options, fx_indexer_index, fx_condition_index, fx_indexer_argv, fx_condition_argv]
   );
 }
@@ -451,8 +489,8 @@ function dialog_fx_create_dispatch(settings_mask = 0, flow_options = [], fx_inde
 
 function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, fx_condition_index = undefined, fx_condition_argv = [])
 {
-  return new DialogFX(
-    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK) | settings_mask,
+  return dialog_fx_create(
+    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_FALLBACK),
     [[flow_option], undefined, fx_condition_index, undefined, fx_condition_argv]
   );
 }
@@ -470,8 +508,8 @@ function dialog_fx_create_fallback(settings_mask = 0, flow_option = undefined, f
 
 function dialog_fx_create_choice(settings_mask = 0, flow_options = [], fx_indexer_index = DIALOG_FX.FUNC_INDEXER_RUNNER_CHOICE_INDEX, fx_indexer_argv = [])
 {
-  return new DialogFX(
-    DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE) | settings_mask,
+  return dialog_fx_create(
+    DialogFX.tag(settings_mask) | DialogFX.signal(DIALOG_FX.SIGNAL_STOP_CYCLE) | DialogFX.trigger(settings_mask) | DialogFX.type(DIALOG_FX.TYPE_FLOWRES_CHOICE),
     [flow_options, fx_indexer_index, undefined, fx_indexer_argv, undefined]
   );
 }
