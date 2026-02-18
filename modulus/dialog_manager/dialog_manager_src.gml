@@ -3975,7 +3975,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static TEXT_WIDTH_MAX = -1;
   static TEXT_WIDTH_FUNC = function(dialog) {
     return string_width(dialog.text);
-  }
+  };
 
   self.text = text;
   self.fx_map = [];
