@@ -2154,7 +2154,7 @@ function DialogManager(lang, data_string, is_file) constructor
   {
     var w = m + 1
       , dp = array_create((n + 1) * w, 0)
-      , _data = function(_id, type, index, index_match = undefined) {
+      , _data = function(_id, type, index, index_match = noone) {
           return { _id: int64(_id), type, index: int64(index), index_match: int64(index_match) };
       }
     ;
