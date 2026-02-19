@@ -2081,7 +2081,7 @@ function DialogManager(lang, data_string, is_file) constructor
    * @returns {Struct}
    */
 
-  static __diff_level = function(l1, n, l2, m, lv = 0, path = $"DialogManager\{{self.lang}\}", id_fn = function(e) { return e._id; })
+  static __diff_level = function(l1, n, l2, m, lv = 0, path = $"DialogManager\{{self.lang}\}", id_fn = function(item) { return item._id; })
   {
     var _diff_node = function(_id, level, type, index, index_match, path)
       {
@@ -2150,7 +2150,7 @@ function DialogManager(lang, data_string, is_file) constructor
     * @returns {Struct}
    */
 
-  static __diff_list = function(l1, n, l2, m, id_fn = function(e) { return e._id; })
+  static __diff_list = function(l1, n, l2, m, id_fn = function(item) { return item._id; })
   {
     var w = m + 1
       , dp = array_create((n + 1) * w, 0)
@@ -2212,7 +2212,7 @@ function DialogManager(lang, data_string, is_file) constructor
    * @returns {Array}
    */
 
-  static __diff_resolve_moves = function(nodelist, node_count = 0, id_fn = function(e) { return e._id; })
+  static __diff_resolve_moves = function(nodelist, node_count = 0, id_fn = function(item) { return item._id; })
   {
     var insertions = {}, deletions = {};
 
