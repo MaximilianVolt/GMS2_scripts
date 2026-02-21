@@ -1372,7 +1372,7 @@ function DialogRunner(manager) constructor
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_JUMP_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
       }
 
-      maintained &= !jumps;
+      maintained *= !jumps;
 
       flow = _fx_cycle(
         maintained && current_dialog == maintained_dialog
