@@ -1353,8 +1353,10 @@ function DialogRunner(manager) constructor
       , current_dialog = manager.__to_dialog(position)
       , maintained_dialog = current_dialog
       , maintained = jump_settings & DIALOG_RUNNER.JUMP_INFO_MAINTAINED
-      , should_execute_on_leave = !(maintained || jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE) || (maintained && jump_settings & DIALOG_RUNNER.JUMP_SETTING_EXEC_FX_ON_LEAVE_IF_MAINTAINED)
-      , should_execute_on_enter = !(maintained || jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER) || (maintained && jump_settings & DIALOG_RUNNER.JUMP_SETTING_EXEC_FX_ON_ENTER_IF_MAINTAINED)
+      , should_execute_on_leave_maintained = jump_settings & DIALOG_RUNNER.JUMP_SETTING_EXEC_FX_ON_LEAVE_IF_MAINTAINED
+      , should_execute_on_enter_maintained = jump_settings & DIALOG_RUNNER.JUMP_SETTING_EXEC_FX_ON_ENTER_IF_MAINTAINED
+      , should_execute_on_leave = !(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE)
+      , should_execute_on_enter = !(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER)
       , flow = ctx
       , _fx_cycle = function(condition, dialog, argv, ctx, trigger, filter_fn = undefined) {
           return condition
@@ -1370,12 +1372,22 @@ function DialogRunner(manager) constructor
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_JUMP_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
       }
 
-      flow = _fx_cycle(should_execute_on_leave || current_dialog != maintained_dialog || jumps, current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE);
+      flow = _fx_cycle(
+        maintained && !jumps && current_dialog == maintained_dialog
+          ? should_execute_on_leave_maintained
+          : should_execute_on_leave,
+        current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE
+      );
 
       if (flow && flow.signal >= DIALOG_FX.SIGNAL_STOP_RESOLUTION)
         break;
 
-      flow = _fx_cycle(should_execute_on_enter || ctx.target != maintained_dialog || jumps, ctx.target, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER);
+      flow = _fx_cycle(
+        maintained && !jumps && ctx.target == maintained_dialog
+          ? should_execute_on_enter_maintained
+          : should_execute_on_enter,
+        ctx.target, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER
+      );
 
       if (flow && flow.signal >= DIALOG_FX.SIGNAL_STOP_RESOLUTION)
         break;
