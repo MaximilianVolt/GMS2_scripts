@@ -1372,8 +1372,10 @@ function DialogRunner(manager) constructor
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_JUMP_LOOP_DETECTED, [jumps, current_dialog.__struct()]);
       }
 
+      maintained &= !jumps;
+
       flow = _fx_cycle(
-        maintained && !jumps && current_dialog == maintained_dialog
+        maintained && current_dialog == maintained_dialog
           ? should_execute_on_leave_maintained
           : should_execute_on_leave,
         current_dialog, argv, ctx, DIALOG_FX.TRIGGER_ON_LEAVE
@@ -1383,7 +1385,7 @@ function DialogRunner(manager) constructor
         break;
 
       flow = _fx_cycle(
-        maintained && !jumps && ctx.target == maintained_dialog
+        maintained && ctx.target == maintained_dialog
           ? should_execute_on_enter_maintained
           : should_execute_on_enter,
         ctx.target, argv, ctx, DIALOG_FX.TRIGGER_ON_ENTER
