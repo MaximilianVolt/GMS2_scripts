@@ -28,7 +28,7 @@
 
 
 /**
- * 
+ *
  */
 
 enum INPUT
@@ -46,7 +46,7 @@ enum INPUT
   PROFILE_MENU,
     // ...
   PROFILE_COUNT,
-  PROFILE_DEFAULT = INPUT.PROFILE_NONE, 
+  PROFILE_DEFAULT = INPUT.PROFILE_NONE,
 
   // Input constants
   __MOUSE_MIN = 0x0000,
@@ -82,8 +82,8 @@ enum INPUT
 
 
 /**
- * 
- * @param player_count 
+ *
+ * @param player_count
  */
 
 function InputManager(player_count, profile_count) constructor
@@ -97,7 +97,7 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   * 
+   *
    */
 
   static save = function(prettify = false)
@@ -108,7 +108,7 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   * 
+   *
    */
 
   static load = function(data_string)
@@ -119,7 +119,7 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   * 
+   *
    */
 
   static profile = function(profile_idx = 0, profile_data = undefined)
@@ -130,7 +130,7 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   * 
+   *
    */
 
   static input = function(input_idx = 0)
@@ -141,7 +141,7 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   * 
+   *
    */
 
   static step = function()
@@ -175,7 +175,7 @@ function InputManager(player_count, profile_count) constructor
 
 
 /**
- * 
+ *
  */
 
 function InputContext(player_index, source = INPUT.DEVICE_DEFAULT, gamepad = noone, mouse = noone) constructor
@@ -216,7 +216,7 @@ function InputContext(player_index, source = INPUT.DEVICE_DEFAULT, gamepad = noo
 
 
 /**
- * 
+ *
  */
 
 function InputAction(binds, context) constructor
@@ -226,7 +226,7 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
+   *
    */
 
   static normalize = function(binds)
@@ -248,12 +248,12 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
+   *
    */
 
   static check = function(check_fn)
   {
-    for (var i = 0; i < bind_count; ++i)
+    for (var i = 0; i < self.bind_count; ++i)
     {
       var bind = self.binds[i]
         , bind_input_count = array_length(bind)
@@ -288,7 +288,7 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
+   *
    */
 
   function pressed(action = self)
@@ -304,7 +304,7 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
+   *
    */
 
   function released(action = self)
@@ -351,13 +351,13 @@ function InputAction(binds, context) constructor
 
 
 /**
- * 
+ *
  */
 
 function InputCombo(actions, time, context) constructor
 {
   /**
-   * 
+   *
    */
 
   static check = function(check_fn = InputAction.pressed)
@@ -407,13 +407,13 @@ function InputCombo(actions, time, context) constructor
 
 
 /**
- * 
+ *
  */
 
 function InputDevice()
 {
   /**
-   * 
+   *
    */
 
   static sourceof = function(key)
