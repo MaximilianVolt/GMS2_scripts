@@ -273,7 +273,7 @@ dialog_runner.load(relative_dialog, /* busy = */ true, /* argv = */ [/* ... */])
 
 
 
-// 4. Decoding dialog data
+// 4a. Decoding dialog data
 var scene = dialog_runner.scene(2);
 
 var scene_index = scene.index();              // Index in the dialog manager
@@ -314,6 +314,14 @@ var fx_prompt = fx.prompt(2);                 // FX flow option prompt (only if 
 var fx_metadata = fx.metadata(-3);            // FX flow option metadata (only if fx is of flowres type)
 var fx_indexer = fx.indexer();                // FX flow option indexer (only if fx is of valid flowres type)
 var fx_condition = fx.condition();            // FX flow option condition (only if fx is of valid flowres type)
+
+// 4b. Advanced item filtering
+// You can access the .container property inside the manager, scene, sequence and dialog to access more selection options, e.g:
+// Returns (if existent) the 4th sequence with a tag option equal to DIALOG_SEQUENCE.TAG_FOR_SELECTION
+
+var selected_sequence = scene.container.nth_of(4, function(sequence) {
+  return sequence.tag() == DIALOG_SEQUENCE.TAG_FOR_SELECTION;
+});
 
 
 
