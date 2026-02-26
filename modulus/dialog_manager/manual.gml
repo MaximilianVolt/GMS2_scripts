@@ -225,8 +225,11 @@ dialog_manager.add([scn1]);
 
 
 
-// 0. Instantiate a dialog runner to cycle through the dialog manager data
+// 0a. Instantiate a dialog runner to cycle through the dialog manager data
 dialog_runner = dialog_runner_create(dialog_manager);
+
+// 0b. Clone the dialog runner
+dialog_runner_clone = dialog_runner.clone();
 
 
 
@@ -303,6 +306,7 @@ var dialog_fx = dialog.fx(-1);                // Last fx listed in the reference
 
 var fx_type = fx.type();                      // FX type index data
 var fx_trigger = fx.trigger();                // FX trigger index data
+var fx_signal = fx.signal();                  // FX signal data
 var fx_tag = fx.tag();                        // FX tag data
 var fx_options = fx.options();                // FX flow options (only if fx is of flowres type)
 var fx_option = fx.option(-1);                // FX flow option (only if fx is of flowres type)
@@ -330,6 +334,7 @@ var enc_dialog_tag = Dialog.tag(4);           // Encodes the dialog tag to the c
 
 var enc_fx_type = DialogFX.type(4);           // Encodes the dialog fx type to the corresponding bitmask value
 var enc_fx_trigger = DialogFX.trigger(4);     // Encodes the dialog fx trigger to the corresponding bitmask value
+var enc_fx_signal = DialogFX.signal(4);     // Encodes the dialog fx signal to the corresponding bitmask value
 var enc_fx_tag = DialogFX.tag(4);             // Encodes the dialog fx tag to the corresponding bitmask value
 
 
@@ -455,7 +460,7 @@ DIALOG_MANAGER.ERR_INFINITE_FX_LOOP_DETECTED              // Error raised when d
 DIALOG_MANAGER.ERRCHECK_JUMP_INFINITE_LOOP_TRESHOLD       // Safety check for triggering panicking error if manager is unable to reach a stable position
 DIALOG_MANAGER.ERRCHECK_FX_INFINITE_LOOP_TRESHOLD         // Safety check for triggering panicking error if manager is unable to resolve an effect cycle
 
-/// Constant.DIALOG_FX    
+/// Constant.DIALOG_FX
 
 DIALOG_FX.REGISTER_SETTING_FX_FUNC                        // Registering setting for normal fx map
 DIALOG_FX.REGISTER_SETTING_FX_FUNC_INDEXER                // Registering setting for indexer fx map
@@ -477,21 +482,17 @@ DialogManager.__CONSTRUCTOR_ARGC                  // Dialog manager constructor 
 
 // Struct.DialogScene
 DialogScene.__CONSTRUCTOR_ARGC                    // Dialog scene constructor function argument count
-DialogScene.__ID                                  // Dialog scene global id
 
 // Struct.DialogSequence
 DialogSequence.__CONSTRUCTOR_ARGC                 // Dialog sequence onstructor function argument count
-DialogSequence.__ID                               // Dialog sequence global id
 
 // Struct.Dialog
 Dialog.__CONSTRUCTOR_ARGC                         // Dialog constructor function argument count
-Dialog.__ID                                       // Dialog global id
 Dialog.TEXT_WIDTH_MAX                             // Dialog text width max limit
 Dialog.TEXT_WIDTH_FUNC                            // Dialog width-checking function
 
 // Struct.DialogFX
 DialogFX.__CONSTRUCTOR_ARGC                       // Dialog fx constructor function argument count
-DialogFX.__ID                                     // Dialog fx global id
 
 
 
@@ -516,6 +517,7 @@ dialog_manager.scenes                             // List of dialog scenes
 dialog_manager.scene_count                        // Scene count
 
 // Struct.DialogScene
+dialog_scene.id                                   // Globally assigned scene id (first ID should start from 200_000_001 for readability)
 dialog_scene.manager                              // Back-reference to dialog manager
 dialog_scene.scene_idx                            // Relative index inside dialog manager
 dialog_scene.sequences                            // List of dialog sequences
@@ -523,6 +525,7 @@ dialog_scene.sequence_count                       // Sequence count
 dialog_scene.settings_mask                        // The scene's encoded options
 
 // Struct.DialogSequence
+dialog_sequence.id                                // Globally assigned sequence id (first ID should start from 100_000_001 for readability)
 dialog_sequence.scene                             // Back-reference to dialog scene
 dialog_sequence.sequence_idx                      // Relative index inside dialog scene
 dialog_sequence.dialogs                           // List of dialogs
@@ -531,6 +534,7 @@ dialog_sequence.speakers                          // List of speakers (useful wh
 dialog_sequence.settings_mask                     // The sequence's encoded options
 
 // Struct.Dialog
+dialog.id                                         // Globally assigned dialog id (first ID should start from 1 for readability)
 dialog.sequence                                   // Back-reference to dialog sequence
 dialog.dialog_idx                                 // Relative index inside dialog scene
 dialog.text                                       // Dialog text
@@ -539,6 +543,7 @@ dialog.fx_count                                   // Dialog effects count
 dialog.settings_mask                              // The dialog's encoded options
 
 // Struct.DialogFX
+dialog_fx.id                                      // Globally assigned dialog fx id (first ID should start from 300_000_001 for readability)
 dialog_fx.argv                                    // Dialog fx argument values
 dialog_fx.settings_mask                           // The dialog effect's encoded options
 
@@ -614,7 +619,9 @@ var next_dialog_data = dialog_runner.predict(vk_enter); // Same parameters as Di
 //
 // The dialog runner also includes a status member that has both flags toggled based on particular situations
 // with positions (first/last dialog/sequence/scene, first/middle/last of sequence/scene, etc.) and frame-based
-// operations, such as having advanced/receded dialogs/sequences/scenes or having executed jumps/fallbacks/choices
+// operations, such as having advanced/receded dialogs/sequences/scenes or having executed jumps/dispathces/fallbacks/choices
+//
+// For that reason it is recommended that DialogRunner.advance() is called every frame the object should be active.
 
 
 
@@ -651,10 +658,12 @@ if (dialog_runner.status & DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE) {
 //    Each argument is an array of length DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT maximum. The arrays have the same formats for the levels, in order:
 //    1. FX   ->   2. Dialog   ->   3. DialogSequence   ->   4. DialogScene
 //    Use DIALOG_MANAGER.DIFF_ARG_TOLERANCE_* indices to correctly position your tolerance params if need be.
-diff_tolerance_params = dialog_manager_master_language.diff_tolerance_params_create(/* ... */);
+diff_tolerance_params = DialogManager.diff_tolerance_params_create(/* ... */);
+
+
 
 // 1a. Compare two managers
-diff_data = dialog_manager_1.diff(dialog_manager_2, diff_tolerance_params);
+diff_data = dialog_manager_master_language.diff(dialog_manager_secondary_language, diff_tolerance_params);
 
 // 1b. Deserialize and compare two managers (data_strings, is_file, diff_tolerance_params)
 diff_data_and_managers = DialogManager.diffstatic("en.json", "it.json", true, diff_tolerance_params);

@@ -2,11 +2,15 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.11.2
-*/
+ * @version 0.12.0
+ */
 
 
 
+#region Lib functions
+
+#macro __DIALOG_MANAGER_VERSION__             "0.12.0"
+#macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager"
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
 
@@ -80,29 +84,6 @@ function dialog_runner_create(dialog_manager)
 function dialog_manager_create(lang = DialogManager.DATA.LANGS.ISO_639_1.english, data_string = "", is_file = false)
 {
   return new DialogManager(lang, data_string, is_file);
-}
-
-
-
-/**
- * @desc Returns a list of all components from an element matching a tag.
- * @param {Struct.DialogManager|Struct.DialogLinkable} collection The collection where to execute the search.
- * @param {Constant.DIALOG_SCENE|Constant.DIALOG_SEQUENCE|Constant.DIALOG|Real} tag The tag to search for.
- * @returns {Array<Struct.DialogLinkable}
- */
-
-function dialog_manager_search_by_tag(collection, tag)
-{
-  if (is_instanceof(collection, DialogManager))
-    return collection.__get_scenes_by_tag(tag);
-
-  if (is_instanceof(collection, DialogScene))
-    return collection.__get_sequences_by_tag(tag);
-
-  if (is_instanceof(collection, DialogSequence))
-    return collection.__get_dialogs_by_tag(tag);
-
-  return collection;
 }
 
 
@@ -316,50 +297,6 @@ function dialog_create_from_struct(data)
 
 
 
-/**
- * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects of the specified type.
- * @param {Struct.Dialog} dialog The dialog to check.
- * @param {Constant.DIALOG_FX|Real} [type] The type of the effect to check for.
- * @returns {Bool}
- */
-
-function dialog_has_fx_of_type(dialog, type = DIALOG_FX.TYPE_DEFAULT)
-{
-  return dialog.__fx_has_of(function(fx, argv) { return fx.type() == argv; }, type);
-}
-
-
-
-/**
- * @desc Retrieves all dialog FX which match a filter.
- * @param {Struct.Dialog} dialog The dialog where the effects should be retrieved from.
- * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
- * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
- * @returns {Array<Struct.DialogFX>}
- */
-
-function dialog_get_fx_all_of(dialog, filter_fn = function(fx, argv) { return true; }, argv = undefined)
-{
-  return dialog.__fx_get_all_of(filter_fn, argv);
-}
-
-
-
-/**
- * @desc Executes all dialog FX which match a filter.
- * @param {Struct.Dialog} dialog The dialog that should execute all the effects.
- * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to `true`.
- * @param {Array} [argv] The arguments to pass to the effects.
- * @returns {Struct.Dialog}
- */
-
-function dialog_execute_fx_all_of(dialog, filter_fn = function(fx, argv) { return true; }, argv = undefined)
-{
-  return dialog.__fx_execute_all_of(filter_fn, argv);
-}
-
-
-
 
 
 
@@ -530,8 +467,11 @@ function dialog_fx_create_from_struct(data)
 
 
 
+#endregion
+
 // ----------------------------------------------------------------------------
 
+#region Enums
 
 
 
@@ -735,6 +675,7 @@ enum DIALOG_MANAGER // Should not edit
   DIFF_ARG_TOLERANCE_COUNT,
 
   // Positioning masks
+  __ID_SEPARATOR = 100000000,
   __BITMASK_POSITION_DIALOG_SHIFT = 0,
   __BITMASK_POSITION_DIALOG_BITS = 12,
   __BITMASK_POSITION_DIALOG_MASK = ((1 << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS) - 1) << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT,
@@ -763,6 +704,22 @@ enum DIALOG_MANAGER // Should not edit
   // Error checks
   ERRCHECK_JUMP_INFINITE_LOOP_TRESHOLD = 32,
   ERRCHECK_FX_INFINITE_LOOP_TRESHOLD = 256,
+}
+
+
+
+/**
+ * @desc `LEVEL_*` options refer to the linkable levels of the dialogical structure.
+ */
+
+enum DIALOG_ITEM
+{
+  LEVEL_SCENE,
+  LEVEL_SEQUENCE,
+  LEVEL_DIALOG,
+  LEVEL_LINKABLE_COUNT,
+  LEVEL_DIALOG_FX = DIALOG_ITEM.LEVEL_LINKABLE_COUNT,
+  LEVEL_COUNT,
 }
 
 
@@ -811,7 +768,7 @@ enum DIALOG_SCENE // Edit as needed
   TAG_DEFAULT = DIALOG_SCENE.TAG_NONE,
 
   // Settings masks
-  __INITIAL_ID = 3999999,
+  __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVEL_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_SCENE - 1) - 1,
   __BITMASK_BG_SHIFT = 0,
   __BITMASK_BG_BITS = 7,
   __BITMASK_BG_MASK = ((1 << DIALOG_SCENE.__BITMASK_BG_BITS) - 1) << DIALOG_SCENE.__BITMASK_BG_SHIFT,
@@ -852,7 +809,7 @@ enum DIALOG_SEQUENCE // Edit as needed
   TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
 
   // Settings masks
-  __INITIAL_ID = 1999999,
+  __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVEL_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_SEQUENCE- 1) - 1,
   __BITMASK_TAG_SHIFT = 0,
   __BITMASK_TAG_BITS = 5,
   __BITMASK_TAG_MASK = ((1 << DIALOG_SEQUENCE.__BITMASK_TAG_BITS) - 1) << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT,
@@ -916,7 +873,7 @@ enum DIALOG // Edit as needed
   TAG_DEFAULT = DIALOG.TAG_NONE,
 
   // Settings masks
-  __INITIAL_ID = -1,
+  __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVEL_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_DIALOG - 1) - 1,
   __BITMASK_SPEAKER_SHIFT = 0,
   __BITMASK_SPEAKER_BITS = 8,
   __BITMASK_SPEAKER_MASK = ((1 << DIALOG.__BITMASK_SPEAKER_BITS) - 1) << DIALOG.__BITMASK_SPEAKER_SHIFT,
@@ -1037,7 +994,7 @@ enum DIALOG_FX // Edit as needed
   FUNC_INDEXER_COUNT,
 
   // Settings masks
-  __INITIAL_ID = 5999999,
+  __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * DIALOG_ITEM.LEVEL_DIALOG_FX - 1,
   __BITMASK_TYPE_SHIFT = 0,
   __BITMASK_TYPE_BITS = 10,
   __BITMASK_TYPE_MAX_COUNT = (1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1,
@@ -1076,7 +1033,11 @@ enum DIALOG_FX // Edit as needed
 
 
 
+#endregion
+
 // ----------------------------------------------------------------------------
+
+#region Main classes
 
 
 
@@ -1108,6 +1069,28 @@ function DialogRunner(manager) constructor
   self.seed = irandom(0x7FFFFFFF);
   self.history = [];
   self.vars = {};
+
+
+
+  /**
+   * @desc Creates a clone of the dialog runner with the same state. Useful for simulating jumps or saving states. [CHAINABLE]
+   * @returns {Struct.DialogRunner}
+   */
+
+  static clone = function()
+  {
+    var copy = new DialogRunner(self.manager);
+
+    copy.choice_index = self.choice_index;
+    copy.status = self.status;
+    copy.position = self.position;
+
+    copy.seed = self.seed;
+    copy.history = variable_clone(self.history);
+    copy.vars = variable_clone(self.vars);
+
+    return copy;
+  }
 
 
 
@@ -1277,7 +1260,7 @@ function DialogRunner(manager) constructor
 
   static predict = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, start_position = self.position, argv = undefined)
   {
-    return variable_clone(self).advance(shift, jump_settings, start_position, argv);
+    return self.clone().advance(shift, jump_settings, start_position, argv);
   }
 
 
@@ -1302,7 +1285,7 @@ function DialogRunner(manager) constructor
         : DIALOG_RUNNER.__BITMASK_STATUS_AUTORESET_MASK
     );
 
-    if (shift == 0 || !manager.scene_count)
+    if (shift == 0 || !manager.itemcount())
     {
       if (!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_STAY)) {
         manager.__to_dialog(prev_position).__fx_execute_all_of(function(fx) {
@@ -1420,9 +1403,10 @@ function DialogRunner(manager) constructor
       , target_scene_idx = manager.__decode_scene_idx(target_position)
       , target_sequence_idx = manager.__decode_sequence_idx(target_position)
       , target_dialog_idx = manager.__decode_dialog_idx(target_position)
-      , target_sequence_count = manager.scene(target_scene_idx).sequence_count
-      , target_dialog_count = manager.sequence(target_sequence_idx, target_scene_idx).dialog_count
-      , is_last_scene = target_scene_idx == manager.scene_count - 1
+      , target_sequence_count = manager.scene(target_scene_idx).itemcount()
+      , target_dialog_count = manager.sequence(target_sequence_idx, target_scene_idx).itemcount()
+      , target_scene_count = manager.itemcount()
+      , is_last_scene = target_scene_idx == target_scene_count - 1
       , is_last_of_scene = target_sequence_idx == target_sequence_count - 1
       , is_last_of_sequence = target_dialog_idx == target_dialog_count - 1
       , is_last_sequence = is_last_scene && is_last_of_scene
@@ -1443,7 +1427,7 @@ function DialogRunner(manager) constructor
       | DIALOG_RUNNER.STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                            )
       | DIALOG_RUNNER.STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1                       )
       | DIALOG_RUNNER.STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1                   )
-      | DIALOG_RUNNER.STATUS_MIDDLE_SCENE       * (target_scene_idx == manager.scene_count >> 1                        )
+      | DIALOG_RUNNER.STATUS_MIDDLE_SCENE       * (target_scene_idx == target_scene_count >> 1                         )
       | DIALOG_RUNNER.STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                             )
       | DIALOG_RUNNER.STATUS_LAST_SEQUENCE      * (is_last_sequence                                                    )
       | DIALOG_RUNNER.STATUS_LAST_SCENE         * (is_last_scene                                                       )
@@ -1456,164 +1440,6 @@ function DialogRunner(manager) constructor
       | DIALOG_RUNNER.STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                                   )
       | DIALOG_RUNNER.STATUS_RECEDED_SCENE      * (scene_diff < 0                                                      )
     ;
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * @desc `DialogCycleContext` constructor. Provides per-cycle caching for condition and indexer evaluations.
- * @param {Struct.DialogRunner} runner The dialog runner instance.
- * @param {Real} position The current position in the dialog graph.
- * @param {Real} target_position The target position of the current cycle.
- * @returns {Struct.DialogCycleContext}
- */
-
-function DialogCycleContext(runner, position, target_position) constructor
-{
-  static __CONSTRUCTOR_ARGC = argument_count;
-
-  self.runner = runner;
-  self.dialog = runner.manager.__to_dialog(position);
-  self.target = runner.manager.__to_dialog(target_position);
-
-  self.fx = undefined;
-  self.executed = 0;
-  self.resolved = false;
-  self.signal = DIALOG_FX.SIGNAL_NONE;
-  self.cache = {
-    conditions: {},
-    indexers: {},
-  };
-
-
-
-  /**
-   * @desc Signals a successful flow resolution, setting the target position and updating runner status.
-   * @param {Struct.Dialog} [target_position] The target position to set.
-   * @param {Real} [runner_status] Additional status flags to OR into the runner's status.
-   * @returns {Struct.Dialog}
-   */
-
-  static success = function(target_position = self.target, runner_status = 0)
-  {
-    var runner = self.runner
-      , fx = self.fx
-    ;
-
-    runner.status |= runner_status;
-    self.target = target_position;
-    self.signal = fx ? fx.signal() : DIALOG_FX.SIGNAL_NONE;
-
-    return target_position;
-  }
-
-
-
-  /**
-   * @desc Signals a failed flow resolution, returning the target position (mostly undefined).
-   * @param {Struct.Dialog} [target_position] Unused parameter for consistency.
-   * @param {Real} [runner_status] Unused parameter for consistency.
-   * @returns {Struct.Dialog}
-   */
-
-  static fail = function(target_position = self.target, runner_status = 0)
-  {
-    var runner = self.runner;
-
-    runner.status |= runner_status;
-    self.target = target_position;
-    self.signal = DIALOG_FX.SIGNAL_NONE;
-
-    return target_position;
-  }
-
-
-
-  /**
-   * @desc Evaluates a condition function with caching to ensure it's not re-evaluated multiple times per cycle.
-   * @param {Real} fx_condition_index The index of the condition function.
-   * @param {Array} fx_condition_argv The arguments for the condition function.
-   * @returns {Bool} The result of the condition evaluation.
-   */
-
-  static condition = function(fx_condition_index, fx_condition_argv)
-  {
-    return __eval_cache(
-      self.cache.conditions,
-      DialogFX.data.fx_condition_map,
-      fx_condition_index,
-      fx_condition_argv,
-      DIALOG_FX.FUNC_CONDITION_TRUE
-    );
-  }
-
-
-
-  /**
-   * @desc Evaluates an indexer function with caching to ensure it's not re-evaluated multiple times per cycle.
-   * @param {Real} fx_indexer_index The index of the indexer function.
-   * @param {Array} fx_indexer_argv The arguments for the indexer function.
-   * @returns {Real} The result of the indexer evaluation, or unselected if invalid.
-   */
-
-  static indexer = function(fx_indexer_index, fx_indexer_argv)
-  {
-    return __eval_cache(
-      self.cache.indexers,
-      DialogFX.data.fx_indexer_map,
-      fx_indexer_index,
-      fx_indexer_argv,
-      DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED
-    );
-  }
-
-
-
-  /**
-   * @desc Evaluates and caches a function result to avoid repeated computations within a cycle.
-   * @param {Struct} storage The cache storage struct.
-   * @param {Struct} map The function map containing funcs array.
-   * @param {Real} key The function index key.
-   * @param {Array} argv The arguments to pass to the function.
-   * @param {Any} defaultret The default return value if key is invalid.
-   * @returns {Any} The cached or newly computed result.
-   */
-
-  static __eval_cache = function(storage, map, key, argv, defaultret)
-  {
-    if ((key ?? DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED) < 0)
-      return defaultret;
-
-    if (struct_exists(storage, key))
-      return storage[$ key];
-
-    var result = map.funcs[key](argv, self);
-    storage[$ key] = result;
-
-    return result;
   }
 }
 
@@ -1685,6 +1511,9 @@ function DialogManager(lang, data_string, is_file) constructor
     },
     DIFF: {
       LEVELS: ["scene", "sequence", "dialog", "fx"],
+      LEVEL_IDS: [DIALOG_SCENE.__INITIAL_ID, DIALOG_SEQUENCE.__INITIAL_ID, DIALOG.__INITIAL_ID, DIALOG_FX.__INITIAL_ID],
+      LEVEL_CONSTRUCTORS: [DialogScene, DialogSequence, Dialog, DialogFX],
+      LEVEL_TYPES: [nameof(DialogScene), nameof(DialogSequence), nameof(Dialog), nameof(DialogFX)],
       OPERATIONS: {
         op_matched: "MATCHED",
         op_inserted: "INSERTED",
@@ -1695,9 +1524,11 @@ function DialogManager(lang, data_string, is_file) constructor
     }
   };
 
+
+
+  self.container = new DialogItemContainer([], self);
+  self.version = __DIALOG_MANAGER_VERSION__;
   self.lang = lang;
-  self.scene_count = 0;
-  self.scenes = [];
 
 
 
@@ -1709,6 +1540,21 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static ERROR = function(type, argv = [])
   {
+    static messages = [
+      "UNKNOWN ERROR TYPE: {0}",
+      "SERIALIZATION FAILED - INVALID DATA:\nENSURE PRESENCE OF ALL REFERENCED \{Struct.{0}\} OBJECTS",
+      "DESERIALIZATION FAILED - A PROBLEM OCCURRED WHILE OPENING FILE <{0}>:\nENSURE INTEGRITY OF FILE NAME/PATH OR FILE HANDLE",
+      "PARSING FAILED - INVALID DATA: ENSURE INTEGRITY OF SERIALIZED DATA",
+      "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}",
+      "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}\n\nCONTAINER STRUCTURE INFO: {5}",
+      "USED CONTAINER OBJECT OF TYPE \{Struct.{0}\} SHOULD NOT BE EMPTY",
+      "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
+      "INFINITE JUMP LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
+      "POTENTIAL TEXT OVERFLOW DETECTED (W: {0}/{1}): SPLIT INTO MULTIPLE DIALOG OBJECTS\n\nVIOLATOR DATA: {2}",
+      "FX LIMIT EXCEEDED - MAX FX MAP CAPACITY REACHED WHILE REGISTERING FX {0}\n(TOTAL CAPACITY: {1})",
+      "INFINITE FX RESOLUTION LOOP DETECTED - ITERATION {0}: ENSURE FX SIGNALS ALLOW CORRECTNESS IN EXECUTION\n\nCRASH CONTEXT DATA: {1}",
+    ];
+
     if (type < 0 || type >= DIALOG_MANAGER.ERR_COUNT)
     {
       argv = [type];
@@ -1718,48 +1564,49 @@ function DialogManager(lang, data_string, is_file) constructor
     if (!is_array(argv))
       argv = [argv];
 
-    var msg = string_ext([
-        "UNKNOWN ERROR TYPE: {0}",
-        "SERIALIZATION FAILED - INVALID DATA:\nENSURE PRESENCE OF ALL REFERENCED \{Struct.{0}\} OBJECTS",
-        "DESERIALIZATION FAILED - A PROBLEM OCCURRED WHILE OPENING FILE <{0}>:\nENSURE INTEGRITY OF FILE NAME/PATH OR FILE HANDLE",
-        "PARSING FAILED - INVALID DATA: ENSURE INTEGRITY OF SERIALIZED DATA",
-        "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}",
-        "POSITION RESOLUTION FAILED FROM \{Struct.{0}\} - UNDEFINED \{Struct.{1}\} CONTAINER OBJECT:\nENSURE EXISTENCE OF BACK-REFERENCE AND AVOIDAL OF USAGE OF variable_clone()'d RECURSIVE COMPONENT REFERENCES (\{Struct.{2}\}, \{Struct.{3}\}) AS VALID OBJECTS.\n\nSTRUCTURE INFO: {4}\n\nCONTAINER STRUCTURE INFO: {5}",
-        "USED CONTAINER OBJECT OF TYPE \{Struct.{0}\} SHOULD NOT BE EMPTY",
-        "INVALID POSITION - INDEX OUT OF BOUNDS: ERROR WHILE ATTEMPTING ACCESS TO:\n< SCENE {0} | SEQUENCE {1} | DIALOG {2} >",
-        "INFINITE JUMP LOOP DETECTED - ITERATION {0}: ENSURE JUMP EFFECTS DO NOT POINT TO LOOPING LOCATIONS\n\nCRASH POSITION DATA: {1}",
-        "POTENTIAL TEXT OVERFLOW DETECTED (W: {0}/{1}): SPLIT INTO MULTIPLE DIALOG OBJECTS\n\nVIOLATOR DATA: {2}",
-        "FX LIMIT EXCEEDED - MAX FX MAP CAPACITY REACHED WHILE REGISTERING FX {0}\n(TOTAL CAPACITY: {1})",
-        "INFINITE FX RESOLUTION LOOP DETECTED - ITERATION {0}: ENSURE FX SIGNALS ALLOW CORRECTNESS IN EXECUTION\n\nCRASH CONTEXT DATA: {1}",
-      ][type],
-      argv
-    );
-
-    return $"\n\n\n{msg}\n\n";
+    return $"\n\n\n{string_ext(messages[type], argv)}\n\n";
   }
 
 
 
   /**
-   * @desc Returns the contained items.
-   * @returns {Array<Struct.DialogScene}
+   * @desc Retrieves the contained items.
+   * @returns {Array<Struct.DialogScene>}
    */
 
   static items = function()
   {
-    return self.scenes;
+    return self.container.items;
   }
 
 
 
   /**
-   * @desc Returns the number of contained items.
+   * @desc Retrieves the number of items.
    * @returns {Real}
    */
 
   static itemcount = function()
   {
-    return self.scene_count;
+    return self.container.item_count;
+  }
+
+
+
+  /**
+   * @desc Retrieves an item given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
+   * @param {Real} item_idx The index of the item to get.
+   * @param {Function} [filter_fn] An optional filter function to apply to the container items. Should return `true` for the item to be returned.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to the filter function.
+   * @returns {Struct.DialogScene}
+   */
+
+  static item = function(item_idx, filter_fn = undefined, argv = undefined)
+  {
+    return filter_fn
+      ? self.container.nth_of(item_idx, filter_fn, argv)
+      : self.container.item(item_idx)
+    ;
   }
 
 
@@ -1767,13 +1614,15 @@ function DialogManager(lang, data_string, is_file) constructor
   /**
    * @desc Retrieves a scene given an index. Negative indices will iterate backwards. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if out of bounds.
    * @param {Real} scene_idx The index of the scene to get.
+   * @param {Function} [filter_fn] An optional filter function to apply to the scenes. Should return `true` for the scene to be returned.
+   * @param {Any|Array<Any>} [argv] The argument(s) to pass to the filter function.
    * @returns {Struct.DialogScene}
    */
 
-  static scene = function(scene_idx)
+  static scene = function(scene_idx, filter_fn = undefined, argv = undefined)
   {
     try {
-      return self.scenes[scene_idx + self.scene_count * (scene_idx < 0)];
+      return self.item(scene_idx, filter_fn, argv);
     }
     catch (ex) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INVALID_POSITION, [scene_idx, 0, 0]);
@@ -1889,30 +1738,9 @@ function DialogManager(lang, data_string, is_file) constructor
    * @returns {Struct.DialogManager}
    */
 
-  static add = function(scenes, index = self.scene_count)
+  static add = function(scenes, index = self.itemcount())
   {
-    if (!is_array(scenes))
-      scenes = [scenes];
-
-    var scene_count = array_length(scenes);
-
-    for (var i = index; i < self.scene_count; ++i)
-      self.scenes[i].scene_idx += scene_count;
-
-    for (var i = 0; i < scene_count; ++i)
-    {
-      var scene = scenes[i];
-
-      if (!scene.sequence_count) {
-        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT, [nameof(DialogScene)]);
-      }
-
-      scene.manager = self;
-      scene.scene_idx = index + i;
-      array_insert(self.scenes, index + i, scene);
-    }
-
-    self.scene_count += scene_count;
+    self.container.add(scenes, index);
 
     return self;
   }
@@ -1929,10 +1757,12 @@ function DialogManager(lang, data_string, is_file) constructor
   {
     try {
       return json_stringify({
-          scenes: array_map(self.scenes, function(scene) {
+          scenes: array_map(self.items(), function(scene) {
             return scene.__DIALOG_MANAGER_SERIALIZER_METHOD__();
           }),
-          scene_count: int64(self.scene_count),
+          scene_count: int64(self.itemcount()),
+          version: __DIALOG_MANAGER_VERSION__,
+          link: __DIALOG_MANAGER_LINK__,
           lang: self.lang,
         },
         prettify
@@ -1993,17 +1823,10 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static parse = function(data)
   {
-    try
-    {
+    try {
+      self.container.refresh(data.scenes, self, DialogManager.__get_deserializer(DIALOG_ITEM.LEVEL_SCENE), data.scene_count);
+      self.version = data.version;
       self.lang = data.lang;
-      __reset_parser_state().scene_count = data.scene_count;
-
-      for (var i = 0; i < self.scene_count; ++i) {
-        var scene = DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(data.scenes[i]);
-        scene.manager = self;
-        scene.scene_idx = i;
-        self.scenes[i] = scene;
-      }
     }
     catch (ex) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_PARSING_FAILED);
@@ -2046,7 +1869,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static diff = function(dialog_manager, diff_tolerance_params = diff_tolerance_params_create())
   {
-    var tree = __diff_level(self.items(), self.itemcount(), dialog_manager.items(), dialog_manager.itemcount());
+    var tree = __diff_level(self.container, dialog_manager.container);
 
     return {
       summary: __diff_stats_summary(tree, diff_tolerance_params),
@@ -2110,20 +1933,21 @@ function DialogManager(lang, data_string, is_file) constructor
    * @param {Real} m The number of items in the second list.
    * @param {Real} lv The current level of the recursion, used for path generation. Defaults to `0`.
    * @param {String} path The current path in the tree, used for node identification. Defaults to `"DialogManager.{self.lang}"`.
-   * @param {Function} id_fn The function to extract the unique identifier from the items
    * @returns {Struct}
    */
 
-  static __diff_level = function(l1, n, l2, m, lv = 0, path = $"DialogManager\{{self.lang}\}", id_fn = function(item) { return item._id; })
+  static __diff_level = function(c1, c2, lv = 0, path = $"DialogManager\{{self.lang}\}")
   {
-    var _diff_node = function(_id, level, type, index, index_match, path)
+    var _diff_node = function(id, level, type, index, index_match, path)
       {
         return {
-          _id: int64(_id), level: int64(level), type, index: int64(index), index_match: int64(index_match), path,
+          id: int64(id), level: int64(level), type, index: int64(index), index_match: int64(index_match), path,
           items: [], stats: undefined, severity: int64(0),
         };
       }
-      , diffdata = __diff_list(l1, n, l2, m)
+      , l1 = c1.items
+      , l2 = c2.items
+      , diffdata = __diff_list(l1, c1.item_count, l2, c2.item_count)
       , subdiffcount = 0
       , diffcount = 0
       , result = []
@@ -2132,7 +1956,8 @@ function DialogManager(lang, data_string, is_file) constructor
     for (var i = 0; i < diffdata.count; ++i)
     {
       var op = diffdata.ops[i]
-        , node = _diff_node(id_fn(op), lv, op.type, op.index, op.index_match, $"{path}.{DialogManager.DATA.DIFF.LEVELS[lv]}({op.index})")
+        , node = _diff_node(op.id, lv, op.type, op.index, op.index_match, $"{path}.{DialogManager.DATA.DIFF.LEVELS[lv]}({op.index})")
+        , diff_incr = 1
       ;
 
       if (op.type == DialogManager.DATA.DIFF.OPERATIONS.op_matched)
@@ -2141,26 +1966,22 @@ function DialogManager(lang, data_string, is_file) constructor
           , sl2 = l2[op.index_match]
           , recursion = is_instanceof(sl1, DialogLinkable)
           , level_data = recursion
-            ? __diff_level(sl1.items(), sl1.itemcount(), sl2.items(), sl2.itemcount(), lv + 1, node.path)
-            : undefined
+              ? __diff_level(sl1.container, sl2.container, lv + 1, node.path)
+              : undefined
+          , has_diff = recursion && level_data.diffcount
         ;
 
-        if (recursion && level_data.subdiffcount)
+        diff_incr &= has_diff;
+
+        if (has_diff)
         {
           node.items = level_data.items;
-
-          // level_data.diffcount > 0 => level_data.subdiffcount > 0
-          if (level_data.diffcount) {
-            node.type = DialogManager.DATA.DIFF.OPERATIONS.op_modified;
-            ++diffcount;
-          }
-
-          subdiffcount += level_data.diffcount + level_data.subdiffcount;
+          node.type = DialogManager.DATA.DIFF.OPERATIONS.op_modified;
+          subdiffcount += level_data.subdiffcount;
         }
       }
-      else
-        ++diffcount;
 
+      diffcount += diff_incr;
       result[i] = node;
     }
 
@@ -2179,22 +2000,21 @@ function DialogManager(lang, data_string, is_file) constructor
     * @param {Real} n The number of items in the first list.
     * @param {Array} l2 The second list of items.
     * @param {Real} m The number of items in the second list.
-    * @param {Function} id_fn The function to extract the unique identifier from the items
     * @returns {Struct}
    */
 
-  static __diff_list = function(l1, n, l2, m, id_fn = function(item) { return item._id; })
+  static __diff_list = function(l1, n, l2, m)
   {
     var w = m + 1
       , dp = array_create((n + 1) * w, 0)
-      , _data = function(_id, type, index, index_match = noone) {
-          return { _id: int64(_id), type, index: int64(index), index_match: int64(index_match) };
+      , _data = function(id, type, index, index_match = noone) {
+          return { id: int64(id), type, index: int64(index), index_match: int64(index_match) };
       }
     ;
 
     for (var i = 1; i <= n; ++i)
       for (var j = 1; j <= m; ++j)
-        if (id_fn(l1[i - 1]) == id_fn(l2[j - 1]))
+        if (l1[i - 1].id == l2[j - 1].id)
           dp[i * w + j] = dp[(i - 1) * w + j - 1] + 1;
         else
           dp[i * w + j] = max(dp[(i - 1) * w + j], dp[i * w + j - 1]);
@@ -2207,23 +2027,23 @@ function DialogManager(lang, data_string, is_file) constructor
     {
       var _l1 = i - 1, _l2 = j - 1;
 
-      if (i && j && id_fn(l1[_l1]) == id_fn(l2[_l2]))
+      if (i && j && l1[_l1].id == l2[_l2].id)
       {
         var type = _l1 == _l2
           ? DialogManager.DATA.DIFF.OPERATIONS.op_matched
           : DialogManager.DATA.DIFF.OPERATIONS.op_moved
         ;
 
-        operations[f] = _data(id_fn(l1[_l1]), type, _l1, _l2);
+        operations[f] = _data(l1[_l1].id, type, _l1, _l2);
         --i;
         --j;
       }
       else if (j && (!i || dp[i * w + _l2] >= dp[_l1 * w + j])) {
-        operations[f] = _data(id_fn(l2[_l2]), DialogManager.DATA.DIFF.OPERATIONS.op_inserted, _l2);
+        operations[f] = _data(l2[_l2].id, DialogManager.DATA.DIFF.OPERATIONS.op_inserted, _l2);
         --j;
       }
       else {
-        operations[f] = _data(id_fn(l1[_l1]), DialogManager.DATA.DIFF.OPERATIONS.op_deleted, _l1);
+        operations[f] = _data(l1[_l1].id, DialogManager.DATA.DIFF.OPERATIONS.op_deleted, _l1);
         --i;
       }
     }
@@ -2241,11 +2061,10 @@ function DialogManager(lang, data_string, is_file) constructor
   /**
    * @desc Resolves move operations in a list of diff nodes.
    * @param {Array} nodelist The list of diff nodes to resolve.
-   * @param {Function} id_fn The function to extract the unique identifier from the nodes
    * @returns {Array}
    */
 
-  static __diff_resolve_moves = function(nodelist, node_count = 0, id_fn = function(item) { return item._id; })
+  static __diff_resolve_moves = function(nodelist, node_count = 0)
   {
     var insertions = {}, deletions = {};
 
@@ -2256,11 +2075,11 @@ function DialogManager(lang, data_string, is_file) constructor
       switch (node.type)
       {
         case DialogManager.DATA.DIFF.OPERATIONS.op_inserted:
-          insertions[$ id_fn(node)] = i;
+          insertions[$ node.id] = i;
         break;
 
         case DialogManager.DATA.DIFF.OPERATIONS.op_deleted:
-          deletions[$ id_fn(node)] = i;
+          deletions[$ node.id] = i;
         break;
       }
     }
@@ -2326,7 +2145,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __diff_stats_compute_level = function(nodelist, level_stats = undefined)
   {
-    level_stats ??= array_create(array_length(DialogManager.DATA.DIFF.LEVELS), __diff_stats_empty());
+    level_stats ??= array_map(array_create(DIALOG_ITEM.LEVEL_COUNT), __diff_stats_empty);
 
     var node_count = array_length(nodelist);
 
@@ -2359,9 +2178,8 @@ function DialogManager(lang, data_string, is_file) constructor
 
     for (var i = 0; i < node_count; ++i)
     {
-      var node = nodelist[i];
-
-      var stats_current = __diff_stats_compute_from_type(node.type)
+      var node = nodelist[i]
+        , stats_current = __diff_stats_compute_from_type(node.type)
         , stats_child = __diff_stats_compute_tree(node.items)
       ;
 
@@ -2380,26 +2198,26 @@ function DialogManager(lang, data_string, is_file) constructor
    * @returns {Struct}
    */
 
-  static __diff_stats_compute_from_type = function(type)
+  static __diff_stats_compute_from_type = function(type, weight = 1)
   {
     var stats = __diff_stats_empty();
 
     switch (type)
     {
       case DialogManager.DATA.DIFF.OPERATIONS.op_inserted:
-        ++stats.insertions;
+        stats.insertions = weight;
       break;
 
       case DialogManager.DATA.DIFF.OPERATIONS.op_deleted:
-        ++stats.deletions;
+        stats.deletions = weight;
       break;
 
       case DialogManager.DATA.DIFF.OPERATIONS.op_moved:
-        ++stats.moves;
+        stats.moves = weight;
       break;
 
       case DialogManager.DATA.DIFF.OPERATIONS.op_modified:
-        ++stats.modifications;
+        stats.modifications = weight;
       break;
     }
 
@@ -2434,7 +2252,7 @@ function DialogManager(lang, data_string, is_file) constructor
    * @desc Computes a summary of the diff tree statistics and checks for violation of the specified tolerance parameters.
    * @param {Struct.DialogManager.DiffNode} tree The diff tree to compute the summary from.
    * @param {Array<Struct.DialogManager.DiffToleranceParam>} diff_tolerance_params
-   * @return {Struct}
+   * @returns {Struct}
    */
 
   static __diff_stats_summary = function(tree, diff_tolerance_params)
@@ -2519,6 +2337,8 @@ function DialogManager(lang, data_string, is_file) constructor
         , child_data = __diff_stats_summary_update_severity(node.items, diff_tolerance_params)
       ;
 
+      // Clear self-level error reporting by using -1 weight on node type
+      node.stats = __diff_stats_merge(node.stats, __diff_stats_compute_from_type(node.type, -1));
       node.severity = max(severity_current, child_data.severity);
       node.violating = node.severity >= DIALOG_MANAGER.DIFF_SEVERITY_ERROR;
       violations += node.violating + child_data.violations;
@@ -2529,6 +2349,59 @@ function DialogManager(lang, data_string, is_file) constructor
       severity: int64(severity),
       violations: int64(violations),
     };
+  }
+
+
+
+  /**
+   * @desc Returns the constructor function for a given level of DialogItem.
+   * @param {Real} level The level of the DialogItem to get the constructor function for.
+   * @returns {Function}
+   */
+
+  static __get_constructor = function(level)
+  {
+    return static_get(DialogManager.DATA.DIFF.LEVEL_CONSTRUCTORS[level]);
+  }
+
+
+
+  /**
+   * @desc Returns the deserializer function for a given level of DialogItem.
+   * @param {Real} level The level of the DialogItem to get the deserializer function for.
+   * @returns {Function}
+   */
+
+  static __get_deserializer = function(level)
+  {
+    return __get_constructor(level).__DIALOG_MANAGER_DESERIALIZER_METHOD__;
+  }
+
+
+
+  /**
+   * @desc Returns the unique id for a given level of DialogItem.
+   * @param {Real} level The level of the DialogItem to get the unique id for.
+   * @param {Real} [id] The deserialized id.
+   * @returns {Real}
+   */
+
+  static __id_assign = function(item, id = undefined)
+  {
+    var level = item.__level();
+
+    if (level < DIALOG_ITEM.LEVEL_SCENE) {
+      return -infinity;
+    }
+
+    var constr = __get_constructor(level)
+      , item_global_ids = DialogManager.DATA.DIFF.LEVEL_IDS
+      , final_id = id ?? item_global_ids[level] + 1
+    ;
+
+    item_global_ids[level] = max(item_global_ids[level], final_id);
+
+    return final_id;
   }
 
 
@@ -2580,6 +2453,74 @@ function DialogManager(lang, data_string, is_file) constructor
 
 
   /**
+   * @desc Encodes a value into a bitmask given a mask and a shift.
+   * @param {Real} value The value to encode into the bitmask.
+   * @param {Real} mask The bitmask to encode the value into.
+   * @param {Real} shift The number of bits to shift the value to the left before applying the mask.
+   * @returns {Real}
+   */
+
+  static __bitmask_encode = function(value, mask, shift)
+  {
+    return value << shift & mask;
+  }
+
+
+
+  /**
+   * @desc Filters a value with a bitmask, returning only the bits that are set in the mask.
+   * @param {Real} value The value to filter with the bitmask.
+   * @param {Real} mask The bitmask to filter the value with.
+   * @returns {Real}
+   */
+
+  static __bitmask_filter = function(value, mask)
+  {
+    return value & mask;
+  }
+
+
+
+  /**
+   * @desc Decodes a value from a bitmask given a mask and a shift.
+   * @param {Real} value The value to decode from the bitmask.
+   * @param {Real} mask The bitmask to decode the value from.
+   * @param {Real} shift The number of bits to shift the value to the right after applying the mask.
+   * @returns {Real}
+   */
+
+  static __bitmask_decode = function(value, mask, shift)
+  {
+    return __bitmask_filter(value, mask) >> shift;
+  }
+
+
+
+  /**
+   * @desc Encodes the position of a DialogLinkable item into a single value.
+   * @param {Struct.DialogLinkable} item The item to encode the position of.
+   * @returns {Real}
+   */
+
+  static __encode_level_position = function(item)
+  {
+    var idx = array_create(DIALOG_ITEM.LEVEL_LINKABLE_COUNT, 0);
+
+    for (var lv = item.__level(); lv >= 0; --lv) {
+      idx[lv] = item.index();
+      item = item.parent;
+    }
+
+    return __encode_position(
+      idx[DIALOG_ITEM.LEVEL_SCENE],
+      idx[DIALOG_ITEM.LEVEL_SEQUENCE],
+      idx[DIALOG_ITEM.LEVEL_DIALOG]
+    );
+  }
+
+
+
+  /**
    * @desc Encodes a position given the specified indices.
    * @param {Real} scene_idx The scene index to encode.
    * @param {Real} sequence_idx The sequence index to encode.
@@ -2602,7 +2543,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_scene_idx = function(scene_idx)
   {
-    return scene_idx << DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT & DIALOG_MANAGER.__BITMASK_POSITION_SCENE_MASK;
+    return __bitmask_encode(scene_idx, DIALOG_MANAGER.__BITMASK_POSITION_SCENE_MASK, DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT);
   }
 
 
@@ -2615,7 +2556,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_sequence_idx = function(sequence_idx)
   {
-    return sequence_idx << DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT & DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_MASK;
+    return __bitmask_encode(sequence_idx, DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_MASK, DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT);
   }
 
 
@@ -2628,7 +2569,21 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_dialog_idx = function(dialog_idx)
   {
-    return dialog_idx << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT & DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK;
+    return __bitmask_encode(dialog_idx, DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK, DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT);
+  }
+
+
+
+  /**
+   * @desc Encodes a position given an index and a level.
+   * @param {Real} idx The index to encode.
+   * @param {Constant.DIALOG_ITEM} level The level to encode the index for.
+   * @returns {Real}
+   */
+
+  static __encode_level_idx = function(idx, level)
+  {
+    return [__encode_scene_idx, __encode_sequence_idx, __encode_dialog_idx][level](idx);
   }
 
 
@@ -2655,7 +2610,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_jump_setting_type = function(jump_type)
   {
-    return jump_type << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT & DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_MASK;
+    return __bitmask_encode(jump_type, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT);
   }
 
 
@@ -2668,7 +2623,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_jump_setting_unit = function(jump_unit)
   {
-    return jump_unit << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT & DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK;
+    return __bitmask_encode(jump_unit, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT);
   }
 
 
@@ -2681,7 +2636,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_scene_idx = function(position)
   {
-    return (position & DIALOG_MANAGER.__BITMASK_POSITION_SCENE_MASK) >> DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT;
+    return __bitmask_decode(position, DIALOG_MANAGER.__BITMASK_POSITION_SCENE_MASK, DIALOG_MANAGER.__BITMASK_POSITION_SCENE_SHIFT);
   }
 
 
@@ -2694,7 +2649,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_sequence_idx = function(position)
   {
-    return (position & DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_MASK) >> DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT;
+    return __bitmask_decode(position, DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_MASK, DIALOG_MANAGER.__BITMASK_POSITION_SEQUENCE_SHIFT);
   }
 
 
@@ -2707,7 +2662,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_dialog_idx = function(position)
   {
-    return (position & DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK) >> DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT;
+    return __bitmask_decode(position, DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK, DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_SHIFT);
   }
 
 
@@ -2720,7 +2675,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_jump_setting_type = function(jump_settings)
   {
-    return (jump_settings & DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_MASK) >> DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT;
+    return __bitmask_decode(jump_settings, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT);
   }
 
 
@@ -2733,7 +2688,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_jump_setting_unit = function(jump_settings)
   {
-    return (jump_settings & DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK) >> DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT;
+    return __bitmask_decode(jump_settings, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT);
   }
 
 
@@ -2771,7 +2726,7 @@ function DialogManager(lang, data_string, is_file) constructor
     ;
 
     return {
-      position: self.scene((__decode_scene_idx(start_position) + scene_shift * !status) % self.scene_count),
+      position: self.scene((__decode_scene_idx(start_position) + scene_shift * !status) % self.itemcount()),
       status,
     };
   }
@@ -2806,22 +2761,22 @@ function DialogManager(lang, data_string, is_file) constructor
 
     if (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE) {
       var target_sequence_idx = next_sequence_idx + sequence_shift;
-      next_sequence_idx = clamp(target_sequence_idx, 0, next_scene.sequence_count - 1);
-      status |= DIALOG_RUNNER.STATUS_MAINTAINED_SCENE * !_in_range(target_sequence_idx, 0, next_scene.sequence_count);
+      next_sequence_idx = clamp(target_sequence_idx, 0, next_scene.itemcount() - 1);
+      status |= DIALOG_RUNNER.STATUS_MAINTAINED_SCENE * !_in_range(target_sequence_idx, 0, next_scene.itemcount());
       sequence_shift = 0;
     }
-    else if (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
+    else if (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.itemcount()))
     {
-      var sequence_diff = shift_sign ? next_sequence_idx + 1 : next_scene.sequence_count - next_sequence_idx;
-      next_sequence_idx = shift_sign ? -1 : next_scene.sequence_count;
+      var sequence_diff = shift_sign ? next_sequence_idx + 1 : next_scene.itemcount() - next_sequence_idx;
+      next_sequence_idx = shift_sign ? -1 : next_scene.itemcount();
       sequence_shift += sequence_diff * shift_sign;
 
-      while (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.sequence_count))
+      while (!_in_range(next_sequence_idx + sequence_shift, 0, next_scene.itemcount()))
       {
-        sequence_shift -= next_scene.sequence_count * shift_sign;
-        next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.scene_count);
+        sequence_shift -= next_scene.itemcount() * shift_sign;
+        next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.itemcount());
         next_scene = self.scene(next_scene_idx);
-        next_sequence_idx = shift_sign ? -1 : next_scene.sequence_count;
+        next_sequence_idx = shift_sign ? -1 : next_scene.itemcount();
       }
     }
 
@@ -2862,38 +2817,38 @@ function DialogManager(lang, data_string, is_file) constructor
 
     if (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SEQUENCE) {
       var target_dialog_idx = next_dialog_idx + dialog_shift;
-      next_dialog_idx = clamp(target_dialog_idx, 0, next_sequence.dialog_count - 1);
-      status |= DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE * !_in_range(target_dialog_idx, 0, next_sequence.dialog_count);
+      next_dialog_idx = clamp(target_dialog_idx, 0, next_sequence.itemcount() - 1);
+      status |= DIALOG_RUNNER.STATUS_MAINTAINED_SEQUENCE * !_in_range(target_dialog_idx, 0, next_sequence.itemcount());
       dialog_shift = 0;
     }
-    else if (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
+    else if (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.itemcount()))
     {
-      var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.dialog_count - next_dialog_idx;
-      next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
+      var dialog_diff = shift_sign ? next_dialog_idx + 1 : next_sequence.itemcount() - next_dialog_idx;
+      next_dialog_idx = shift_sign ? -1 : next_sequence.itemcount();
       dialog_shift += dialog_diff * shift_sign;
 
-      while (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.dialog_count))
+      while (!_in_range(next_dialog_idx + dialog_shift, 0, next_sequence.itemcount()))
       {
-        dialog_shift -= next_sequence.dialog_count * shift_sign;
+        dialog_shift -= next_sequence.itemcount() * shift_sign;
         next_sequence_idx += shift_sign;
 
-        if (!_in_range(next_sequence_idx, 0, next_scene.sequence_count))
+        if (!_in_range(next_sequence_idx, 0, next_scene.itemcount()))
         {
           if (jump_settings & DIALOG_RUNNER.JUMP_SETTING_MAINTAIN_SCENE) {
-            next_dialog_idx = shift_sign ? next_sequence.dialog_count - 1 : 0;
+            next_dialog_idx = shift_sign ? next_sequence.itemcount() - 1 : 0;
             status |= DIALOG_RUNNER.STATUS_MAINTAINED_SCENE;
             next_sequence_idx -= shift_sign;
             dialog_shift = 0;
             break;
           }
 
-          next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.scene_count);
+          next_scene_idx = __index_wrap(next_scene_idx + shift_sign, 0, self.itemcount());
           next_scene = self.scene(next_scene_idx);
-          next_sequence_idx = shift_sign ? 0 : next_scene.sequence_count - 1;
+          next_sequence_idx = shift_sign ? 0 : next_scene.itemcount() - 1;
         }
 
         next_sequence = self.sequence(next_sequence_idx, next_scene_idx);
-        next_dialog_idx = shift_sign ? -1 : next_sequence.dialog_count;
+        next_dialog_idx = shift_sign ? -1 : next_sequence.itemcount();
       }
     }
 
@@ -2948,25 +2903,25 @@ function DialogManager(lang, data_string, is_file) constructor
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_FIRST:
         return __encode_position(0, 0, 0);
       case DIALOG_MANAGER.POSITION_CODE_SCENE_LAST:
-        return __encode_position(self.scene_count - 1, 0, 0);
+        return __encode_position(self.itemcount() - 1, 0, 0);
       case DIALOG_MANAGER.POSITION_CODE_SCENE_NEXT:
-        return __encode_position((scene_idx + 1) % self.scene_count, 0, 0);
+        return __encode_position((scene_idx + 1) % self.itemcount(), 0, 0);
       case DIALOG_MANAGER.POSITION_CODE_SCENE_END:
-        return __encode_position(scene_idx, scene.sequence_count - 1, 0);
+        return __encode_position(scene_idx, scene.itemcount() - 1, 0);
       case DIALOG_MANAGER.POSITION_CODE_SCENE_MIDDLE:
-        return __encode_position(scene_idx, scene.sequence_count >> 1, 0);
+        return __encode_position(scene_idx, scene.itemcount() >> 1, 0);
       case DIALOG_MANAGER.POSITION_CODE_SCENE_START:
         return __encode_position(scene_idx, 0, 0);
       case DIALOG_MANAGER.POSITION_CODE_SCENE_PREVIOUS:
-        return __encode_position((scene_idx + self.scene_count - 1) % self.scene_count, 0, 0);
+        return __encode_position((scene_idx + self.itemcount() - 1) % self.itemcount(), 0, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_LAST:
-        return __encode_position(self.scene_count - 1, self.scenes[self.scene_count - 1].sequence_count - 1, 0);
+        return __encode_position(self.itemcount() - 1, self.scenes[self.itemcount() - 1].itemcount() - 1, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_NEXT:
         return __get_sequence_relative(1, position, jump_settings).position.position();
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_END:
-        return __encode_position(scene_idx, sequence_idx, sequence.dialog_count - 1);
+        return __encode_position(scene_idx, sequence_idx, sequence.itemcount() - 1);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_MIDDLE:
-        return __encode_position(scene_idx, sequence_idx, sequence.dialog_count >> 1);
+        return __encode_position(scene_idx, sequence_idx, sequence.itemcount() >> 1);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_START:
         return __encode_position(scene_idx, sequence_idx, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_PREVIOUS:
@@ -2978,9 +2933,9 @@ function DialogManager(lang, data_string, is_file) constructor
     scene_idx = __decode_scene_idx(position);
 
     if (
-      scene_idx >= self.scene_count
-      || sequence_idx >= self.scene(scene_idx).sequence_count
-      || dialog_idx >= self.sequence(sequence_idx, scene_idx).dialog_count
+      scene_idx >= self.itemcount()
+      || sequence_idx >= self.scene(scene_idx).itemcount()
+      || dialog_idx >= self.sequence(sequence_idx, scene_idx).itemcount()
     ) {
       throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INVALID_POSITION, [
         scene_idx, sequence_idx, dialog_idx
@@ -3030,21 +2985,6 @@ function DialogManager(lang, data_string, is_file) constructor
 
 
 
-  /**
-   * @desc Resets the state of the manager. [CHAINABLE]
-   * @returns {Struct.DialogManager}
-   */
-
-  static __reset_parser_state = function()
-  {
-    self.scenes = [];
-    self.scene_count = 0;
-
-    return self;
-  }
-
-
-
   self.deserialize(data_string, is_file);
 }
 
@@ -3073,110 +3013,21 @@ function DialogManager(lang, data_string, is_file) constructor
 
 
 /**
- * @desc `DialogLinkable` constructor. Used to generalize dialog components' types.
- * @returns {Struct.DialogLinkable}
- */
-
-function DialogLinkable(settings_mask) constructor
-{
-  static __CONSTRUCTOR_ARGC = argument_count;
-
-  self.settings_mask = settings_mask;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * `DialogScene` constructor.
+ * @desc `DialogScene` constructor.
  * @param {Array<Struct.DialogSequence>} sequences The array of `DialogSequence` of the scene.
  * @param {Constant.DIALOG_SCENE|Real} settings_mask The scene settings.
+ * @param {Real} [id] The scene identifier. If `undefined`, an identifier will be automatically assigned to ensure uniqueness.
  * @returns {Struct.DialogScene}
  */
 
-function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) constructor
+function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(sequences, settings_mask, id) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
-  static __ID = DIALOG_SCENE.__INITIAL_ID;
-
-  self.sequences = [];
-  self.scene_idx = 0;
-  self.sequence_count = 0;
-  self.manager = undefined;
-  self._id = ++DialogScene.__ID;
+  static __LEVEL = DIALOG_ITEM.LEVEL_SCENE;
 
 
 
-  /**
-   * @desc Returns the current/encoded scene index.
-   * @param {Real} [scene_idx] The scene index to encode.
-   * @returns {Real}
-   */
-
-  static index = function(scene_idx = undefined)
-  {
-    return scene_idx != undefined
-      ? DialogManager.__encode_scene_idx(scene_idx)
-      : self.scene_idx
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns the number of scenes in the selected scene's pool.
-   * @returns {Real}
-   */
-
-  static poolcount = function()
-  {
-    return self.manager.scene_count;
-  }
-
-
-
-  /**
-   * @desc Returns whether the scene idx is the last of the containing manager's.
-   * @returns {Bool}
-   */
-
-  static islast = function()
-  {
-    return self.scene_idx == self.manager.scene_count - 1;
-  }
-
-
-
-  /**
-   * @desc Retrieves the scene's global position.
-   * @returns {Real}
-   */
-
-  static position = function()
-  {
-    return DialogManager.__encode_position(self.scene_idx, 0, 0);
-  }
+  self.id = DialogManager.__id_assign(self, id);
 
 
 
@@ -3188,10 +3039,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static bg = function(bg_mask = undefined)
   {
-    return bg_mask == undefined
-      ? __bg() >> DIALOG_SCENE.__BITMASK_BG_SHIFT
-      : __bg(bg_mask << DIALOG_SCENE.__BITMASK_BG_SHIFT)
-    ;
+    return __bitmask_enc_dec(bg_mask, DIALOG_SCENE.__BITMASK_BG_MASK, DIALOG_SCENE.__BITMASK_BG_SHIFT);
   }
 
 
@@ -3204,10 +3052,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static bgm = function(bgm_mask = undefined)
   {
-    return bgm_mask == undefined
-      ? __bgm() >> DIALOG_SCENE.__BITMASK_BGM_SHIFT
-      : __bgm(bgm_mask << DIALOG_SCENE.__BITMASK_BGM_SHIFT)
-    ;
+    return __bitmask_enc_dec(bgm_mask, DIALOG_SCENE.__BITMASK_BGM_MASK, DIALOG_SCENE.__BITMASK_BGM_SHIFT);
   }
 
 
@@ -3220,10 +3065,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static bgs = function(bgs_mask = undefined)
   {
-    return bgs_mask == undefined
-      ? __bgs() >> DIALOG_SCENE.__BITMASK_BGS_SHIFT
-      : __bgs(bgs_mask << DIALOG_SCENE.__BITMASK_BGS_SHIFT)
-    ;
+    return __bitmask_enc_dec(bgs_mask, DIALOG_SCENE.__BITMASK_BGS_MASK, DIALOG_SCENE.__BITMASK_BGS_SHIFT);
   }
 
 
@@ -3236,112 +3078,22 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static tag = function(tag_mask = undefined)
   {
-    return tag_mask == undefined
-      ? __tag() >> DIALOG_SCENE.__BITMASK_TAG_SHIFT
-      : __tag(tag_mask << DIALOG_SCENE.__BITMASK_TAG_SHIFT)
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns the contained items.
-   * @returns {Array<Struct.DialogSequence}
-   */
-
-  static items = function()
-  {
-    return self.sequences;
-  }
-
-
-
-  /**
-   * @desc Returns the number of contained items.
-   * @returns {Real}
-   */
-
-  static itemcount = function()
-  {
-    return self.sequence_count;
+    return __bitmask_enc_dec(tag_mask, DIALOG_SCENE.__BITMASK_TAG_MASK, DIALOG_SCENE.__BITMASK_TAG_SHIFT);
   }
 
 
 
   /**
    * @desc Retrieves a sequence given an index. Negative indices will iterate backwards.
-   * @param {Real} [sequence_idx] The index of the sequence to get.
+   * @param {Real} sequence_idx The index of the sequence to get.
+   * @param {Function} [filter_fn] An optional filter function that takes a sequence and the provided `argv` as arguments and returns a boolean indicating whether the sequence satisfies the filter condition.
+   * @param {Any} [argv] An optional argument to be passed to the filter.
    * @returns {Struct.DialogSequence}
    */
 
-  static sequence = function(sequence_idx)
+  static sequence = function(sequence_idx, filter_fn = undefined, argv = undefined)
   {
-    return self.sequences[sequence_idx + self.sequence_count * (sequence_idx < 0)];
-  }
-
-
-
-  /**
-   * @desc Inserts sequences in the scene list at a given index. Throws DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT if any of the sequences is empty. [CHAINABLE]
-   * @param {Struct.DialogSequence|Array<Struct.DialogSequence>} sequences The new sequences to add.
-   * @param {Real} [index] The index where to add the new sequences. Defaults to last index.
-   * @returns {Struct.DialogScene}
-   */
-
-  static add = function(sequences, index = self.sequence_count)
-  {
-    if (!is_array(sequences))
-      sequences = [sequences];
-
-    var sequence_count = array_length(sequences);
-
-    for (var i = index; i < self.sequence_count; ++i)
-      self.sequences[i].sequence_idx += sequence_count;
-
-    for (var i = 0; i < sequence_count; ++i)
-    {
-      var sequence = sequences[i];
-
-      if (!sequence.dialog_count) {
-        throw DialogManager.ERROR(DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT, [nameof(DialogSequence)]);
-      }
-
-      sequence.scene = self;
-      sequence.sequence_idx = index + i;
-      array_insert(self.sequences, index + i, sequence);
-    }
-
-    self.sequence_count += sequence_count;
-
-    return self;
-  }
-
-
-
-  /**
-   * @desc Sets the internal ID of the scene.
-   * @param {Real} _id The new ID to set.
-   * @returns {Struct.DialogScene}
-   */
-
-  static __id = function(_id)
-  {
-    DialogScene.__ID = max(DialogScene.__ID, _id);
-    self._id = _id;
-
-    return self;
-  }
-
-
-
-  /**
-   * @desc Retrieves the assigned manager object.
-   * @returns {Struct.DialogManager}
-   */
-
-  static __get_manager = function()
-  {
-    return self.manager;
+    return self.item(sequence_idx, filter_fn, argv);
   }
 
 
@@ -3354,10 +3106,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __bg = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_SCENE.__BITMASK_BG_MASK
-      : settings_mask & DIALOG_SCENE.__BITMASK_BG_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_SCENE.__BITMASK_BG_MASK);
   }
 
 
@@ -3370,10 +3119,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __bgm = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_SCENE.__BITMASK_BGM_MASK
-      : settings_mask & DIALOG_SCENE.__BITMASK_BGM_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_SCENE.__BITMASK_BGM_MASK);
   }
 
 
@@ -3386,10 +3132,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __bgs = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_SCENE.__BITMASK_BGS_MASK
-      : settings_mask & DIALOG_SCENE.__BITMASK_BGS_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_SCENE.__BITMASK_BGS_MASK);
   }
 
 
@@ -3402,29 +3145,7 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __tag = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_SCENE.__BITMASK_TAG_MASK
-      : settings_mask & DIALOG_SCENE.__BITMASK_TAG_MASK
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns a list of all sequences matching a tag.
-   * @param {Constant.DIALOG_SEQUENCE|Real} [tag] The tag to filter the sequences with. Defaults to `DIALOG_SEQUENCE.TAG_DEFAULT`.
-   * @returns {Array<Struct.DialogSequence>}
-   */
-
-  static __get_sequences_by_tag = function(tag = DIALOG_SEQUENCE.TAG_DEFAULT)
-  {
-    var sequences = [];
-
-    for (var i = 0; i < self.sequence_count; ++i)
-      if (self.sequences[i].tag() == tag)
-        array_push(sequences, self.sequences[i]);
-
-    return sequences;
+    return __bitmask_filter(settings_mask, DIALOG_SCENE.__BITMASK_TAG_MASK);
   }
 
 
@@ -3437,12 +3158,12 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static __array = function()
   {
     return [
-      array_map(self.sequences, function(sequence) {
+      array_map(self.items(), function(sequence) {
         return sequence.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       int64(self.settings_mask),
-      int64(self.sequence_count),
-      int64(self._id),
+      int64(self.itemcount()),
+      int64(self.id),
     ];
   }
 
@@ -3456,12 +3177,12 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
   static __struct = function()
   {
     return {
-      sequences: array_map(self.sequences, function(sequence) {
+      sequences: array_map(self.items(), function(sequence) {
         return sequence.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       settings_mask: int64(self.settings_mask),
-      sequence_count: int64(self.sequence_count),
-      _id: int64(self._id),
+      sequence_count: int64(self.itemcount()),
+      id: int64(self.id),
     };
   }
 
@@ -3475,9 +3196,8 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __from_array = function(data)
   {
-    return new DialogScene([], data[DIALOG_SCENE.ARG_SETTINGS_MASK])
+    return new DialogScene([], data[DIALOG_SCENE.ARG_SETTINGS_MASK], data[DIALOG_SCENE.ARG_ID])
       .__parse(data[DIALOG_SCENE.ARG_SEQUENCES], data[DIALOG_SCENE.ARG_SEQUENCE_COUNT])
-      .__id(data[DIALOG_SCENE.ARG_ID])
     ;
   }
 
@@ -3491,65 +3211,10 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
   static __from_struct = function(data)
   {
-    return new DialogScene([], data.settings_mask)
+    return new DialogScene([], data.settings_mask, data.id)
       .__parse(data.sequences, data.sequence_count)
-      .__id(data._id)
     ;
   }
-
-
-
-  /**
-   * @desc Serialises the scene to JSON.
-   * @param {Bool} [prettify] Whether the string should have line breaks/indentation (`true`) or not (`false`).
-   * @returns {String}
-   */
-
-  static __serialize = function(prettify = false)
-  {
-    return json_stringify(DialogScene.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
-  }
-
-
-
-  /**
-   * @desc Deserialises a JSON string produced by {@link __serialize}.
-   * @param {String} data_string The JSON payload.
-   * @returns {Struct.DialogScene}
-   */
-
-  static __deserialize = function(data_string)
-  {
-     DialogScene.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
-  }
-
-
-
-  /**
-   * @desc Prepares the data inside the DialogScene structure.
-   * @param {Array<Struct>} sequences The sequences to update.
-   * @param {Real} sequence_count The number of sequences.
-   * @returns {Struct.DialogScene}
-   */
-
-  static __parse = function(sequences, sequence_count)
-  {
-    for (var i = 0; i < sequence_count; ++i) {
-      var sequence = DialogSequence.__DIALOG_MANAGER_DESERIALIZER_METHOD__(sequences[i]);
-      sequence.sequence_idx = i;
-      sequence.scene = self;
-      sequences[i] = sequence;
-    }
-
-    self.sequence_count = sequence_count;
-    self.sequences = sequences;
-
-    return self;
-  }
-
-
-
-  add(sequences);
 }
 
 
@@ -3577,84 +3242,23 @@ function DialogScene(sequences, settings_mask) : DialogLinkable(settings_mask) c
 
 
 /**
- * `DialogSequence` constructor.
+ * @desc `DialogSequence` constructor.
  * @param {Array<Struct.Dialog>} dialogs The array of `Dialog` of the sequence.
  * @param {Constant.DIALOG_SEQUENCE|Real} settings_mask The sequence info.
  * @param {Array<Real>} speakers The indices of the speakers.
+ * @param {Real} [id] The sequence identifier. If `undefined`, an identifier will be automatically assigned to ensure uniqueness.
  * @returns {Struct.DialogSequence}
  */
 
-function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(settings_mask) constructor
+function DialogSequence(dialogs, settings_mask, speakers, id = undefined) : DialogLinkable(dialogs, settings_mask, id) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
-  static __ID = DIALOG_SEQUENCE.__INITIAL_ID;
+  static __LEVEL = DIALOG_ITEM.LEVEL_SEQUENCE;
 
-  self.dialogs = [];
+
+
+  self.id = DialogManager.__id_assign(self, id);
   self.speakers = speakers;
-  self.sequence_idx = 0;
-  self.dialog_count = 0;
-  self.scene = undefined;
-  self._id = ++DialogSequence.__ID;
-
-
-
-  /**
-   * @desc Returns the current/encoded sequence index.
-   * @param {Real} [sequence_idx] The sequence index to encode.
-   * @returns {Real}
-   */
-
-  static index = function(sequence_idx = undefined)
-  {
-    return sequence_idx != undefined
-      ? DialogManager.__encode_sequence_idx(sequence_idx)
-      : self.sequence_idx
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns the number of sequences in the selected sequence's pool.
-   * @returns {Real}
-   */
-
-  static poolcount = function()
-  {
-    return self.scene.sequence_count;
-  }
-
-
-
-  /**
-   * @desc Returns whether the sequence idx is the last of the containing scene's.
-   * @returns {Bool}
-   */
-
-  static islast = function()
-  {
-    return self.sequence_idx == self.scene.sequence_count - 1;
-  }
-
-
-
-  /**
-   * @desc Retrieves the sequence's global position. Throws DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1 if the back-reference to the scene is undefined.
-   * @returns {Real}
-   */
-
-  static position = function()
-  {
-    var scene = self.scene;
-
-    if (!scene) {
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1, [
-        nameof(DialogSequence), nameof(DialogScene), nameof(DialogLinkable), nameof(DialogFX), __struct()
-      ]);
-    }
-
-    return DialogManager.__encode_position(self.scene.scene_idx, self.sequence_idx, 0);
-  }
 
 
 
@@ -3666,80 +3270,22 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static tag = function(tag_mask = undefined)
   {
-    return tag_mask == undefined
-      ? __tag() >> DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT
-      : __tag(tag_mask << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT)
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns the contained items.
-   * @returns {Array<Struct.Dialog}
-   */
-
-  static items = function()
-  {
-    return self.dialogs;
-  }
-
-
-
-  /**
-   * @desc Returns the number of contained items.
-   * @returns {Real}
-   */
-
-  static itemcount = function()
-  {
-    return self.dialog_count;
+    return __bitmask_enc_dec(tag_mask, DIALOG_SEQUENCE.__BITMASK_TAG_MASK, DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT);
   }
 
 
 
   /**
    * @desc Retrieves a dialog given an index. Negative indices will iterate backwards.
-   * @param {Real} [dialog_idx] The index of the dialog to get.
+   * @param {Real} dialog_idx The index of the dialog to get.
+   * @param {Function} [filter_fn] An optional filter function that takes a dialog and the provided `argv` as arguments and returns a boolean indicating whether the dialog satisfies the filter condition.
+   * @param {Any} [argv] An optional argument to be passed to the filter.
    * @returns {Struct.Dialog}
    */
 
-  static dialog = function(dialog_idx)
+  static dialog = function(dialog_idx, filter_fn = undefined, argv = undefined)
   {
-    return self.dialogs[dialog_idx + self.dialog_count * (dialog_idx < 0)];
-  }
-
-
-
-  /**
-   * @desc Inserts dialogs into the sequence list at a given index. [CHAINABLE]
-   * @param {Struct.Dialog|Array<Struct.Dialog>} dialogs The new dialogs to insert.
-   * @param {Real} [index] The index where to insert the new dialogs. Defaults to last index.
-   * @returns {Struct.DialogSequence}
-   */
-
-  static add = function(dialogs, index = self.dialog_count)
-  {
-    if (!is_array(dialogs))
-      dialogs = [dialogs];
-
-    var dialog_count = array_length(dialogs);
-
-    for (var i = index; i < self.dialog_count; ++i)
-      self.dialogs[i].dialog_idx += dialog_count;
-
-    for (var i = 0; i < dialog_count; ++i)
-    {
-      var dialog = dialogs[i];
-
-      dialog.sequence = self;
-      dialog.dialog_idx = index + i;
-      array_insert(self.dialogs, index + i, dialog);
-    }
-
-    self.dialog_count += dialog_count;
-
-    return self;
+    return self.item(dialog_idx, filter_fn, argv);
   }
 
 
@@ -3755,11 +3301,12 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
     var map = {}
       , count = 0
+      , dialog_count = self.itemcount()
     ;
 
-    for (var i = 0; i < self.dialog_count; ++i)
+    for (var i = 0; i < dialog_count; ++i)
     {
-      var dialog = self.dialogs[i]
+      var dialog = self.dialog(i)
         , speaker = dialog.speaker()
       ;
 
@@ -3778,34 +3325,6 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 
   /**
-   * @desc Sets the internal ID of the sequence.
-   * @param {Real} _id The new ID to set.
-   * @returns {Struct.DialogSequence}
-   */
-
-  static __id = function(_id)
-  {
-    DialogSequence.__ID = max(DialogSequence.__ID, _id);
-    self._id = _id;
-
-    return self;
-  }
-
-
-
-  /**
-   * @desc Retrieves the assigned manager object.
-   * @returns {Struct.DialogManager}
-   */
-
-  static __get_manager = function()
-  {
-    return self.scene.manager;
-  }
-
-
-
-  /**
    * @desc Encodes/decodes the sequence tag as a bitmask fragment.
    * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The settings mask.
    * @returns {Real}
@@ -3813,29 +3332,7 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __tag = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK
-      : settings_mask & DIALOG_SEQUENCE.__BITMASK_TAG_MASK
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns a list of all dialogs matching a tag.
-   * @param {Constant.DIALOG|Real} [tag] The tag to filter the dialogs with. Defaults to `DIALOG.TAG_DEFAULT`.
-   * @returns {Array<Struct.Dialog>}
-   */
-
-  static __get_dialogs_by_tag = function(tag = DIALOG.TAG_DEFAULT)
-  {
-    var dialogs = [];
-
-    for (var i = 0; i < self.dialog_count; ++i)
-      if (self.dialogs[i].tag() == tag)
-        array_push(dialogs, self.dialogs[i]);
-
-    return dialogs;
+    return __bitmask_filter(settings_mask, DIALOG_SEQUENCE.__BITMASK_TAG_MASK);
   }
 
 
@@ -3849,14 +3346,14 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   {
     return [
       int64(self.settings_mask),
-      array_map(self.dialogs, function(dialog) {
+      array_map(self.items(), function(dialog) {
         return dialog.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       array_map(self.speakers, function(speaker) {
         return int64(speaker);
       }),
-      int64(self.dialog_count),
-      int64(self._id),
+      int64(self.itemcount()),
+      int64(self.id),
     ];
   }
 
@@ -3871,14 +3368,14 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
   {
     return {
       settings_mask: int64(self.settings_mask),
-      dialogs: array_map(self.dialogs, function(dialog) {
+      dialogs: array_map(self.items(), function(dialog) {
         return dialog.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       speakers: array_map(self.speakers, function(speaker) {
         return int64(speaker);
       }),
-      dialog_count: int64(self.dialog_count),
-      _id: int64(self._id),
+      dialog_count: int64(self.itemcount()),
+      id: int64(self.id),
     };
   }
 
@@ -3892,9 +3389,8 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __from_array = function(data)
   {
-    return new DialogSequence([], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS])
+    return new DialogSequence([], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS], data[DIALOG_SEQUENCE.ARG_ID])
       .__parse(data[DIALOG_SEQUENCE.ARG_DIALOGS], data[DIALOG_SEQUENCE.ARG_DIALOG_COUNT])
-      .__id(data[DIALOG_SEQUENCE.ARG_ID])
     ;
   }
 
@@ -3908,65 +3404,10 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
   static __from_struct = function(data)
   {
-    return new DialogSequence([], data.settings_mask, data.speakers)
+    return new DialogSequence([], data.settings_mask, data.speakers, data.id)
       .__parse(data.dialogs, data.dialog_count)
-      .__id(data._id)
     ;
   }
-
-
-
-  /**
-   * @desc Serialises the sequence to JSON.
-   * @param {Bool} [prettify] Whether the string should have line breaks/indentation (`true`) or not (`false`).
-   * @returns {String}
-   */
-
-  static __serialize = function(prettify = false)
-  {
-    return json_stringify(DialogSequence.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
-  }
-
-
-
-  /**
-   * @desc Deserialises a JSON string produced by {@link __serialize}.
-   * @param {String} data_string The JSON payload.
-   * @returns {Struct.DialogSequence}
-   */
-
-  static __deserialize = function(data_string)
-  {
-    return DialogSequence.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
-  }
-
-
-
-  /**
-   * @desc Prepares the data inside the DialogSequence structure.
-   * @param {Array<Struct>} dialogs The dialogs to update.
-   * @param {Real} dialog_count The number of dialogs.
-   * @returns {Struct.DialogSequence}
-   */
-
-  static __parse = function(dialogs, dialog_count)
-  {
-    for (var i = 0; i < dialog_count; ++i) {
-      var dialog = Dialog.__DIALOG_MANAGER_DESERIALIZER_METHOD__(dialogs[i]);
-      dialog.dialog_idx = i;
-      dialog.sequence = self;
-      dialogs[i] = dialog;
-    }
-
-    self.dialog_count = dialog_count;
-    self.dialogs = dialogs;
-
-    return self;
-  }
-
-
-
-  add(dialogs);
 }
 
 
@@ -3994,28 +3435,28 @@ function DialogSequence(dialogs, settings_mask, speakers) : DialogLinkable(setti
 
 
 /**
- * `Dialog` constructor.
+ * @desc `Dialog` constructor.
  * @param {String} text The text message of the dialog.
  * @param {Constant.DIALOG|Real} settings_mask The dialog info.
  * @param {Array<Struct.DialogFX>} fx_map The array of `DialogFX` to apply.
+ * @param {Real} [id] The dialog identifier. If `undefined`, an identifier will be automatically assigned to ensure uniqueness.
  * @returns {Struct.Dialog}
  */
 
-function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) constructor
+function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx_map, settings_mask, id) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
-  static __ID = DIALOG.__INITIAL_ID;
+  static __LEVEL = DIALOG_ITEM.LEVEL_DIALOG;
+
   static TEXT_WIDTH_MAX = -1;
   static TEXT_WIDTH_FUNC = function(dialog) {
     return string_width(dialog.text);
   };
 
+
+
+  self.id = DialogManager.__id_assign(self, id);
   self.text = text;
-  self.fx_map = [];
-  self.dialog_idx = 0;
-  self.fx_count = 0;
-  self.sequence = undefined;
-  self._id = ++Dialog.__ID;
 
   if (Dialog.TEXT_WIDTH_MAX)
   {
@@ -4028,72 +3469,6 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
     }
   }
 
-  /**
-   * @desc Returns the current/encoded dialog index.
-   * @param {Real} [dialog_idx] The dialog index to encode.
-   * @returns {Real}
-   */
-
-  static index = function(dialog_idx = undefined)
-  {
-    return dialog_idx != undefined
-      ? DialogManager.__encode_dialog_idx(dialog_idx)
-      : self.dialog_idx
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns the number of dialogs in the selected dialog's pool.
-   * @returns {Real}
-   */
-
-  static poolcount = function()
-  {
-    return self.sequence.dialog_count;
-  }
-
-
-
-  /**
-   * @desc Returns whether the dialog idx is the last of the containing sequence's.
-   * @returns {Bool}
-   */
-
-  static islast = function()
-  {
-    return self.dialog_idx == self.sequence.dialog_count - 1;
-  }
-
-
-
-  /**
-   * @desc Retrieves the dialog's global position. Throws DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1 if the back-reference to the sequence is undefined or DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L2 if the back-reference to the scene is undefined.
-   * @returns {Real}
-   */
-
-  static position = function()
-  {
-    var sequence = self.sequence;
-
-    if (!sequence) {
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L1, [
-        nameof(Dialog), nameof(DialogSequence), nameof(DialogLinkable), nameof(DialogFX), __struct()
-      ]);
-    }
-
-    var scene = sequence.scene;
-
-    if (!scene) {
-      throw DialogManager.ERROR(DIALOG_MANAGER.ERR_UNDEFINED_BACKREF_L2, [
-        nameof(Dialog), nameof(DialogSequence), nameof(DialogLinkable), nameof(DialogFX), __struct(), sequence.__struct()
-      ]);
-    }
-
-    return DialogManager.__encode_position(scene.scene_idx, sequence.sequence_idx, self.dialog_idx);
-  }
-
 
 
   /**
@@ -4104,10 +3479,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static speaker = function(speaker_mask = undefined)
   {
-    return speaker_mask == undefined
-      ? __speaker() >> DIALOG.__BITMASK_SPEAKER_SHIFT
-      : __speaker(speaker_mask << DIALOG.__BITMASK_SPEAKER_SHIFT)
-    ;
+    return __bitmask_enc_dec(speaker_mask, DIALOG.__BITMASK_SPEAKER_MASK, DIALOG.__BITMASK_SPEAKER_MASK);
   }
 
 
@@ -4120,10 +3492,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static emotion = function(emotion_mask = undefined)
   {
-    return emotion_mask == undefined
-      ? __emotion() >> DIALOG.__BITMASK_EMOTION_SHIFT
-      : __emotion(emotion_mask << DIALOG.__BITMASK_EMOTION_SHIFT)
-    ;
+    return __bitmask_enc_dec(emotion_mask, DIALOG.__BITMASK_EMOTION_MASK, DIALOG.__BITMASK_EMOTION_SHIFT);
   }
 
 
@@ -4136,10 +3505,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static anchor = function(anchor_mask = undefined)
   {
-    return anchor_mask == undefined
-      ? __anchor() >> DIALOG.__BITMASK_ANCHOR_SHIFT
-      : __anchor(anchor_mask << DIALOG.__BITMASK_ANCHOR_SHIFT)
-    ;
+    return __bitmask_enc_dec(anchor_mask, DIALOG.__BITMASK_ANCHOR_MASK, DIALOG.__BITMASK_ANCHOR_SHIFT);
   }
 
 
@@ -4152,10 +3518,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static textbox = function(textbox_mask = undefined)
   {
-    return textbox_mask == undefined
-      ? __textbox() >> DIALOG.__BITMASK_TEXTBOX_SHIFT
-      : __textbox(textbox_mask << DIALOG.__BITMASK_TEXTBOX_SHIFT)
-    ;
+    return __bitmask_enc_dec(textbox_mask, DIALOG.__BITMASK_TEXTBOX_MASK, DIALOG.__BITMASK_TEXTBOX_SHIFT);
   }
 
 
@@ -4168,34 +3531,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static tag = function(tag_mask = undefined)
   {
-    return tag_mask == undefined
-      ? __tag() >> DIALOG.__BITMASK_TAG_SHIFT
-      : __tag(tag_mask << DIALOG.__BITMASK_TAG_SHIFT)
-    ;
-  }
-
-
-
-  /**
-   * @desc Returns the contained items.
-   * @returns {Array<Struct.DialogFX}
-   */
-
-  static items = function()
-  {
-    return self.fx_map;
-  }
-
-
-
-  /**
-   * @desc Returns the number of contained items.
-   * @returns {Real}
-   */
-
-  static itemcount = function()
-  {
-    return self.fx_count;
+    return __bitmask_enc_dec(tag_mask, DIALOG.__BITMASK_TAG_MASK, DIALOG.__BITMASK_TAG_SHIFT);
   }
 
 
@@ -4210,10 +3546,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static fx = function(n, filter_fn = undefined, argv = undefined)
   {
-    return filter_fn
-      ? __fx_get_nth_of(n, filter_fn, argv)
-      : self.fx_map[n + self.fx_count * (n < 0)]
-    ;
+    return self.item(n, filter_fn, argv);
   }
 
 
@@ -4228,7 +3561,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static flowresolver = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    return __fx_get_nth_of(n, function(fx, argv) {
+    return self.fx(n, function(fx, argv) {
       return fx.isflowresolver() && argv[0](fx, argv[1]);
     }, [filter_fn, argv]);
   }
@@ -4245,7 +3578,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static jump = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    return __fx_get_nth_of(n, function(fx, argv) {
+    return self.fx(n, function(fx, argv) {
       return fx.type() == DIALOG_FX.TYPE_FLOWRES_JUMP && argv[0](fx, argv[1]);
     }, [filter_fn, argv]);
   }
@@ -4262,7 +3595,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static dispatch = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    return __fx_get_nth_of(n, function(fx, argv) {
+    return self.fx(n, function(fx, argv) {
       return fx.type() == DIALOG_FX.TYPE_FLOWRES_DISPATCH && argv[0](fx, argv[1]);
     }, [filter_fn, argv]);
   }
@@ -4279,7 +3612,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static fallback = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    return __fx_get_nth_of(n, function(fx, argv) {
+    return self.fx(n, function(fx, argv) {
       return fx.type() == DIALOG_FX.TYPE_FLOWRES_FALLBACK && argv[0](fx, argv[1]);
     }, [filter_fn, argv]);
   }
@@ -4296,7 +3629,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static choice = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
   {
-    return __fx_get_nth_of(n, function(fx, argv) {
+    return self.fx(n, function(fx, argv) {
       return fx.type() == DIALOG_FX.TYPE_FLOWRES_CHOICE && argv[0](fx, argv[1]);
     }, [filter_fn, argv]);
   }
@@ -4350,58 +3683,6 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
 
   /**
-   * @desc Inserts effects in the dialog effect list at a given index. [CHAINABLE]
-   * @param {Struct.DialogSequence|Array<Struct.DialogSequence>} sequences The new sequences to add.
-   * @param {Real} [index] The index where to add the new sequences. Defaults to last index.
-   * @returns {Struct.DialogScene}
-   */
-
-  static add = function(fxs, index = self.fx_count)
-  {
-    if (!is_array(fxs))
-      fxs = [fxs];
-
-    var fx_count = array_length(fxs);
-
-    for (var i = 0; i < fx_count; ++i)
-      array_insert(self.fx_map, index + i, fxs[i]);
-
-    self.fx_count += fx_count;
-
-    return self;
-  }
-
-
-
-  /**
-   * @desc Sets the internal ID of the dialog.
-   * @param {Real} _id The new ID to set.
-   * @returns {Struct.Dialog}
-   */
-
-  static __id = function(_id)
-  {
-    Dialog.__ID = max(Dialog.__ID, _id);
-    self._id = _id;
-
-    return self;
-  }
-
-
-
-  /**
-   * @desc Retrieves the assigned manager object.
-   * @returns {Struct.DialogManager}
-   */
-
-  static __get_manager = function()
-  {
-    return self.sequence.scene.manager;
-  }
-
-
-
-  /**
    * @desc Encodes/decodes the dialog speaker as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
@@ -4409,10 +3690,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __speaker = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG.__BITMASK_SPEAKER_MASK
-      : settings_mask & DIALOG.__BITMASK_SPEAKER_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG.__BITMASK_SPEAKER_MASK);
   }
 
 
@@ -4425,10 +3703,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __emotion = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG.__BITMASK_EMOTION_MASK
-      : settings_mask & DIALOG.__BITMASK_EMOTION_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG.__BITMASK_EMOTION_MASK);
   }
 
 
@@ -4441,10 +3716,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __anchor = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG.__BITMASK_ANCHOR_MASK
-      : settings_mask & DIALOG.__BITMASK_ANCHOR_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG.__BITMASK_ANCHOR_MASK);
   }
 
 
@@ -4457,10 +3729,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __textbox = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG.__BITMASK_TEXTBOX_MASK
-      : settings_mask & DIALOG.__BITMASK_TEXTBOX_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG.__BITMASK_TEXTBOX_MASK);
   }
 
 
@@ -4473,133 +3742,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __tag = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG.__BITMASK_TAG_MASK
-      : settings_mask & DIALOG.__BITMASK_TAG_MASK
-    ;
-  }
-
-
-
-  /**
-   * @desc Checks whether the specified `Dialog` object contains `DialogFX` objects matching a specified criteria.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
-   * @returns {Bool}
-   */
-
-  static __fx_has_of = function(filter_fn = function(fx, argv) { return true; }, argv = undefined)
-  {
-    for (var i = array_length(self.fx_map) - 1; i >= 0; --i)
-      if (filter_fn(self.fx_map[i], argv))
-        return true;
-
-    return false;
-  }
-
-
-
-  /**
-   * @desc Retrieves the first dialog FX which matches a filter.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __fx_get_first_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
-  {
-    for (var i = 0; i < self.fx_count; ++i)
-      if (filter_fn(self.fx_map[i], argv))
-        return self.fx_map[i];
-
-    return undefined;
-  }
-
-
-
-  /**
-   * @desc Retrieves the last dialog FX which matches a filter.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __fx_get_last_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
-  {
-    var fx = undefined;
-
-    for (var i = 0; i < self.fx_count; ++i)
-      if (filter_fn(self.fx_map[i], argv))
-        fx = self.fx_map[i];
-
-    return fx;
-  }
-
-
-
-  /**
-   * @desc Retrieves the nth dialog FX which matches a filter.
-   * @param {Real} n The nth occurrence to look for.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
-   * @returns {Struct.DialogFX|undefined}
-   */
-
-  static __fx_get_nth_of = function(n, filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
-  {
-    var fx = undefined;
-
-    for (var i = 0; n && i < self.fx_count; ++i)
-      if (filter_fn(self.fx_map[i], argv) && n--)
-        fx = self.fx_map[i];
-
-    return n ? undefined : fx;
-  }
-
-
-
-  /**
-   * @desc Retrieves all dialog FX which match a filter.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
-   * @returns {Array<Struct.DialogFX>}
-   */
-
-  static __fx_get_all_of = function(filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
-  {
-    return __fx_get_all_of_until(
-      function(fx, argv = undefined) { return false; },
-      filter_fn,
-      argv
-    );
-  }
-
-
-
-  /**
-   * @desc Retrieves all dialog FX until the filter is met.
-   * @param {Function} [stop_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
-   * @param {Any|Array<Any>} [argv] The arguments to pass to the effects.
-   * @returns {Array<Struct.DialogFX>}
-   */
-
-  static __fx_get_all_of_until = function(stop_fn = function(fx, argv = undefined) { return true; }, filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
-  {
-    var filtered = [];
-
-    for (var i = 0; i < self.fx_count; ++i)
-    {
-      var fx = self.fx_map[i];
-
-      if (stop_fn(fx, argv))
-        break;
-
-      if (filter_fn(fx, argv))
-        array_push(filtered, fx);
-    }
-
-    return filtered;
+    return __bitmask_filter(settings_mask, DIALOG.__BITMASK_TAG_MASK);
   }
 
 
@@ -4632,9 +3775,11 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
   static __fx_execute_all_of_until = function(stop_fn = function(fx, argv = undefined) { return true; }, filter_fn = function(fx, argv = undefined) { return true; }, argv = undefined)
   {
-    for (var i = 0; i < self.fx_count; ++i)
+    var fx_count = self.itemcount();
+
+    for (var i = 0; i < fx_count; ++i)
     {
-      var fx = self.fx_map[i];
+      var fx = self.fx(i);
 
       if (stop_fn(fx, argv))
         return self;
@@ -4665,9 +3810,10 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
       , fx_last_exec_index = fx_first_exec_index
       , fx_previous_exec_index = fx_last_exec_index
       , loop_goto_next = false
+      , fx_count = self.itemcount()
     ;
 
-    for (var i = 0; i < self.fx_count; ++i)
+    for (var i = 0; i < fx_count; ++i)
     {
       if (ctx.executed > DIALOG_MANAGER.ERRCHECK_FX_INFINITE_LOOP_TRESHOLD) {
         throw DialogManager.ERROR(DIALOG_MANAGER.ERR_INFINITE_FX_LOOP_DETECTED, [
@@ -4675,7 +3821,7 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
         ]);
       }
 
-      var fx = self.fx_map[i];
+      var fx = self.fx(i);
 
       if (fx.trigger() != trigger || !filter_fn(fx, argv))
         continue;
@@ -4741,11 +3887,11 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
     return [
       self.text,
       int64(self.settings_mask),
-      array_map(self.fx_map, function(fx) {
+      array_map(self.items(), function(fx) {
         return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
-      int64(self.fx_count),
-      int64(self._id),
+      int64(self.itemcount()),
+      int64(self.id),
     ];
   }
 
@@ -4761,11 +3907,11 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
     return {
       text: self.text,
       settings_mask: int64(self.settings_mask),
-      fx_map: array_map(self.fx_map, function(fx) {
+      fx_map: array_map(self.items(), function(fx) {
         return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
-      fx_count: int64(self.fx_count),
-      _id: int64(self._id),
+      fx_count: int64(self.itemcount()),
+      id: int64(self.id),
     };
   }
 
@@ -4780,16 +3926,15 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __from_array = function(data)
   {
     var dialog = new Dialog(
-        data[DIALOG.ARG_TEXT],
-        data[DIALOG.ARG_SETTINGS_MASK],
-        array_map(data[DIALOG.ARG_FX_MAP], function(fx) {
-          return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
-        })
-      )
-      .__id(data[DIALOG.ARG_ID])
-    ;
+      data[DIALOG.ARG_TEXT],
+      data[DIALOG.ARG_SETTINGS_MASK],
+      array_map(data[DIALOG.ARG_FX_MAP], function(fx) {
+        return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
+      }),
+      data[DIALOG.ARG_ID]
+    );
 
-    dialog.fx_count = data[DIALOG.ARG_FX_COUNT];
+    dialog.container.item_count = data[DIALOG.ARG_FX_COUNT];
 
     return dialog;
   }
@@ -4805,49 +3950,18 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
   static __from_struct = function(data)
   {
     var dialog = new Dialog(
-        data.text,
-        data.settings_mask,
-        array_map(data.fx_map, function(fx) {
-          return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
-        })
-      )
-      .__id(data._id)
-    ;
+      data.text,
+      data.settings_mask,
+      array_map(data.fx_map, function(fx) {
+        return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(fx);
+      }),
+      data.id
+    );
 
-    dialog.fx_count = data.fx_count;
+    dialog.container.item_count = data.fx_count;
 
     return dialog;
   }
-
-
-
-  /**
-   * @desc Serialises the dialog to JSON.
-   * @param {Bool} [prettify] Whether the string should have line breaks/indentation (`true`) or not (`false`).
-   * @returns {String}
-   */
-
-  static __serialize = function(prettify = false)
-  {
-    return json_stringify(Dialog.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
-  }
-
-
-
-  /**
-   * @desc Deserialises a JSON string produced by {@link __serialize}.
-   * @param {String} data_string The JSON payload.
-   * @returns {Struct.Dialog}
-   */
-
-  static __deserialize = function(data_string)
-  {
-    return Dialog.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
-  }
-
-
-
-  add(fx_map);
 }
 
 
@@ -4875,16 +3989,17 @@ function Dialog(text, settings_mask, fx_map) : DialogLinkable(settings_mask) con
 
 
 /**
- * `DialogFX` constructor.
+ * @desc `DialogFX` constructor.
  * @param {Constant.DIALOG_FX|Real} settings_mask The effect info.
  * @param {Array<Any>} argv The arguments of the mapped effect function.
+ * @param {Real} [id] The unique identifier of the effect. Optional, mainly used for deserialization.
  * @returns {Struct.DialogFX}
  */
 
-function DialogFX(settings_mask, argv) constructor
+function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mask, id) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
-  static __ID = DIALOG_FX.__INITIAL_ID;
+  static __LEVEL = DIALOG_ITEM.LEVEL_DIALOG_FX;
   static data = {
     initialized: false,
     fx_map: {
@@ -4923,9 +4038,8 @@ function DialogFX(settings_mask, argv) constructor
 
 
 
-  self.settings_mask = settings_mask;
+  self.id = DialogManager.__id_assign(self, id);
   self.argv = argv;
-  self._id = ++DialogFX.__ID;
 
 
 
@@ -4937,10 +4051,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static type = function(type_mask = undefined)
   {
-    return type_mask == undefined
-      ? __type() >> DIALOG_FX.__BITMASK_TYPE_SHIFT
-      : __type(type_mask << DIALOG_FX.__BITMASK_TYPE_SHIFT)
-    ;
+    return __bitmask_enc_dec(type_mask, DIALOG_FX.__BITMASK_TYPE_MASK, DIALOG_FX.__BITMASK_TYPE_SHIFT);
   }
 
 
@@ -4953,10 +4064,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static trigger = function(trigger_mask = undefined)
   {
-    return trigger_mask == undefined
-      ? __trigger() >> DIALOG_FX.__BITMASK_TRIGGER_SHIFT
-      : __trigger(trigger_mask << DIALOG_FX.__BITMASK_TRIGGER_SHIFT)
-    ;
+    return __bitmask_enc_dec(trigger_mask, DIALOG_FX.__BITMASK_TRIGGER_MASK, DIALOG_FX.__BITMASK_TRIGGER_SHIFT);
   }
 
 
@@ -4969,10 +4077,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static signal = function(signal_mask = undefined)
   {
-    return signal_mask == undefined
-      ? __signal() >> DIALOG_FX.__BITMASK_SIGNAL_SHIFT
-      : __signal(signal_mask << DIALOG_FX.__BITMASK_SIGNAL_SHIFT)
-    ;
+    return __bitmask_enc_dec(signal_mask, DIALOG_FX.__BITMASK_SIGNAL_MASK, DIALOG_FX.__BITMASK_SIGNAL_SHIFT);
   }
 
 
@@ -4985,10 +4090,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static tag = function(tag_mask = undefined)
   {
-    return tag_mask == undefined
-      ? __tag() >> DIALOG_FX.__BITMASK_TAG_SHIFT
-      : __tag(tag_mask << DIALOG_FX.__BITMASK_TAG_SHIFT)
-    ;
+    return __bitmask_enc_dec(tag_mask, DIALOG_FX.__BITMASK_TAG_MASK, DIALOG_FX.__BITMASK_TAG_SHIFT);
   }
 
 
@@ -5173,22 +4275,6 @@ function DialogFX(settings_mask, argv) constructor
 
 
   /**
-   * @desc Sets the internal ID of the dialog fx.
-   * @param {Real} _id The new ID to set.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __id = function(_id)
-  {
-    DialogFX.__ID = max(DialogFX.__ID, _id);
-    self._id = _id;
-
-    return self;
-  }
-
-
-
-  /**
    * @desc Encodes/decodes the dialog FX type as a bitmask fragment.
    * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
    * @returns {Real}
@@ -5196,10 +4282,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static __type = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_FX.__BITMASK_TYPE_MASK
-      : settings_mask & DIALOG_FX.__BITMASK_TYPE_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_FX.__BITMASK_TYPE_MASK);
   }
 
 
@@ -5212,10 +4295,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static __trigger = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK
-      : settings_mask & DIALOG_FX.__BITMASK_TRIGGER_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_FX.__BITMASK_TRIGGER_MASK);
   }
 
 
@@ -5228,10 +4308,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static __signal = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_FX.__BITMASK_SIGNAL_MASK
-      : settings_mask & DIALOG_FX.__BITMASK_SIGNAL_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_FX.__BITMASK_SIGNAL_MASK);
   }
 
 
@@ -5244,10 +4321,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static __tag = function(settings_mask = undefined)
   {
-    return settings_mask == undefined
-      ? self.settings_mask & DIALOG_FX.__BITMASK_TAG_MASK
-      : settings_mask & DIALOG_FX.__BITMASK_TAG_MASK
-    ;
+    return __bitmask_filter(settings_mask, DIALOG_FX.__BITMASK_TAG_MASK);
   }
 
 
@@ -5395,7 +4469,7 @@ function DialogFX(settings_mask, argv) constructor
     return [
       int64(self.settings_mask),
       __resolve_recursive(self.argv),
-      int64(self._id),
+      int64(self.id),
     ];
   }
 
@@ -5411,7 +4485,7 @@ function DialogFX(settings_mask, argv) constructor
     return {
       settings_mask: int64(self.settings_mask),
       argv: __resolve_recursive(self.argv),
-      _id: int64(self._id),
+      id: int64(self.id),
     };
   }
 
@@ -5425,9 +4499,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static __from_array = function(data)
   {
-    return new DialogFX(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV])
-      .__id(data[DIALOG_FX.ARG_ID])
-    ;
+    return new DialogFX(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV], data[DIALOG_FX.ARG_ID]);
   }
 
 
@@ -5440,35 +4512,7 @@ function DialogFX(settings_mask, argv) constructor
 
   static __from_struct = function(data)
   {
-    return new DialogFX(data.settings_mask, data.argv)
-      .__id(data._id)
-    ;
-  }
-
-
-
-  /**
-   * @desc Serialises the FX to a JSON string.
-   * @param {Bool} [prettify] Whether the string should be pretty-printed.
-   * @returns {String}
-   */
-
-  static __serialize = function(prettify = false)
-  {
-    return json_stringify(DialogFX.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
-  }
-
-
-
-  /**
-   * @desc Deserialises a JSON string produced by {@link __serialize}.
-   * @param {String} data_string The JSON payload.
-   * @returns {Struct.DialogFX}
-   */
-
-  static __deserialize = function(data_string)
-  {
-    return DialogFX.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
+    return new DialogFX(data.settings_mask, data.argv, data.id);
   }
 
 
@@ -5487,3 +4531,800 @@ function DialogFX(settings_mask, argv) constructor
     ;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+#endregion
+
+// ----------------------------------------------------------------------------
+
+#region Support classes
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogCycleContext` constructor. Provides per-cycle caching for condition and indexer evaluations.
+ * @param {Struct.DialogRunner} runner The dialog runner instance.
+ * @param {Real} position The current position in the dialog graph.
+ * @param {Real} target_position The target position of the current cycle.
+ * @returns {Struct.DialogCycleContext}
+ */
+
+function DialogCycleContext(runner, position, target_position) constructor
+{
+  static __CONSTRUCTOR_ARGC = argument_count;
+
+  self.runner = runner;
+  self.dialog = runner.manager.__to_dialog(position);
+  self.target = runner.manager.__to_dialog(target_position);
+
+  self.fx = undefined;
+  self.executed = 0;
+  self.resolved = false;
+  self.signal = DIALOG_FX.SIGNAL_NONE;
+  self.cache = {
+    conditions: {},
+    indexers: {},
+  };
+
+
+
+  /**
+   * @desc Signals a successful flow resolution, setting the target position and updating runner status.
+   * @param {Struct.Dialog} [target_position] The target position to set.
+   * @param {Real} [runner_status] Additional status flags to OR into the runner's status.
+   * @returns {Struct.Dialog}
+   */
+
+  static success = function(target_position = self.target, runner_status = 0)
+  {
+    var runner = self.runner
+      , fx = self.fx
+    ;
+
+    runner.status |= runner_status;
+    self.target = target_position;
+    self.signal = fx ? fx.signal() : DIALOG_FX.SIGNAL_NONE;
+
+    return target_position;
+  }
+
+
+
+  /**
+   * @desc Signals a failed flow resolution, returning the target position (mostly undefined).
+   * @param {Struct.Dialog} [target_position] Unused parameter for consistency.
+   * @param {Real} [runner_status] Unused parameter for consistency.
+   * @returns {Struct.Dialog}
+   */
+
+  static fail = function(target_position = self.target, runner_status = 0)
+  {
+    var runner = self.runner;
+
+    runner.status |= runner_status;
+    self.target = target_position;
+    self.signal = DIALOG_FX.SIGNAL_NONE;
+
+    return target_position;
+  }
+
+
+
+  /**
+   * @desc Evaluates a condition function with caching to ensure it's not re-evaluated multiple times per cycle.
+   * @param {Real} fx_condition_index The index of the condition function.
+   * @param {Array} fx_condition_argv The arguments for the condition function.
+   * @returns {Bool} The result of the condition evaluation.
+   */
+
+  static condition = function(fx_condition_index, fx_condition_argv)
+  {
+    return __eval_cache(
+      self.cache.conditions,
+      DialogFX.data.fx_condition_map,
+      fx_condition_index,
+      fx_condition_argv,
+      DIALOG_FX.FUNC_CONDITION_TRUE
+    );
+  }
+
+
+
+  /**
+   * @desc Evaluates an indexer function with caching to ensure it's not re-evaluated multiple times per cycle.
+   * @param {Real} fx_indexer_index The index of the indexer function.
+   * @param {Array} fx_indexer_argv The arguments for the indexer function.
+   * @returns {Real} The result of the indexer evaluation, or unselected if invalid.
+   */
+
+  static indexer = function(fx_indexer_index, fx_indexer_argv)
+  {
+    return __eval_cache(
+      self.cache.indexers,
+      DialogFX.data.fx_indexer_map,
+      fx_indexer_index,
+      fx_indexer_argv,
+      DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED
+    );
+  }
+
+
+
+  /**
+   * @desc Evaluates and caches a function result to avoid repeated computations within a cycle.
+   * @param {Struct} storage The cache storage struct.
+   * @param {Struct} map The function map containing funcs array.
+   * @param {Real} key The function index key.
+   * @param {Array} argv The arguments to pass to the function.
+   * @param {Any} defaultret The default return value if key is invalid.
+   * @returns {Any} The cached or newly computed result.
+   */
+
+  static __eval_cache = function(storage, map, key, argv, defaultret)
+  {
+    if ((key ?? DIALOG_FX.FX_ARG_FLOWRES_INDEX_UNSELECTED) < 0)
+      return defaultret;
+
+    if (struct_exists(storage, key))
+      return storage[$ key];
+
+    var result = map.funcs[key](argv, self);
+    storage[$ key] = result;
+
+    return result;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogItemContainer` constructor. Manages a list of dialog items with indexing and parent references.
+ * @param {Array<Struct.DialogItem>} items The initial list of dialog items to populate the container.
+ * @returns {Struct.DialogItemContainer}
+ */
+
+function DialogItemContainer(items, parent) constructor
+{
+  self.item_count = 0;
+  self.items = [];
+
+
+
+  /**
+   * @desc Retrieves the list of dialog linkable items.
+   * @param {Real} item_idx The index of the item to retrieve. Supports negative indexing.
+   * @returns {Array<Struct.DialogItem>}
+   */
+
+  static item = function(item_idx)
+  {
+    return self.items[item_idx + self.item_count * (item_idx < 0)];
+  }
+
+
+
+  /**
+   * @desc Clears the dialog linkable list. [CHAINABLE]
+   * @returns {Struct.DialogItemContainer}
+   */
+
+  static clear = function()
+  {
+    self.item_count = 0;
+    self.items = [];
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Clears the dialog linkable list and adds new items. Throws DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT if any of the item is empty. [CHAINABLE]
+   * @param {Struct.DialogItem|Array<Struct.DialogItem>} items The new items to add.
+   * @param {Struct.DialogLinkable} [parent] The parent linkable object to reference in the items.
+   * @param {Function} [item_fn] An optional function to apply to each item before mapping.
+   * @param {Real} [item_count] The number of items to add. Defaults to the length of the items array.
+   * @returns {Struct.DialogItemContainer}
+   */
+
+  static refresh = function(items, parent = undefined, item_fn = undefined, item_count = undefined)
+  {
+    return self.clear().add(items, undefined, parent, item_fn, item_count);
+  }
+
+
+
+  /**
+   * @desc Inserts items in the dialog linkable list at a given index. Throws DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT if any of the item is empty. [CHAINABLE]
+   * @param {Struct.DialogItem|Array<Struct.DialogItem>} items The new items to add.
+   * @param {Real} [index] The index where to add the new items. Defaults to last index.
+   * @param {Struct.DialogLinkable} [parent] The parent linkable object to reference in the items.
+   * @param {Function} [item_fn] An optional function to apply to each item before mapping.
+   * @param {Real} [item_count] The number of items to add. Defaults
+   * @returns {Struct.DialogItemContainer}
+   */
+
+  static add = function(items, index = self.item_count, parent = undefined, item_fn = undefined, item_count = undefined)
+  {
+    if (!is_array(items))
+      items = [items];
+
+    item_count ??= array_length(items);
+
+    for (var i = index; i < self.item_count; ++i)
+      self.items[i].item_idx += item_count;
+
+    for (var i = 0; i < item_count; ++i)
+    {
+      var insertion_idx = index + i
+        , item = self.mapitem(items[i], insertion_idx, parent, item_fn)
+      ;
+
+      if (item.complete()) {
+        array_insert(self.items, insertion_idx, item);
+      }
+    }
+
+    self.item_count += item_count;
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Maps an item object to the dialog linkable list format, adding indexing and parent references.
+   * @param {Struct.DialogItem} item The item to map.
+   * @param {Real} item_idx The index of the item in the container.
+   * @param {Struct.DialogLinkable} parent The parent linkable object to reference in the item.
+   * @param {Function} [item_fn] An optional function to apply to the item
+   * @returns {Struct.DialogItem}
+   */
+
+  static mapitem = function(item, item_idx, parent, item_fn = undefined)
+  {
+    if (item_fn)
+      item = item_fn(item);
+
+    item.item_idx = item_idx;
+    item.parent = parent;
+
+    return item;
+  };
+
+
+
+  /**
+   * @desc Removes items from the dialog linkable list at a given index. Defaults to removing the last item if no index is provided. [CHAINABLE]
+   * @param {Real} [index] The index where to remove items. Defaults to last index.
+   * @param {Real} [count] The number of items to remove. Defaults to 1 if index is provided, otherwise -1 to remove all items.
+   * @returns {Struct.DialogItemContainer}
+   */
+
+  static remove = function(index = self.item_count - 1, count = -1)
+  {
+    if (count != 0)
+    {
+      var count_abs = abs(count)
+        , count_is_negative = count < 0
+      ;
+
+      self.item_count -= count_abs;
+      index -= count_abs * count_is_negative - count_is_negative;
+      array_delete(self.items, index, count_abs);
+
+      for (var i = index; i < self.item_count; ++i)
+        self.items[i].item_idx -= count_abs;
+    }
+
+    return self;
+  }
+
+
+
+  /**
+   * @desc Checks whether the specified container object contains item objects matching a specified criteria.
+   * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
+   * @returns {Bool}
+   */
+
+  static has_of = function(filter_fn = function(item, argv) { return true; }, argv = undefined)
+  {
+    return self.first_of(filter_fn, argv) != undefined;
+  }
+
+
+
+  /**
+   * @desc Retrieves the first item which matches a filter.
+   * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
+   * @returns {Struct.DialogItem}
+   */
+
+  static first_of = function(filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
+  {
+    for (var i = 0; i < self.item_count; ++i)
+      if (filter_fn(self.items[i], argv))
+        return self.items[i];
+
+    return undefined;
+  }
+
+
+
+  /**
+   * @desc Retrieves the last item which matches a filter.
+   * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the item.
+   * @returns {Struct.DialogItem}
+   */
+
+  static last_of = function(filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
+  {
+    var item = undefined;
+
+    for (var i = 0; i < self.item_count; ++i)
+      if (filter_fn(self.items[i], argv))
+        item = self.items[i];
+
+    return item;
+  }
+
+
+
+  /**
+   * @desc Retrieves the nth dialog item which matches a filter.
+   * @param {Real} n The nth occurrence to look for.
+   * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
+   * @returns {Struct.DialogItem|undefined}
+   */
+
+  static nth_of = function(n, filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
+  {
+    var item = undefined;
+
+    for (var i = 0; n && i < self.item_count; ++i)
+      if (filter_fn(self.items[i], argv) && n--)
+        item = self.items[i];
+
+    return n ? undefined : item;
+  }
+
+
+
+  /**
+   * @desc Retrieves all dialog items which match a filter.
+   * @param {Function} [filter_fn] The predicate to test against each items. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
+   * @returns {Array<Struct.DialogItem|undefined>}
+   */
+
+  static all_of = function(filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
+  {
+    return all_of_until(
+      function(item, argv = undefined) { return false; },
+      filter_fn,
+      argv
+    );
+  }
+
+
+
+  /**
+   * @desc Retrieves all dialog items until the filter is met.
+   * @param {Function} [stop_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
+   * @returns {Array<Struct.DialogItem|undefined>}
+   */
+
+  static all_of_until = function(stop_fn = function(item, argv = undefined) { return true; }, filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
+  {
+    var filtered = [];
+
+    for (var i = 0; i < self.item_count; ++i)
+    {
+      var item = self.items[i];
+
+      if (stop_fn(item, argv))
+        break;
+
+      if (filter_fn(item, argv))
+        array_push(filtered, item);
+    }
+
+    return filtered;
+  }
+
+
+
+  self.add(items, 0, parent);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogItem` constructor. Represents a dialog item with indexing and parent references.
+ * @param {Real} settings_mask The settings mask for the dialog item.
+ * @param {Real} [id] The optional ID for the dialog item. If not provided, an ID will be automatically assigned.
+ * @returns {Struct.DialogItem}
+ */
+
+function DialogItem(settings_mask, id) constructor
+{
+  static __CONSTRUCTOR_ARGC = argument_count;
+  static __LEVEL = -infinity;
+
+
+
+  self.settings_mask = settings_mask;
+  self.parent = undefined;
+  self.item_idx = 0;
+
+
+
+  /**
+   * @desc Returns the current/encoded item index.
+   * @param {Real} [item_idx] The item index to encode.
+   * @returns {Real}
+   */
+
+  static index = function(item_idx = undefined)
+  {
+    return self.item_idx;
+  }
+
+
+
+  /**
+   * @desc Returns the number of item in the selected item's pool.
+   * @returns {Real}
+   */
+
+  static poolcount = function()
+  {
+    return self.parent.container.item_count;
+  }
+
+
+
+  /**
+   * @desc Returns whether the item idx is the last of the containing item's.
+   * @returns {Bool}
+   */
+
+  static islast = function()
+  {
+    return self.item_idx == self.poolcount() - 1;
+  }
+
+
+
+  /**
+   * @desc Serialises the item to JSON.
+   * @param {Bool} [prettify] Whether the string should have line breaks/indentation (`true`) or not (`false`).
+   * @returns {String}
+   */
+
+  static serialize = function(prettify = false)
+  {
+    return json_stringify(self.__DIALOG_MANAGER_SERIALIZER_METHOD__(), prettify);
+  }
+
+
+
+  /**
+   * @desc Deserialises a JSON string produced by {@link __serialize}.
+   * @param {String} data_string The JSON payload.
+   * @returns {Struct.DialogItem}
+   */
+
+  static deserialize = function(data_string)
+  {
+     return self.__DIALOG_MANAGER_DESERIALIZER_METHOD__(json_parse(data_string));
+  }
+
+
+
+  /**
+   * @desc Checks whether the item is complete, meaning it has all the required data to be functional. This is used to determine whether the item should be added to a container or not, throwing an error if the item is incomplete and its container does not allow empty items.
+   * @returns {Bool}
+   */
+
+  static complete = function()
+  {
+    var level = __level();
+
+    if (level >= DIALOG_ITEM.LEVEL_DIALOG || self.itemcount()) {
+      return true;
+    }
+
+    throw DialogManager.ERROR(DIALOG_MANAGER.ERR_EMPTY_CONTAINER_OBJECT, [
+      DialogManager.DATA.LEVEL_TYPES[level]
+    ]);
+  }
+
+
+
+  /**
+   * @desc Retrieves the assigned manager object.
+   * @returns {Struct.DialogManager}
+   */
+
+  static __get_manager = function()
+  {
+    var item = self;
+
+    for (var lv = self.__LEVEL; lv >= 0; --lv) {
+      item = item.parent;
+    }
+
+    return item;
+  }
+
+
+
+  /**
+   * @desc Retrieves the item's level.
+   * @returns {Real}
+   */
+
+  static __level = function()
+  {
+    return self.__LEVEL;
+  }
+
+
+
+  /**
+   * @desc Encodes/decodes the item data as a bitmask fragment.
+   * @param {Real} value The value identifier.
+   * @param {Real} mask The identifier mask.
+   * @param {Real} shift The identifier shift.
+   * @returns {Real}
+   */
+
+  static __bitmask_enc_dec = function(value, mask, shift)
+  {
+    return value == undefined
+      ? __bitmask_filter(undefined, mask) >> shift
+      : __bitmask_filter(value << shift, mask)
+    ;
+  }
+
+
+
+  /**
+   * @desc Filters the current or given value as a bitmask fragment.
+   * @param {Real} mask The filtering mask of the identifier.
+   * @param {Real} value The value of the identifier.
+   * @returns {Real}
+   */
+
+  static __bitmask_filter = function(value, mask)
+  {
+    return (value ?? self.settings_mask) & mask;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc `DialogLinkable` constructor. Used to generalize dialog components' types.
+ * @param {Array<DialogLinkable|Any>} dialog_items The items of the dialogical entity.
+ * @param {Real} settings_mask The settings mask for the dialogical entity.
+ * @param {Real} [id] The optional ID for the dialogical entity. If not provided, an ID will be automatically assigned.
+ * @returns {Struct.DialogLinkable}
+ */
+
+function DialogLinkable(dialog_items, settings_mask, id = undefined) : DialogItem(settings_mask, id) constructor
+{
+  self.container = new DialogItemContainer(dialog_items, self);
+
+
+
+  /**
+   * @desc Returns the current/encoded item index.
+   * @param {Real} [item_idx] The item index to encode.
+   * @returns {Real}
+   */
+
+  static index = function(item_idx = undefined)
+  {
+    return item_idx != undefined
+      ? DialogManager.__encode_level_idx(item_idx, self.__LEVEL)
+      : self.item_idx
+    ;
+  }
+
+
+
+  /**
+   * @desc Retrieves the items of the container.
+   * @returns {Array<Struct.DialogItem>}
+   */
+
+  static items = function()
+  {
+    return self.container.items;
+  }
+
+
+
+  /**
+   * @desc Retrieves the number of items in the container.
+   * @returns {Real}
+   */
+
+  static itemcount = function()
+  {
+    return self.container.item_count;
+  }
+
+
+
+  /**
+   * @desc Retrieves the item at a specified index, optionally filtered by a predicate function.
+   * @param {Real} item_idx The index of the item to retrieve.
+   * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
+   * @param {Any|Array<Any>} [argv] The arguments to pass to the filter function.
+   * @returns {Struct.DialogItem|undefined}
+   */
+
+  static item = function(item_idx, filter_fn = undefined, argv = undefined)
+  {
+    return filter_fn
+      ? self.container.nth_of(item_idx, filter_fn, argv)
+      : self.container.item(item_idx)
+    ;
+  }
+
+
+
+  /**
+   * @desc Adds items to the container.
+   * @param {Array<Struct.DialogItem>} items The items to add.
+   * @param {Real} [index] The index at which to add the items. If not provided, the items are appended.
+   * @param {Struct.DialogLinkable} [parent] The parent of the items to add.
+   * @param {Function} [item_fn] The function to call for each item being added.
+   * @param {Real} [item_count] The number of items to add.
+   * @returns {Struct.DialogLinkable}
+   */
+
+  static add = function(items, index = undefined, parent = undefined, item_fn = undefined, item_count = undefined)
+  {
+    return self.container.add(items, index, parent, item_fn, item_count);
+  }
+
+
+
+  /**
+   * @desc Removes items from the container.
+   * @param {Real} [index] The index at which to remove items. If not provided, the last item is removed.
+   * @param {Real} [count] The number of items to remove. If not provided, one item is removed.
+   * @returns {Struct.DialogLinkable}
+   */
+
+  static remove = function(index = undefined, count = undefined)
+  {
+    return self.container.remove(index, count);
+  }
+
+
+
+  /**
+   * @desc Retrieves the items's global position.
+   * @returns {Real}
+   */
+
+  static position = function()
+  {
+    return DialogManager.__encode_level_position(self);
+  }
+
+
+
+  /**
+   * @desc Parses the items of the container from a given array, using the dialog manager's deserializer method. Returns the parent object for chaining.
+   * @param {Struct.DialogLinkable|Struct.DialogManager} items The objects to parse.
+   * @param {Real} item_count The number of items to parse.
+   * @param {Array} items The array of items to parse.
+   */
+
+  static __parse = function(items, item_count)
+  {
+    self.container.refresh(items, self, DialogManager.__get_deserializer(self.__LEVEL + 1), item_count);
+
+    return self;
+  }
+}
+
+#endregion
