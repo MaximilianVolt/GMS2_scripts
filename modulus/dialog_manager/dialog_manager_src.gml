@@ -2,14 +2,14 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.12.0
+ * @version 0.12.1
  */
 
 
 
 #region Lib functions
 
-#macro __DIALOG_MANAGER_VERSION__             "0.12.0"
+#macro __DIALOG_MANAGER_VERSION__             "0.12.1"
 #macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager"
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
@@ -114,18 +114,19 @@ function dialog_manager_create(lang = DialogManager.DATA.LANGS.ISO_639_1.english
  * @desc DialogScene` constructor.
  * @param {Struct.DialogSequence|Array<Struct.DialogSequence>} [sequences] The array of `DialogSequence` of the scene.
  * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The scene settings.
+ * @param {Real} [id] The scene id. Overridden if deserialized. Defaults to `undefined`.
  * @returns {Struct.DialogScene}
  */
 
-function dialog_scene_create(sequences = [], settings_mask = 0)
+function dialog_scene_create(sequences = [], settings_mask = 0, id = undefined)
 {
   return new DialogScene(
     is_array(sequences) ? sequences : [sequences],
     settings_mask
-      | (DialogScene.__bg(settings_mask) ? 0 : DialogScene.bg(DIALOG_SCENE.BG_DEFAULT))
-      | (DialogScene.__bgm(settings_mask) ? 0 : DialogScene.bgm(DIALOG_SCENE.BGM_DEFAULT))
-      | (DialogScene.__bgs(settings_mask) ? 0 : DialogScene.bgs(DIALOG_SCENE.BGS_DEFAULT))
-      | (DialogScene.__tag(settings_mask) ? 0 : DialogScene.tag(DIALOG_SCENE.TAG_DEFAULT))
+      | DialogScene.bg(DIALOG_SCENE.BG_DEFAULT) * !DialogScene.__bg(settings_mask)
+      | DialogScene.bgm(DIALOG_SCENE.BGM_DEFAULT) * !DialogScene.__bgm(settings_mask)
+      | DialogScene.bgs(DIALOG_SCENE.BGS_DEFAULT) * !DialogScene.__bgs(settings_mask)
+      | DialogScene.tag(DIALOG_SCENE.TAG_DEFAULT) * !DialogScene.__tag(settings_mask)
   );
 }
 
@@ -139,7 +140,7 @@ function dialog_scene_create(sequences = [], settings_mask = 0)
 
 function dialog_scene_create_from_array(data)
 {
-  return dialog_scene_create(data[DIALOG_SCENE.ARG_SEQUENCES], data[DIALOG_SCENE.ARG_SETTINGS_MASK]);
+  return dialog_scene_create(data[DIALOG_SCENE.ARG_SEQUENCES], data[DIALOG_SCENE.ARG_SETTINGS_MASK], data[DIALOG_SCENE.ARG_ID]);
 }
 
 
@@ -152,7 +153,7 @@ function dialog_scene_create_from_array(data)
 
 function dialog_scene_create_from_struct(data)
 {
-  return dialog_scene_create(data.sequences, data.settings_mask);
+  return dialog_scene_create(data.sequences, data.settings_mask, data.id);
 }
 
 
@@ -184,15 +185,16 @@ function dialog_scene_create_from_struct(data)
  * @param {Struct.Dialog|Array<Struct.Dialog>} [dialogs] The array of `Dialog` of the sequence.
  * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The sequence info.
  * @param {Array<Real>} [speakers] The indices of the speakers.
+ * @param {Real} [id] The sequence id. Overridden if deserialized. Defaults to `undefined`.
  * @returns {Struct.DialogSequence}
  */
 
-function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [])
+function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [], id = undefined)
 {
   return new DialogSequence(
     is_array(dialogs) ? dialogs : [dialogs],
     settings_mask
-      | (DialogSequence.__tag(settings_mask) ? 0 : DialogSequence.tag(DIALOG_SEQUENCE.TAG_DEFAULT)),
+      | DialogSequence.tag(DIALOG_SEQUENCE.TAG_DEFAULT) * !DialogSequence.__tag(settings_mask),
     is_array(speakers) ? speakers : [speakers]
   );
 }
@@ -207,7 +209,7 @@ function dialog_sequence_create(dialogs = [], settings_mask = 0, speakers = [])
 
 function dialog_sequence_create_from_array(data)
 {
-  return dialog_sequence_create(data[DIALOG_SEQUENCE.ARG_DIALOGS], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS]);
+  return dialog_sequence_create(data[DIALOG_SEQUENCE.ARG_DIALOGS], data[DIALOG_SEQUENCE.ARG_SETTINGS_MASK], data[DIALOG_SEQUENCE.ARG_SPEAKERS], data[DIALOG_SEQUENCE.ARG_ID]);
 }
 
 
@@ -220,7 +222,7 @@ function dialog_sequence_create_from_array(data)
 
 function dialog_sequence_create_from_struct(data)
 {
-  return dialog_sequence_create(data.dialogs, data.settings_mask, data.speakers);
+  return dialog_sequence_create(data.dialogs, data.settings_mask, data.speakers, data.id);
 }
 
 
@@ -252,19 +254,20 @@ function dialog_sequence_create_from_struct(data)
  * @param {String} text The text message of the dialog.
  * @param {Constant.DIALOG|Real} [settings_mask] The dialog info.
  * @param {Struct.DialogFX|Array<Struct.DialogFX>} [fx_map] The array of `DialogFX` to apply.
+ * @param {Real} [id] The dialog id. Overridden if deserialized. Defaults to `undefined`.
  * @returns {Struct.Dialog}
  */
 
-function dialog_create(text, settings_mask = 0, fx_map = [])
+function dialog_create(text, settings_mask = 0, fx_map = [], id = undefined)
 {
   return new Dialog(
     text,
     settings_mask
-      | (Dialog.__speaker(settings_mask) ? 0 : Dialog.speaker(DIALOG.SPEAKER_DEFAULT))
-      | (Dialog.__emotion(settings_mask) ? 0 : Dialog.emotion(DIALOG.EMOTION_DEFAULT))
-      | (Dialog.__anchor(settings_mask) ? 0 : Dialog.anchor(DIALOG.ANCHOR_DEFAULT))
-      | (Dialog.__textbox(settings_mask) ? 0 : Dialog.textbox(DIALOG.TEXTBOX_DEFAULT))
-      | (Dialog.__tag(settings_mask) ? 0 : Dialog.tag(DIALOG.TAG_DEFAULT)),
+      | Dialog.speaker(DIALOG.SPEAKER_DEFAULT) * !Dialog.__speaker(settings_mask)
+      | Dialog.emotion(DIALOG.EMOTION_DEFAULT) * !Dialog.__emotion(settings_mask)
+      | Dialog.anchor(DIALOG.ANCHOR_DEFAULT) * !Dialog.__anchor(settings_mask)
+      | Dialog.textbox(DIALOG.TEXTBOX_DEFAULT) * !Dialog.__textbox(settings_mask)
+      | Dialog.tag(DIALOG.TAG_DEFAULT) * !Dialog.__tag(settings_mask),
     is_array(fx_map) ? fx_map : [fx_map]
   );
 }
@@ -279,7 +282,7 @@ function dialog_create(text, settings_mask = 0, fx_map = [])
 
 function dialog_create_from_array(data)
 {
-  return dialog_create(data[DIALOG.ARG_TEXT], data[DIALOG.ARG_SETTINGS_MASK], data[DIALOG.ARG_FX_MAP]);
+  return dialog_create(data[DIALOG.ARG_TEXT], data[DIALOG.ARG_SETTINGS_MASK], data[DIALOG.ARG_FX_MAP], data[DIALOG.ARG_ID]);
 }
 
 
@@ -292,7 +295,7 @@ function dialog_create_from_array(data)
 
 function dialog_create_from_struct(data)
 {
-  return dialog_create(data.text, data.settings_mask, data.fx_map);
+  return dialog_create(data.text, data.settings_mask, data.fx_map, data.id);
 }
 
 
@@ -323,17 +326,18 @@ function dialog_create_from_struct(data)
  * @desc `DialogFX` constructor.
  * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
  * @param {Any|Array<Any>} [argv] The arguments of the mapped effect function.
+ * @param {Real} [id] The effect id. Overridden if deserialized. Defaults to `undefined`.
  * @returns {Struct.DialogFX}
  */
 
-function dialog_fx_create(settings_mask = 0, argv = [])
+function dialog_fx_create(settings_mask = 0, argv = [], id = undefined)
 {
   return new DialogFX(
     settings_mask
-      | (DialogFX.__type(settings_mask) ? 0 : DialogFX.type(DIALOG_FX.TYPE_DEFAULT))
-      | (DialogFX.__trigger(settings_mask) ? 0 : DialogFX.trigger(DIALOG_FX.TRIGGER_DEFAULT))
-      | (DialogFX.__signal(settings_mask) ? 0 : DialogFX.signal(DIALOG_FX.SIGNAL_DEFAULT))
-      | (DialogFX.__tag(settings_mask) ? 0 : DialogFX.tag(DIALOG_FX.TAG_DEFAULT)),
+      | DialogFX.type(DIALOG_FX.TYPE_DEFAULT) * !DialogFX.__type(settings_mask)
+      | DialogFX.trigger(DIALOG_FX.TRIGGER_DEFAULT) * !DialogFX.__trigger(settings_mask)
+      | DialogFX.signal(DIALOG_FX.SIGNAL_DEFAULT) * !DialogFX.__signal(settings_mask)
+      | DialogFX.tag(DIALOG_FX.TAG_DEFAULT) * !DialogFX.__tag(settings_mask),
     is_array(argv) ? argv : [argv]
   );
 }
@@ -440,7 +444,7 @@ function dialog_fx_create_choice(settings_mask = 0, flow_options = [], fx_indexe
 
 function dialog_fx_create_from_array(data)
 {
-  return dialog_fx_create(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV]);
+  return dialog_fx_create(data[DIALOG_FX.ARG_SETTINGS_MASK], data[DIALOG_FX.ARG_ARGV], data[DIALOG_FX.ARG_ID]);
 }
 
 
@@ -453,7 +457,7 @@ function dialog_fx_create_from_array(data)
 
 function dialog_fx_create_from_struct(data)
 {
-  return dialog_fx_create(data.settings_mask, data.argv);
+  return dialog_fx_create(data.settings_mask, data.argv, data.id);
 }
 
 
@@ -738,9 +742,9 @@ enum DIALOG_SCENE // Edit as needed
   // Argument positions
   ARG_SEQUENCES = 0,
   ARG_SETTINGS_MASK,
+  ARG_ID,
   ARG_COUNT,
   ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARG_COUNT,
-  ARG_ID,
   ARG_COUNT_DESERIALIZATION,
 
   // Scene bg
@@ -833,9 +837,9 @@ enum DIALOG // Edit as needed
   ARG_TEXT = 0,
   ARG_SETTINGS_MASK,
   ARG_FX_MAP,
+  ARG_ID,
   ARG_COUNT,
   ARG_FX_COUNT = DIALOG.ARG_COUNT,
-  ARG_ID,
   ARG_COUNT_DESERIALIZATION,
 
   // Speakers
@@ -914,9 +918,9 @@ enum DIALOG_FX // Edit as needed
   ARG_SETTINGS_MASK = 0,
   ARG_ARGV,
   ARG_FUNC,
+  ARG_ID,
   ARG_COUNT,
-  ARG_ID = DIALOG_FX.ARG_COUNT,
-  ARG_COUNT_DESERIALIZATION,
+  ARG_COUNT_DESERIALIZATION = DIALOG_FX.ARG_COUNT,
 
   // FX flowres argument positions
   FX_ARG_FLOWRES_DATA = 0,
@@ -3162,8 +3166,8 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
         return sequence.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
       int64(self.settings_mask),
-      int64(self.itemcount()),
       int64(self.id),
+      int64(self.itemcount()),
     ];
   }
 
@@ -3352,8 +3356,8 @@ function DialogSequence(dialogs, settings_mask, speakers, id = undefined) : Dial
       array_map(self.speakers, function(speaker) {
         return int64(speaker);
       }),
-      int64(self.itemcount()),
       int64(self.id),
+      int64(self.itemcount()),
     ];
   }
 
@@ -3890,8 +3894,8 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
       array_map(self.items(), function(fx) {
         return fx.__DIALOG_MANAGER_SERIALIZER_METHOD__();
       }),
-      int64(self.itemcount()),
       int64(self.id),
+      int64(self.itemcount()),
     ];
   }
 

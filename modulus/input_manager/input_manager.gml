@@ -1,5 +1,11 @@
+input_manager = input_manager_create(4, 3);
+
+
+
+
+
 /**
- * @desc A complete multi-profile object oriented input manager.
+ * @desc A complete multi-profile chord/combo-aware input manager.
  * @version 0.5
  */
 
