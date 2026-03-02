@@ -1568,7 +1568,7 @@ function DialogManager(lang, data_string, is_file) constructor
     if (!is_array(argv))
       argv = [argv];
 
-    return $"\n\n\n{string_ext(messages[type], argv)}\n\n";
+    return string_ext($"\n\n\n{messages[type]}\n\n", argv);
   }
 
 
@@ -3103,7 +3103,7 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
 
 
   /**
-   * @desc Encodes/decodes the scene bg as a bitmask fragment.
+   * @desc Filters the scene bg as a bitmask fragment.
    * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3116,7 +3116,7 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
 
 
   /**
-   * @desc Encodes/decodes the scene bgm as a bitmask fragment.
+   * @desc Filters the scene bgm as a bitmask fragment.
    * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3129,7 +3129,7 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
 
 
   /**
-   * @desc Encodes/decodes the scene bgs as a bitmask fragment.
+   * @desc Filters the scene bgs as a bitmask fragment.
    * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3142,7 +3142,7 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
 
 
   /**
-   * @desc Encodes/decodes the scene tag as a bitmask fragment.
+   * @desc Filters the scene tag as a bitmask fragment.
    * @param {Constant.DIALOG_SCENE|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3329,7 +3329,7 @@ function DialogSequence(dialogs, settings_mask, speakers, id = undefined) : Dial
 
 
   /**
-   * @desc Encodes/decodes the sequence tag as a bitmask fragment.
+   * @desc Filters the sequence tag as a bitmask fragment.
    * @param {Constant.DIALOG_SEQUENCE|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3687,7 +3687,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
 
   /**
-   * @desc Encodes/decodes the dialog speaker as a bitmask fragment.
+   * @desc Filters the dialog speaker as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3700,7 +3700,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
 
   /**
-   * @desc Encodes/decodes the dialog emotion as a bitmask fragment.
+   * @desc Filters the dialog emotion as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3713,7 +3713,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
 
   /**
-   * @desc Encodes/decodes the dialog anchor as a bitmask fragment.
+   * @desc Filters the dialog anchor as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3726,7 +3726,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
 
   /**
-   * @desc Encodes/decodes the dialog textbox as a bitmask fragment.
+   * @desc Filters the dialog textbox as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -3739,7 +3739,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
 
   /**
-   * @desc Encodes/decodes the dialog tag as a bitmask fragment.
+   * @desc Filters the dialog tag as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -4279,7 +4279,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 
 
   /**
-   * @desc Encodes/decodes the dialog FX type as a bitmask fragment.
+   * @desc Filters the dialog FX type as a bitmask fragment.
    * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -4292,7 +4292,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 
 
   /**
-   * @desc Encodes/decodes the dialog FX trigger as a bitmask fragment.
+   * @desc Filters the dialog FX trigger as a bitmask fragment.
    * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -4305,7 +4305,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 
 
   /**
-   * @desc Encodes/decodes the dialog FX signal as a bitmask fragment.
+   * @desc Filters the dialog FX signal as a bitmask fragment.
    * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
@@ -4318,7 +4318,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 
 
   /**
-   * @desc Encodes/decodes the dialog FX tag as a bitmask fragment.
+   * @desc Filters the dialog FX tag as a bitmask fragment.
    * @param {Constant.DIALOG_FX|Real} [settings_mask] The settings mask.
    * @returns {Real}
    */
