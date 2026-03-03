@@ -1,10 +1,18 @@
+/// O_INPUT create event
 input_manager = input_manager_create(4, 3);
 
 input_manager.profile(0, {
-  controller: { },
-  mouse: { },
-  kb: { },
+  attack: [ [[vk_shift, ord("A")]]  , [[gp_shoulderl, gp_padl]]   ], // 2 combos of 1 chord of 2 buttons
+  defend: [ [[vk_shift], [ord("A")]], [[gp_shoulderl], [gp_padl]] ], // 2 combos of 2 chords of 1 button
 });
+
+/// O_PLAYER create event
+player_input = O_INPUT.input_manager.input(self.player_index);
+input = player_input.profile(INPUT.PROFILE_DEFAULT);
+
+if (input.attack.held()) {
+  // ...
+}
 
 
 
@@ -68,6 +76,11 @@ enum INPUT
   PROFILE_COUNT,
   PROFILE_DEFAULT = INPUT.PROFILE_NONE,
 
+  // Input actions
+  ACTION_HELD = 0,
+  ACTION_PRESSED,
+  ACTION_RELEASED,
+
   // Input constants
   __MOUSE_MIN = 0x0000,
   __MOUSE_MAX = 0x0006,
@@ -75,6 +88,19 @@ enum INPUT
   __KEYBOARD_MAX = 0x03FF,
   __GAMEPAD_MIN,
   __GAMEPAD_MAX = 0xFFFF,
+}
+
+
+
+/**
+ * 
+ */
+
+enum INPUT_MANAGER
+{
+  ERR_UNDEFINED_ERROR_TYPE,
+  ERR_UNDEFINED_DEVICE_TYPE,
+  ERR_COUNT,
 }
 
 
@@ -123,7 +149,8 @@ function InputManager(player_count, profile_count) constructor
   static ERROR = function(type, argv = [])
   {
     static messages = [
-
+      "UNKNOWN ERROR TYPE: {0}",
+      "UNKNOWN DEVICE NAME: {0}",
     ];
     
     if (type < 0 || type >= INPUT_MANAGER.ERR_COUNT)
@@ -163,7 +190,7 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   *
+   * !:
    */
 
   static profile = function(profile_idx = 0, profile_data = undefined)
@@ -195,7 +222,7 @@ function InputManager(player_count, profile_count) constructor
           break;
 
           default:
-            throw InputManager.ERROR();
+            throw InputManager.ERROR(INPUT_MANAGER.ERR_UNDEFINED_DEVICE_TYPE, [key]);
         }
 
         profile_data[$ key] = new device(profile_data[$ key]);
@@ -265,7 +292,7 @@ function InputContext(player_index, source = INPUT.DEVICE_DEFAULT, gamepad = noo
   self.gamepad = gamepad;
   self.mouse = mouse;
   self.profile = undefined;
-
+  self.device = undefined;
 
 
 
@@ -301,26 +328,36 @@ function InputContext(player_index, source = INPUT.DEVICE_DEFAULT, gamepad = noo
 
 function InputAction(binds, context) constructor
 {
-  static TIME_WINDOW = 3;
+  static CHORD_TIME_WINDOW = 5;
 
 
 
   /**
-   *
+   * !:
    */
 
   static normalize = function(binds)
   {
-    var ret = [];
+    var ret = []
+      , temp = binds
+      , dim_max = 3
+      , dim = 0
+    ;
 
-    if (!is_array(binds))
-      return [[binds]];
+    for (; is_array(temp); ++dim)
+      temp = temp[0];
 
-    if (is_array(binds[0]))
+    if (dim == dim_max)
       return binds;
 
     for (var i = array_length(binds) - 1; i >= 0; --i)
-      ret[i] = [binds[i]];
+    {
+      ret[i] = binds[i];
+
+      for (var d = 0; d < dim_max - dim; ++d) {
+        ret[i] = [ret[i]];
+      }
+    }
 
     return ret;
   }
@@ -355,13 +392,17 @@ function InputAction(binds, context) constructor
 
 
 
+  static devices = function()
+  {
+    return self.context.devices;
+  }
+
+
+
   function held(action = self)
   {
-    return action.check(function(k, ctx) {
-      return keyboard_check(k)
-        || (ctx.mouse != noone && device_mouse_check_button(ctx.mouse, k))
-        || (ctx.gamepad != noone && gamepad_button_check(ctx.gamepad, k))
-      ;
+    return array_any(action.devices(), function(d) {
+      return d && d.held(k);
     });
   }
 
@@ -373,11 +414,8 @@ function InputAction(binds, context) constructor
 
   function pressed(action = self)
   {
-    return action.check(function(k, ctx) {
-      return keyboard_check_pressed(k)
-        || (ctx.mouse != noone && device_mouse_check_button_pressed(ctx.mouse, k))
-        || (ctx.gamepad != noone && gamepad_button_check_pressed(ctx.gamepad, k))
-      ;
+    return array_any(action.devices(), function(d) {
+      return d && d.pressed(k);
     });
   }
 
@@ -389,11 +427,8 @@ function InputAction(binds, context) constructor
 
   function released(action = self)
   {
-    return action.check(function(k, ctx) {
-      return keyboard_check_released(k)
-        || (ctx.mouse != noone && device_mouse_check_button_released(ctx.mouse, k))
-        || (ctx.gamepad != noone && gamepad_button_check_released(ctx.gamepad, k))
-      ;
+    return array_any(action.devices(), function(d) {
+      return d && d.released(k);
     });
   }
 
@@ -403,7 +438,7 @@ function InputAction(binds, context) constructor
   self.binds = self.normalize(binds);
   self.bind_count = array_length(self.binds);
   self.recording = false;
-  self.time = InputAction.TIME_WINDOW;
+  self.time = InputAction.CHORD_TIME_WINDOW;
 }
 
 
@@ -434,7 +469,7 @@ function InputAction(binds, context) constructor
  *
  */
 
-function InputCombo(actions, time, context) constructor
+function InputCombo(chords, time, context) constructor
 {
   /**
    *
@@ -490,8 +525,20 @@ function InputCombo(actions, time, context) constructor
  *
  */
 
-function InputDevice()
+function InputDevice(device_index)
 {
+  static funcs = [
+    [device_mouse_check_button         , function(index, key) { return keyboard_check(key);          }, gamepad_button_check         ],
+    [device_mouse_check_button_pressed , function(index, key) { return keyboard_check_pressed(key);  }, gamepad_button_check_pressed ],
+    [device_mouse_check_button_released, function(index, key) { return keyboard_check_released(key); }, gamepad_button_check_released],
+  ];
+
+
+
+  self.device_index = device_index;
+
+
+
   /**
    *
    */
@@ -502,13 +549,57 @@ function InputDevice()
       (key >= INPUT.__MOUSE_MIN) + (key >= INPUT.__KEYBOARD_MIN) + (key >= INPUT.__GAMEPAD_MIN)
     );
   }
+
+
+
+  /**
+   * 
+   */
+
+  function check(action, key, index)
+  {
+    return InputDevice.funcs[action][InputDevice.sourceof(key)](index, key);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  function held(key, index)
+  {
+    return InputDevice.check(INPUT.ACTION_HELD, key, index);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  function pressed(key, index)
+  {
+    return InputDevice.check(INPUT.ACTION_PRESSED, key, index);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  function released(key, index)
+  {
+    return InputDevice.check(INPUT.ACTION_RELEASED, key, index);
+  }
 }
 
 
 
 
 
-function InputDeviceMouse()
+function InputDeviceMouse(device_index) : InputDevice(device_index) constructor
 {
   /**
    * 
@@ -518,25 +609,91 @@ function InputDeviceMouse()
   {
     return INPUT.DEVICE_MOUSE;
   }
-}
 
 
 
-function InputDeviceKeyboard()
-{
   /**
    * 
    */
 
-  static sourceof = function()
+  function held(key)
   {
-    return INPUT.DEVICE_KEYBOARD;
+    return device_mouse_check_button(self.device_index, key);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  function pressed(key)
+  {
+    return device_mouse_check_button_pressed(self.device_index, key);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  function released(key)
+  {
+    return device_mouse_check_button_pressed(self.device_index, key);
   }
 }
 
 
 
-function InputDeviceGamepad()
+function InputDeviceKeyboard(device_index) : InputDevice(device_index) constructor
+{
+  /**
+   * 
+   */
+  
+  static sourceof = function()
+  {
+    return INPUT.DEVICE_KEYBOARD;
+  }
+
+
+
+  /**
+   * 
+   */
+  
+  function held(key)
+  {
+    return keyboard_check(key);
+  }
+  
+  
+  
+  /**
+   * 
+   */
+  
+  function pressed(key)
+  {
+    return keyboard_check_pressed(key);
+  }
+  
+  
+  
+  /**
+   * 
+   */
+  
+  function released(key)
+  {
+    return keyboard_check_released(key);
+  }
+}
+
+
+
+function InputDeviceGamepad(device_index) : InputDevice(device_index) constructor
 {
   /**
    * 
@@ -545,5 +702,38 @@ function InputDeviceGamepad()
   static sourceof = function()
   {
     return INPUT.DEVICE_GAMEPAD;
+  }
+
+
+
+  /**
+   * 
+   */
+  
+  function held(key)
+  {
+    return gamepad_button_check(self.device_index, key);
+  }
+  
+  
+  
+  /**
+   * 
+   */
+  
+  function pressed(key)
+  {
+    return gamepad_button_check_pressed(self.device_index, key);
+  }
+  
+  
+  
+  /**
+   * 
+   */
+  
+  function released(key)
+  {
+    return gamepad_button_check_released(self.device_index, key);
   }
 }

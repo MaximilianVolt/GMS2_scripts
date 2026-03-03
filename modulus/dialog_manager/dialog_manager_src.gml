@@ -2919,7 +2919,7 @@ function DialogManager(lang, data_string, is_file) constructor
       case DIALOG_MANAGER.POSITION_CODE_SCENE_PREVIOUS:
         return __encode_position((scene_idx + self.itemcount() - 1) % self.itemcount(), 0, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_LAST:
-        return __encode_position(self.itemcount() - 1, self.scenes[self.itemcount() - 1].itemcount() - 1, 0);
+        return __encode_position(self.itemcount() - 1, self.item(-1).itemcount() - 1, 0);
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_NEXT:
         return __get_sequence_relative(1, position, jump_settings).position.position();
       case DIALOG_MANAGER.POSITION_CODE_SEQUENCE_END:
