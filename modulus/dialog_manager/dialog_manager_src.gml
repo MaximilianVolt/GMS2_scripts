@@ -1112,7 +1112,7 @@ function DialogRunner(manager) constructor
 
     self.position = busy
       ? __resolve(position, self.position, 0, argv)
-      : manager.__resolve_position_absolute(position, 0)
+      : manager.__resolve_position_absolute(position)
     ;
 
     self.status |= __status();
@@ -2877,7 +2877,7 @@ function DialogManager(lang, data_string, is_file) constructor
     if (__decode_jump_setting_type(jump_settings) == DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE)
       return self.__resolve_position_relative(position, prev_position, jump_settings).position;
 
-    return self.__resolve_position_absolute(position, jump_settings);
+    return self.__resolve_position_absolute(position, prev_position, jump_settings);
   }
 
 
@@ -2885,18 +2885,19 @@ function DialogManager(lang, data_string, is_file) constructor
   /**
    * Evaluates a given position to determine the destination of a jump. Throws DIALOG_MANAGER.ERR_INVALID_POSITION if the resolved position is out of bounds.
    * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} position The position to resolve.
+   * @param {Real|Constant.DIALOG_MANAGER|Struct.DialogLinkable} [prev_position] The last stacked absolute position. Defaults to position 0.
    * @param {Constant.DIALOG_MANAGER|Real} [jump_settings] The settings of the jump to perform.
    * @returns {Real}
    */
 
-  static __resolve_position_absolute = function(position, jump_settings = 0)
+  static __resolve_position_absolute = function(position, prev_position = DIALOG_MANAGER.POSITION_CODE_NONE, jump_settings = 0)
   {
     if (is_instanceof(position, DialogLinkable))
       return position.position();
 
-    var dialog_idx = __decode_dialog_idx(position)
-      , sequence_idx = __decode_sequence_idx(position)
-      , scene_idx = __decode_scene_idx(position)
+    var dialog_idx = __decode_dialog_idx(prev_position)
+      , sequence_idx = __decode_sequence_idx(prev_position)
+      , scene_idx = __decode_scene_idx(prev_position)
       , sequence = self.sequence(sequence_idx, scene_idx)
       , scene = self.scene(scene_idx)
     ;
