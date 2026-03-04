@@ -152,7 +152,7 @@ function InputManager(player_count, profile_count) constructor
       "UNKNOWN ERROR TYPE: {0}",
       "UNKNOWN DEVICE NAME: {0}",
     ];
-    
+
     if (type < 0 || type >= INPUT_MANAGER.ERR_COUNT)
     {
       argv = [type];
