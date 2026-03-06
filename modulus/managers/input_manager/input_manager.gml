@@ -1,19 +1,63 @@
+/**
+ * !: USE BITMASKS TO DETERMINE WHETHER AN INPUT SHOULD BE "LISTENED TO" OR NOT
+ * #: EG: { GAMEPAD | KEYBOARD | MOUSE }   <=>   (detected & settings_mask >> InputDevice.sourceof(input)) == STATE_ACTIVE
+ */
+
 /// O_INPUT create event
 input_manager = input_manager_create(4, 3);
 
 input_manager.profile(0, {
-  attack: [ [[vk_shift, ord("A")]]  , [[gp_shoulderl, gp_padl]]   ], // 2 combos of 1 chord of 2 buttons
-  defend: [ [[vk_shift], [ord("A")]], [[gp_shoulderl], [gp_padl]] ], // 2 combos of 2 chords of 1 button
+  a_attack: [ [[vk_shift, ord("A")]]  , [[gp_shoulderl, gp_padl]]   ], // 2 combos of 1 chord of 2 buttons
+  a_defend: [ [[vk_shift], [ord("A")]], [[gp_shoulderl], [gp_padl]] ], // 2 combos of 2 chords of 1 button
+  a_crouch: [ [[vk_shift], [ord("A")]], [[gp_shoulderl], [gp_padl]] ], // 2 combos of 2 chords of 1 button
+  a_jump:   [ [[vk_space]]            , [[gp_a]]                    ],
+
+  c_superjump: input_action_combo_create(function(argv) {
+      return argv[0] > .25 && a_crouch.held(30, 45) && a_jump.pressed(5);
+      [
+        [a_crouch, InputAction.held   , [30, 45]],
+        [a_jump  , InputAction.pressed, [5]     ],
+      ]
+    }, 30 // Time to live (for repeated inputs)
+  ),
+  c_superdoublejump: input_action_combo_create(function(argv) {
+    return c_superjump.check(15, 25) && a_jump.pressed();
+  }),
 });
 
 /// O_PLAYER create event
 player_input = O_INPUT.input_manager.input(self.player_index);
 input = player_input.profile(INPUT.PROFILE_DEFAULT);
 
-if (input.attack.held()) {
+if (input.a_attack.held()) {
   // ...
 }
 
+state_on_ground = function()
+{
+  if (input.c_superjump.check([hp / mhp])) {
+
+  }
+}
+
+
+
+
+// Description
+input_manager = {
+  profiles: [ /* Pure and stateless input template */ ],
+  inputs: [
+    /* InputContext: */ {
+      profile: {
+        action: input_action
+      }
+    },
+  ],
+}
+
+input_action = Array(InputCombo)
+input_combo = Array(InputChord)
+input_chord = Array(InputKey)
 
 
 
@@ -21,6 +65,14 @@ if (input.attack.held()) {
 /**
  * @desc A complete multi-profile chord/combo-aware input manager.
  * @version 0.5
+ * 
+ * TO-DO LIST:
+ * +: Ensure correct struct members' conversion during initialization
+ * +: Validate keys and chords' pressing inside specified time window
+ * +: Validate InputActionCombo creation
+ * +: Create methods to work with input device bitmasks
+ * +: Add support for pressing more times inside time window
+ * +: Save/load functionalities
  */
 
 
@@ -76,11 +128,6 @@ enum INPUT
   PROFILE_COUNT,
   PROFILE_DEFAULT = INPUT.PROFILE_NONE,
 
-  // Input actions
-  ACTION_HELD = 0,
-  ACTION_PRESSED,
-  ACTION_RELEASED,
-
   // Input constants
   __MOUSE_MIN = 0x0000,
   __MOUSE_MAX = 0x0006,
@@ -88,6 +135,34 @@ enum INPUT
   __KEYBOARD_MAX = 0x03FF,
   __GAMEPAD_MIN,
   __GAMEPAD_MAX = 0xFFFF,
+
+  // Bitmasks
+  __BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE = 0,
+  __BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING,
+  __BITMASK_DEVICE_STATUS_FLAG_COUNT,
+  __BITMASK_DEVICE_STATUS_MASK = ((1 << INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT) - 1),
+  __BITMASK_DEVICE_STATUS_MOUSE_SHIFT = 0,
+  __BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT = INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT,
+  __BITMASK_DEVICE_STATUS_GAMEPAD_SHIFT = INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT,
+  DEVICE_STATUS_MOUSE_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT,
+  DEVICE_STATUS_KEYBOARD_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT,
+  DEVICE_STATUS_GAMEPAD_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_GAMEPAD_SHIFT,
+  DEVICE_STATUS_ALL_MASK = INPUT.DEVICE_STATUS_MOUSE_MASK | INPUT.DEVICE_STATUS_KEYBOARD_MASK | INPUT.DEVICE_STATUS_GAMEPAD_MASK,
+  DEVICE_STATUS_ALL_ACTIVE_MASK = (1 << INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE) | (1 << INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE) | (1 << INPUT.__BITMASK_DEVICE_STATUS_GAMEPAD_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE),
+  DEVICE_STATUS_ALL_REBINDING_MASK = INPUT.DEVICE_STATUS_ALL_ACTIVE_MASK << INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING - INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE,
+}
+
+
+
+/**
+ *
+ */
+
+enum INPUT_MANAGER
+{
+  ERR_UNDEFINED_ERROR_TYPE,
+  ERR_UNDEFINED_DEVICE_TYPE,
+  ERR_COUNT,
 }
 
 
@@ -96,11 +171,22 @@ enum INPUT
  * 
  */
 
-enum INPUT_MANAGER
+enum INPUT_ACTION
 {
-  ERR_UNDEFINED_ERROR_TYPE,
-  ERR_UNDEFINED_DEVICE_TYPE,
-  ERR_COUNT,
+  // Input actions
+  ACTION_NONE = -1,
+  ACTION_HELD,
+  ACTION_PRESSED,
+  ACTION_RELEASED,
+  ACTION_COUNT,
+
+  // Bitmasks
+  __BITMASK_ID_PLAYER_SHIFT = 0,
+  __BITMASK_ID_PLAYER_BITS = 5,
+  __BITMASK_ID_PLAYER_MASK = ((1 << INPUT_ACTION.__BITMASK_USER_BITS) - 1) << INPUT_ACTION.__BITMASK_USER_SHIFT,
+  __BITMASK_ID_PROFILE_SHIFT = INPUT_ACTION.__BITMASK_ID_PLAYER_SHIFT + INPUT_ACTION.__BITMASK_ID_PLAYER_BITS,
+  __BITMASK_ID_PROFILE_BITS = 5,
+  __BITMASK_ID_PROFILE_MASK = ((1 << INPUT_ACTION.__BITMASK_ID_PROFILE_BITS) - 1) << INPUT_ACTION.__BITMASK_ID_PROFILE_SHIFT,
 }
 
 
@@ -134,16 +220,17 @@ enum INPUT_MANAGER
 
 function InputManager(player_count, profile_count) constructor
 {
+  static GLOBAL_INPUT_FRAME = 0;
+
   self.player_inputs = array_create(player_count);
   self.input_profiles = array_create(profile_count);
   self.player_count = player_count;
   self.profile_count = profile_count;
-  self.input_frame = 0;
 
 
 
   /**
-   * 
+   *
    */
 
   static ERROR = function(type, argv = [])
@@ -190,48 +277,33 @@ function InputManager(player_count, profile_count) constructor
 
 
   /**
-   * !:
+   *
    */
 
   static profile = function(profile_idx = 0, profile_data = undefined)
   {
-    if (profile_data)
-    {
-      var keys = struct_get_names(profile_data)
-        , device = undefined
-      ;
+    var idx = profile_idx + self.profile_count * (profile_idx < 0);
 
-      for (var i = array_length(keys) - 1; i >= 0; --i)
-      {
-        var key = keys[i];
-
-        switch (key)
-        {
-          case __INPUT_MANAGER_MOUSE_NAME_1__:
-            device = InputDeviceMouse;
-          break;
-
-          case __INPUT_MANAGER_KEYBOARD_NAME_1__:
-          case __INPUT_MANAGER_KEYBOARD_NAME_2__:
-            device = InputDeviceKeyboard;
-          break;
-
-          case __INPUT_MANAGER_GAMEPAD_NAME_1__:
-          case __INPUT_MANAGER_GAMEPAD_NAME_2__:
-            device = InputDeviceGamepad;
-          break;
-
-          default:
-            throw InputManager.ERROR(INPUT_MANAGER.ERR_UNDEFINED_DEVICE_TYPE, [key]);
-        }
-
-        profile_data[$ key] = new device(profile_data[$ key]);
-      }
-
-      self.input_profiles[profile_idx] = profile_data;
+    if (profile_data) {
+      self.input_profiles[idx] = variable_clone(profile_data);
     }
 
-    return self.input_profiles[profile_idx];
+    return self.input_profiles[idx];
+  }
+
+
+
+  /**
+   *
+   */
+
+  static generate = function(settings_mask = 0)
+  {
+    for (var i = 0; i < self.player_count; ++i) {
+      self.player_inputs[i] = new InputContext(i, self.input_profiles, settings_mask);
+    }
+
+    return self;
   }
 
 
@@ -253,7 +325,13 @@ function InputManager(player_count, profile_count) constructor
 
   static step = function()
   {
+    ++InputManager.GLOBAL_INPUT_FRAME;
 
+    array_foreach(self.player_inputs, function(input) {
+      ++input.last_input_type_frames[input.profile_index];
+    });
+
+    return self;
   }
 }
 
@@ -285,15 +363,12 @@ function InputManager(player_count, profile_count) constructor
  *
  */
 
-function InputContext(player_index, source = INPUT.DEVICE_DEFAULT, gamepad = noone, mouse = noone) constructor
+function InputContext(player_index, profiles, settings_mask) constructor
 {
-  self.source = source;
   self.player_index = player_index;
-  self.gamepad = gamepad;
-  self.mouse = mouse;
-  self.profile = undefined;
-  self.device = undefined;
-
+  self.settings_mask = settings_mask;
+  self.profiles = variable_clone(profiles);
+  self.input_type_frames = array_create(INPUT.ACTION_COUNT, InputManager.GLOBAL_INPUT_FRAME);
 
 
 }
@@ -328,7 +403,9 @@ function InputContext(player_index, source = INPUT.DEVICE_DEFAULT, gamepad = noo
 
 function InputAction(binds, context) constructor
 {
-  static CHORD_TIME_WINDOW = 5;
+  static CHECK_FNS = [ InputDevice.held, InputDevice.pressed, InputDevice.released ];
+  static TIME_WINDOW_FRAMES_SEQUENCE = 15;
+  static TIME_WINDOW_FRAMES_CHORD = 5;
 
 
 
@@ -365,11 +442,13 @@ function InputAction(binds, context) constructor
 
 
   /**
-   *
+   * !:
    */
 
-  static check = function(check_fn)
+  static check = function(input_type, settings_mask = self.settings_mask)
   {
+    var check_fn = InputAction.CHECK_FNS[input_type];
+
     for (var i = 0; i < self.bind_count; ++i)
     {
       var bind = self.binds[i]
@@ -383,6 +462,8 @@ function InputAction(binds, context) constructor
 
       if (detected) {
         self.context.source = InputDevice.sourceof(bind[0]);
+        self.last_input_frame = InputManager.GLOBAL_INPUT_FRAME;
+        self.last_input_type_frames[input_type] = self.last_input_frame;
         return true;
       }
     }
@@ -392,6 +473,10 @@ function InputAction(binds, context) constructor
 
 
 
+  /**
+   * 
+   */
+
   static devices = function()
   {
     return self.context.devices;
@@ -399,11 +484,16 @@ function InputAction(binds, context) constructor
 
 
 
-  function held(action = self)
+  /**
+   * 
+   * @param min_frames 
+   * @param max_frames 
+   * @returns 
+   */
+
+  function held(min_frames = 0, max_frames = +infinity)
   {
-    return array_any(action.devices(), function(d) {
-      return d && d.held(k);
-    });
+    return __validate(INPUT.ACTION_HELD, min_frames, max_frames);
   }
 
 
@@ -412,11 +502,9 @@ function InputAction(binds, context) constructor
    *
    */
 
-  function pressed(action = self)
+  function pressed(max_frames = 1, min_frames = 0)
   {
-    return array_any(action.devices(), function(d) {
-      return d && d.pressed(k);
-    });
+    return __validate(INPUT.ACTION_PRESSED, min_frames, max_frames);
   }
 
 
@@ -425,11 +513,34 @@ function InputAction(binds, context) constructor
    *
    */
 
-  function released(action = self)
+  function released(max_frames = 1, min_frames = 0)
   {
-    return array_any(action.devices(), function(d) {
-      return d && d.released(k);
-    });
+    return __validate(INPUT.ACTION_RELEASED, min_frames, max_frames);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static __validate = function(input_type, min_frames, max_frames)
+  {
+    return __input_in_range(self.last_input_type_frames[input_type], min_frames, max_frames)
+      && self.check(input_type)
+    ;
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static __input_in_range = function(frame, minval, maxval)
+  {
+    var val = InputManager.GLOBAL_INPUT_FRAME - frame;
+    return val >= minval && val <= maxval;
   }
 
 
@@ -437,6 +548,11 @@ function InputAction(binds, context) constructor
   self.context = context;
   self.binds = self.normalize(binds);
   self.bind_count = array_length(self.binds);
+  self.last_input_frame = noone;
+  self.last_input_type_frames = array_create(INPUT.ACTION_COUNT, noone);
+  self.settings_mask = INPUT.DEVICE_STATUS_ALL_MASK;
+
+  // !:
   self.recording = false;
   self.time = InputAction.CHORD_TIME_WINDOW;
 }
@@ -469,13 +585,13 @@ function InputAction(binds, context) constructor
  *
  */
 
-function InputCombo(chords, time, context) constructor
+function InputActionCombo(chords, time, context) constructor
 {
   /**
    *
    */
 
-  static check = function(check_fn = InputAction.pressed)
+  static check = function(check_fn = InputDevice.pressed)
   {
     var detected = self.step < self.action_count && check_fn(self.actions[step])
       , target_step = self.step + detected
@@ -535,10 +651,6 @@ function InputDevice(device_index)
 
 
 
-  self.device_index = device_index;
-
-
-
   /**
    *
    */
@@ -553,7 +665,7 @@ function InputDevice(device_index)
 
 
   /**
-   * 
+   *
    */
 
   function check(action, key, index)
@@ -564,7 +676,7 @@ function InputDevice(device_index)
 
 
   /**
-   * 
+   *
    */
 
   function held(key, index)
@@ -575,7 +687,7 @@ function InputDevice(device_index)
 
 
   /**
-   * 
+   *
    */
 
   function pressed(key, index)
@@ -586,154 +698,11 @@ function InputDevice(device_index)
 
 
   /**
-   * 
+   *
    */
 
   function released(key, index)
   {
     return InputDevice.check(INPUT.ACTION_RELEASED, key, index);
-  }
-}
-
-
-
-
-
-function InputDeviceMouse(device_index) : InputDevice(device_index) constructor
-{
-  /**
-   * 
-   */
-
-  static sourceof = function()
-  {
-    return INPUT.DEVICE_MOUSE;
-  }
-
-
-
-  /**
-   * 
-   */
-
-  function held(key)
-  {
-    return device_mouse_check_button(self.device_index, key);
-  }
-
-
-
-  /**
-   * 
-   */
-
-  function pressed(key)
-  {
-    return device_mouse_check_button_pressed(self.device_index, key);
-  }
-
-
-
-  /**
-   * 
-   */
-
-  function released(key)
-  {
-    return device_mouse_check_button_pressed(self.device_index, key);
-  }
-}
-
-
-
-function InputDeviceKeyboard(device_index) : InputDevice(device_index) constructor
-{
-  /**
-   * 
-   */
-  
-  static sourceof = function()
-  {
-    return INPUT.DEVICE_KEYBOARD;
-  }
-
-
-
-  /**
-   * 
-   */
-  
-  function held(key)
-  {
-    return keyboard_check(key);
-  }
-  
-  
-  
-  /**
-   * 
-   */
-  
-  function pressed(key)
-  {
-    return keyboard_check_pressed(key);
-  }
-  
-  
-  
-  /**
-   * 
-   */
-  
-  function released(key)
-  {
-    return keyboard_check_released(key);
-  }
-}
-
-
-
-function InputDeviceGamepad(device_index) : InputDevice(device_index) constructor
-{
-  /**
-   * 
-   */
-
-  static sourceof = function()
-  {
-    return INPUT.DEVICE_GAMEPAD;
-  }
-
-
-
-  /**
-   * 
-   */
-  
-  function held(key)
-  {
-    return gamepad_button_check(self.device_index, key);
-  }
-  
-  
-  
-  /**
-   * 
-   */
-  
-  function pressed(key)
-  {
-    return gamepad_button_check_pressed(self.device_index, key);
-  }
-  
-  
-  
-  /**
-   * 
-   */
-  
-  function released(key)
-  {
-    return gamepad_button_check_released(self.device_index, key);
   }
 }

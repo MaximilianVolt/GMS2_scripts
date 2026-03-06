@@ -475,7 +475,7 @@ function dialog_fx_create_from_struct(data)
 
 // ----------------------------------------------------------------------------
 
-#region Enums
+#region Pragmas
 
 
 
@@ -493,6 +493,32 @@ gml_pragma(
   "global",
   "new DialogRunner(undefined); new DialogManager(0, \"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, []);"
 );
+
+
+
+
+
+
+
+
+
+
+
+
+#endregion
+
+// ----------------------------------------------------------------------------
+
+#region Enums
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5318,10 +5344,11 @@ function DialogLinkable(dialog_items, settings_mask, id = undefined) : DialogIte
 
 
   /**
-   * @desc Parses the items of the container from a given array, using the dialog manager's deserializer method. Returns the parent object for chaining.
-   * @param {Struct.DialogLinkable|Struct.DialogManager} items The objects to parse.
+   * @desc Parses the items of the container from a given array, using the related deserializer method. Returns the parent object. [CHAINABLE]
+   * @param {Struct.DialogItem} items The objects to parse.
    * @param {Real} item_count The number of items to parse.
    * @param {Array} items The array of items to parse.
+   * @returns {Struct.DialogLinkable}
    */
 
   static __parse = function(items, item_count)
