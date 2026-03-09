@@ -10,7 +10,7 @@
 #region Lib functions
 
 #macro __DIALOG_MANAGER_VERSION__             "0.12.1"
-#macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager"
+#macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/dialog_manager"
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
 

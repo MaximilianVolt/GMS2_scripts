@@ -13,13 +13,8 @@ input_manager.profile(0, {
   a_jump:   [ [[vk_space]]            , [[gp_a]]                    ],
 
   c_superjump: input_action_combo_create(function(argv) {
-      return argv[0] > .25 && a_crouch.held(30, 45) && a_jump.pressed(5);
-      [
-        [a_crouch, InputAction.held   , [30, 45]],
-        [a_jump  , InputAction.pressed, [5]     ],
-      ]
-    }, 30 // Time to live (for repeated inputs)
-  ),
+    return argv[0] > .25 && a_crouch.held(30, 45) && a_jump.pressedtimes(5, 30 /* TTL*/);
+  }),
   c_superdoublejump: input_action_combo_create(function(argv) {
     return c_superjump.check(15, 25) && a_jump.pressed();
   }),
@@ -55,17 +50,12 @@ input_manager = {
   ],
 }
 
-input_action = Array(InputCombo)
-input_combo = Array(InputChord)
-input_chord = Array(InputKey)
-
-
 
 
 /**
  * @desc A complete multi-profile chord/combo-aware input manager.
  * @version 0.5
- * 
+ *
  * TO-DO LIST:
  * +: Ensure correct struct members' conversion during initialization
  * +: Validate keys and chords' pressing inside specified time window
@@ -114,12 +104,12 @@ input_chord = Array(InputKey)
 enum INPUT
 {
   // Input device types
-  DEVICE_NONE = 0,
+  DEVICE_ANY = 0,
   DEVICE_MOUSE,
   DEVICE_KEYBOARD,
   DEVICE_GAMEPAD,
   DEVICE_COUNT,
-  DEVICE_DEFAULT = INPUT.DEVICE_NONE,
+  DEVICE_DEFAULT = INPUT.DEVICE_ANY,
 
   // Input profiles
   PROFILE_NONE = 0,
@@ -128,28 +118,44 @@ enum INPUT
   PROFILE_COUNT,
   PROFILE_DEFAULT = INPUT.PROFILE_NONE,
 
+  // Input actions
+  ACTION_NONE = -1,
+  ACTION_HELD,
+  ACTION_PRESSED,
+  ACTION_RELEASED,
+  ACTION_COUNT,
+
   // Input constants
-  __MOUSE_MIN = 0x0000,
-  __MOUSE_MAX = 0x0006,
-  __KEYBOARD_MIN,
-  __KEYBOARD_MAX = 0x03FF,
-  __GAMEPAD_MIN,
-  __GAMEPAD_MAX = 0xFFFF,
+  __KEY_MIN_MOUSE = 0x0000,
+  __KEY_MAX_MOUSE = 0x0006,
+  __KEY_MIN_KEYBOARD,
+  __KEY_MAX_KEYBOARD = 0x03FF,
+  __KEY_MIN_GAMEPAD,
+  __KEY_MAX_GAMEPAD = 0xFFFF,
 
   // Bitmasks
+  __BITMASK_ID_PLAYER_SHIFT = 0,
+  __BITMASK_ID_PLAYER_BITS = 8,
+  __BITMASK_ID_PLAYER_MASK = (1 << INPUT.__BITMASK_ID_PLAYER_BITS) - 1 << INPUT.__BITMASK_ID_PLAYER_SHIFT,
+  __BITMASK_ID_PROFILE_SHIFT = INPUT.__BITMASK_ID_PLAYER_SHIFT + INPUT.__BITMASK_ID_PLAYER_BITS,
+  __BITMASK_ID_PROFILE_BITS = 4,
+  __BITMASK_ID_PROFILE_MASK = (1 << INPUT.__BITMASK_ID_PROFILE_BITS) - 1 << INPUT.__BITMASK_ID_PROFILE_SHIFT,
   __BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE = 0,
   __BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING,
   __BITMASK_DEVICE_STATUS_FLAG_COUNT,
-  __BITMASK_DEVICE_STATUS_MASK = ((1 << INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT) - 1),
-  __BITMASK_DEVICE_STATUS_MOUSE_SHIFT = 0,
+  __BITMASK_DEVICE_STATUS_MASK = (1 << INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT) - 1,
+  __BITMASK_DEVICE_STATUS_ANY_SHIFT = 0,
+  __BITMASK_DEVICE_STATUS_MOUSE_SHIFT = INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT,
   __BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT = INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT,
   __BITMASK_DEVICE_STATUS_GAMEPAD_SHIFT = INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT,
+  __BITMASK_DEVICE_STATUS_ALTERNATING_MASK = ((1 << INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT * INPUT.DEVICE_COUNT) - 1) / ((1 << INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT) - 1),
+  DEVICE_STATUS_ANY_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_ANY_SHIFT,
   DEVICE_STATUS_MOUSE_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT,
   DEVICE_STATUS_KEYBOARD_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT,
   DEVICE_STATUS_GAMEPAD_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_GAMEPAD_SHIFT,
-  DEVICE_STATUS_ALL_MASK = INPUT.DEVICE_STATUS_MOUSE_MASK | INPUT.DEVICE_STATUS_KEYBOARD_MASK | INPUT.DEVICE_STATUS_GAMEPAD_MASK,
-  DEVICE_STATUS_ALL_ACTIVE_MASK = (1 << INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE) | (1 << INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE) | (1 << INPUT.__BITMASK_DEVICE_STATUS_GAMEPAD_SHIFT + INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE),
-  DEVICE_STATUS_ALL_REBINDING_MASK = INPUT.DEVICE_STATUS_ALL_ACTIVE_MASK << INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING - INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE,
+  DEVICE_STATUS_ALL_MASK = (1 << INPUT.DEVICE_COUNT * INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT) - 1,
+  DEVICE_STATUS_ALL_ACTIVE_MASK = INPUT.__BITMASK_DEVICE_STATUS_ALTERNATING_MASK << INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE,
+  DEVICE_STATUS_ALL_REBINDING_MASK = INPUT.__BITMASK_DEVICE_STATUS_ALTERNATING_MASK << INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING,
 }
 
 
@@ -168,25 +174,11 @@ enum INPUT_MANAGER
 
 
 /**
- * 
+ *
  */
 
 enum INPUT_ACTION
 {
-  // Input actions
-  ACTION_NONE = -1,
-  ACTION_HELD,
-  ACTION_PRESSED,
-  ACTION_RELEASED,
-  ACTION_COUNT,
-
-  // Bitmasks
-  __BITMASK_ID_PLAYER_SHIFT = 0,
-  __BITMASK_ID_PLAYER_BITS = 5,
-  __BITMASK_ID_PLAYER_MASK = ((1 << INPUT_ACTION.__BITMASK_USER_BITS) - 1) << INPUT_ACTION.__BITMASK_USER_SHIFT,
-  __BITMASK_ID_PROFILE_SHIFT = INPUT_ACTION.__BITMASK_ID_PLAYER_SHIFT + INPUT_ACTION.__BITMASK_ID_PLAYER_BITS,
-  __BITMASK_ID_PROFILE_BITS = 5,
-  __BITMASK_ID_PROFILE_MASK = ((1 << INPUT_ACTION.__BITMASK_ID_PROFILE_BITS) - 1) << INPUT_ACTION.__BITMASK_ID_PROFILE_SHIFT,
 }
 
 
@@ -237,7 +229,7 @@ function InputManager(player_count, profile_count) constructor
   {
     static messages = [
       "UNKNOWN ERROR TYPE: {0}",
-      "UNKNOWN DEVICE NAME: {0}",
+      "UNKNOWN DEVICE TYPE: {0}",
     ];
 
     if (type < 0 || type >= INPUT_MANAGER.ERR_COUNT)
@@ -258,20 +250,13 @@ function InputManager(player_count, profile_count) constructor
    *
    */
 
-  static save = function(prettify = false)
+  static generate = function(settings_mask = 0)
   {
+    for (var i = 0; i < self.player_count; ++i) {
+      self.player_inputs[i] = new InputContext(i, self.input_profiles, settings_mask);
+    }
 
-  }
-
-
-
-  /**
-   *
-   */
-
-  static load = function(data_string)
-  {
-
+    return self;
   }
 
 
@@ -297,21 +282,6 @@ function InputManager(player_count, profile_count) constructor
    *
    */
 
-  static generate = function(settings_mask = 0)
-  {
-    for (var i = 0; i < self.player_count; ++i) {
-      self.player_inputs[i] = new InputContext(i, self.input_profiles, settings_mask);
-    }
-
-    return self;
-  }
-
-
-
-  /**
-   *
-   */
-
   static input = function(input_idx = 0)
   {
     return player_inputs[input_idx + self.player_count * (input_idx < 0)];
@@ -325,13 +295,33 @@ function InputManager(player_count, profile_count) constructor
 
   static step = function()
   {
+    array_foreach(self.player_inputs, InputContext.update);
+
     ++InputManager.GLOBAL_INPUT_FRAME;
 
-    array_foreach(self.player_inputs, function(input) {
-      ++input.last_input_type_frames[input.profile_index];
-    });
-
     return self;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static save = function(prettify = false)
+  {
+
+  }
+
+
+
+  /**
+   *
+   */
+
+  static load = function(data_string)
+  {
+
   }
 }
 
@@ -367,10 +357,153 @@ function InputContext(player_index, profiles, settings_mask) constructor
 {
   self.player_index = player_index;
   self.settings_mask = settings_mask;
-  self.profiles = variable_clone(profiles);
   self.input_type_frames = array_create(INPUT.ACTION_COUNT, InputManager.GLOBAL_INPUT_FRAME);
 
 
+
+  /**
+   *
+   */
+
+  static step = function()
+  {
+    ++self.input_type_frames[self.profile_idx];
+
+    return self;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static setprofile = function(profile_idx)
+  {
+    self.profile_idx = profile_idx;
+
+    return self;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static active = function(device = INPUT.DEVICE_ANY)
+  {
+    return __bitmask_flag_from_group(device, INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT, INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE);
+  }
+
+
+
+  /**
+   *
+   */
+
+  static rebinding = function(device = INPUT.DEVICE_ANY)
+  {
+    return __bitmask_flag_from_group(device, INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT, INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING);
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __bitmask_filter = function(mask)
+  {
+    return self.settings_mask & mask;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __bitmask_flag = function(flag_idx)
+  {
+    return self.settings_mask >> flag_idx & 1;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __bitmask_decode_group = function(group_idx, group_bits)
+  {
+    return self.settings_mask >> group_idx * group_bits & (1 << group_bits) - 1;
+  }
+
+
+
+
+  /**
+   *
+   */
+
+  static __bitmask_flag_from_group = function(group_idx, group_bits, flag_idx)
+  {
+    return __bitmask_flag(__bitmask_decode_group(group_idx, group_bits), flag_idx);
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __resolve_profiles = function(profiles)
+  {
+    var profile_count = array_length(profiles)
+      , resolved_profiles = array_create(profile_count, undefined)
+    ;
+
+    for (var i = 0; i < profile_count; ++i)
+    {
+      var profile = profiles[i]
+        , keys = struct_get_names(profile)
+        , key_count = array_length(keys)
+      ;
+
+      for (var j = 0; j < key_count; ++i)
+      {
+        var key = keys[i];
+
+        profile[$ key] = __resolve_profile_item(item, i);
+      }
+    }
+
+    return resolved_profiles;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __resolve_profile_item = function(item, profile_idx)
+  {
+    if (is_callable(item)) {
+      return new InputActionCombo(self, item, self.player_index, profile_idx);
+    }
+
+    if (!is_instanceof(item, InputActionCombo)) {
+      return new InputAction(self, item, self.player_index, profile_idx);
+    }
+
+    return item;
+  }
+
+
+
+  self.profiles = __resolve_profiles(profiles);
 }
 
 
@@ -401,7 +534,7 @@ function InputContext(player_index, profiles, settings_mask) constructor
  *
  */
 
-function InputAction(binds, context) constructor
+function InputAction(context, binds, id) constructor
 {
   static CHECK_FNS = [ InputDevice.held, InputDevice.pressed, InputDevice.released ];
   static TIME_WINDOW_FRAMES_SEQUENCE = 15;
@@ -474,21 +607,10 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
-   */
-
-  static devices = function()
-  {
-    return self.context.devices;
-  }
-
-
-
-  /**
-   * 
-   * @param min_frames 
-   * @param max_frames 
-   * @returns 
+   *
+   * @param min_frames
+   * @param max_frames
+   * @returns
    */
 
   function held(min_frames = 0, max_frames = +infinity)
@@ -521,7 +643,7 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
+   *
    */
 
   static __validate = function(input_type, min_frames, max_frames)
@@ -534,7 +656,7 @@ function InputAction(binds, context) constructor
 
 
   /**
-   * 
+   *
    */
 
   static __input_in_range = function(frame, minval, maxval)
@@ -548,9 +670,9 @@ function InputAction(binds, context) constructor
   self.context = context;
   self.binds = self.normalize(binds);
   self.bind_count = array_length(self.binds);
-  self.last_input_frame = noone;
-  self.last_input_type_frames = array_create(INPUT.ACTION_COUNT, noone);
-  self.settings_mask = INPUT.DEVICE_STATUS_ALL_MASK;
+  self.last_input_frame = -1;
+  self.last_input_type_frames = array_create(INPUT.ACTION_COUNT, 0);
+  self.settings_mask = INPUT.DEVICE_STATUS_ALL_ACTIVE_MASK;
 
   // !:
   self.recording = false;
@@ -638,10 +760,10 @@ function InputActionCombo(chords, time, context) constructor
 
 
 /**
- *
+ * @desc Device input management class.
  */
 
-function InputDevice(device_index)
+function InputDevice() constructor
 {
   static funcs = [
     [device_mouse_check_button         , function(index, key) { return keyboard_check(key);          }, gamepad_button_check         ],
@@ -652,23 +774,29 @@ function InputDevice(device_index)
 
 
   /**
-   *
+   * @desc Identifies the type of input of a given key.
+   * @param {Constant.VirtualKey|Real} key The key to get the source from.
+   * @returns {Constant.INPUT}
    */
 
   static sourceof = function(key)
   {
-    return (key <= INPUT.__GAMEPAD_MAX) * (
-      (key >= INPUT.__MOUSE_MIN) + (key >= INPUT.__KEYBOARD_MIN) + (key >= INPUT.__GAMEPAD_MIN)
+    return (key <= INPUT.__KEY_MAX_GAMEPAD) * (
+      (key >= INPUT.__KEY_MIN_MOUSE) + (key >= INPUT.__KEY_MIN_KEYBOARD) + (key >= INPUT.__KEY_MIN_GAMEPAD)
     );
   }
 
 
 
   /**
-   *
+   * @desc Checks whether a key is currently performing a specified action on a given device.
+   * @param {Constant.INPUT} action The action type.
+   * @param {Constant.VirtualKey|Real} key The key to check.
+   * @param {Real} [index] The index of the device. Defaults to `0`.
+   * @returns {Bool}
    */
 
-  function check(action, key, index)
+  function check(action, key, index = 0)
   {
     return InputDevice.funcs[action][InputDevice.sourceof(key)](index, key);
   }
@@ -676,10 +804,13 @@ function InputDevice(device_index)
 
 
   /**
-   *
+   * @desc Checks whether a key is currently held on a given device.
+   * @param {Constant.VirtualKey|Real} key The key to check.
+   * @param {Real} [index] The index of the device. Defaults to `0`.
+   * @returns {Bool}
    */
 
-  function held(key, index)
+  function held(key, index = 0)
   {
     return InputDevice.check(INPUT.ACTION_HELD, key, index);
   }
@@ -687,10 +818,13 @@ function InputDevice(device_index)
 
 
   /**
-   *
+   * @desc Checks whether a key is currently pressed on a given device.
+   * @param {Constant.VirtualKey|Real} key The key to check.
+   * @param {Real} [index] The index of the device. Defaults to `0`.
+   * @returns {Bool}
    */
 
-  function pressed(key, index)
+  function pressed(key, index = 0)
   {
     return InputDevice.check(INPUT.ACTION_PRESSED, key, index);
   }
@@ -698,10 +832,13 @@ function InputDevice(device_index)
 
 
   /**
-   *
+   * @desc Checks whether a key is currently released on a given device.
+   * @param {Constant.VirtualKey|Real} key The key to check.
+   * @param {Real} [index] The index of the device. Defaults to `0`.
+   * @returns {Bool}
    */
 
-  function released(key, index)
+  function released(key, index = 0)
   {
     return InputDevice.check(INPUT.ACTION_RELEASED, key, index);
   }
