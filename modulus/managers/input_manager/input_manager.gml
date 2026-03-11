@@ -52,26 +52,61 @@ input_manager = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * @desc A complete multi-profile chord/combo-aware input manager.
  * @version 0.5
  *
  * TO-DO LIST:
- * +: Ensure correct struct members' conversion during initialization
  * +: Validate keys and chords' pressing inside specified time window
- * +: Validate InputActionCombo creation
- * +: Create methods to work with input device bitmasks
  * +: Add support for pressing more times inside time window
  * +: Save/load functionalities
  */
-
-
-
-#macro __INPUT_MANAGER_MOUSE_NAME_1__    "mouse"
-#macro __INPUT_MANAGER_KEYBOARD_NAME_1__ "keyboard"
-#macro __INPUT_MANAGER_KEYBOARD_NAME_2__ "kb"
-#macro __INPUT_MANAGER_GAMEPAD_NAME_1__  "gamepad"
-#macro __INPUT_MANAGER_GAMEPAD_NAME_2__  "controller"
 
 
 
@@ -137,7 +172,10 @@ enum INPUT
   __BITMASK_ID_PLAYER_SHIFT = 0,
   __BITMASK_ID_PLAYER_BITS = 8,
   __BITMASK_ID_PLAYER_MASK = (1 << INPUT.__BITMASK_ID_PLAYER_BITS) - 1 << INPUT.__BITMASK_ID_PLAYER_SHIFT,
-  __BITMASK_ID_PROFILE_SHIFT = INPUT.__BITMASK_ID_PLAYER_SHIFT + INPUT.__BITMASK_ID_PLAYER_BITS,
+  __BITMASK_ID_DEVICE_SHIFT = INPUT.__BITMASK_ID_PLAYER_SHIFT + INPUT.__BITMASK_ID_PLAYER_BITS,
+  __BITMASK_ID_DEVICE_BITS = 4,
+  __BITMASK_ID_DEVICE_MASK = (1 << INPUT.__BITMASK_ID_DEVICE_BITS) - 1 << INPUT.__BITMASK_ID_DEVICE_SHIFT,
+  __BITMASK_ID_PROFILE_SHIFT = INPUT.__BITMASK_ID_DEVICE_SHIFT + INPUT.__BITMASK_ID_DEVICE_BITS,
   __BITMASK_ID_PROFILE_BITS = 4,
   __BITMASK_ID_PROFILE_MASK = (1 << INPUT.__BITMASK_ID_PROFILE_BITS) - 1 << INPUT.__BITMASK_ID_PROFILE_SHIFT,
   __BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE = 0,
@@ -212,7 +250,7 @@ enum INPUT_ACTION
 
 function InputManager(player_count, profile_count) constructor
 {
-  static GLOBAL_INPUT_FRAME = 0;
+  static GLOBAL_INPUT_FRAME = INPUT.ACTION_NONE;
 
   self.player_inputs = array_create(player_count);
   self.input_profiles = array_create(profile_count);
@@ -442,6 +480,17 @@ function InputContext(player_index, profiles, settings_mask) constructor
 
 
 
+  /**
+   * 
+   */
+
+  static __bitmask_rewrite_region = function(value, shift, bits)
+  {
+    var mask = (1 << bits) - 1 << shift;
+    return self.settings_mask & ~mask | value << shift & mask;
+  }
+
+
 
   /**
    *
@@ -475,7 +524,7 @@ function InputContext(player_index, profiles, settings_mask) constructor
       {
         var key = keys[i];
 
-        profile[$ key] = __resolve_profile_item(item, i);
+        profile[$ key] = __resolve_profile_item(item);
       }
     }
 
@@ -488,14 +537,14 @@ function InputContext(player_index, profiles, settings_mask) constructor
    *
    */
 
-  static __resolve_profile_item = function(item, profile_idx)
+  static __resolve_profile_item = function(item)
   {
     if (is_callable(item)) {
-      return new InputActionCombo(self, item, self.player_index, profile_idx);
+      return new InputActionCombo(self, item);
     }
 
     if (!is_instanceof(item, InputActionCombo)) {
-      return new InputAction(self, item, self.player_index, profile_idx);
+      return new InputAction(self, item);
     }
 
     return item;
@@ -534,7 +583,7 @@ function InputContext(player_index, profiles, settings_mask) constructor
  *
  */
 
-function InputAction(context, binds, id) constructor
+function InputAction(context, binds) constructor
 {
   static CHECK_FNS = [ InputDevice.held, InputDevice.pressed, InputDevice.released ];
   static TIME_WINDOW_FRAMES_SEQUENCE = 15;
@@ -590,7 +639,7 @@ function InputAction(context, binds, id) constructor
       ;
 
       for (var k = 0; detected && k < bind_input_count; ++k) {
-        detected &= check_fn(bind[k], self.context);
+        detected &= check_fn(bind[k], self.context.player_index);
       }
 
       if (detected) {
@@ -670,13 +719,9 @@ function InputAction(context, binds, id) constructor
   self.context = context;
   self.binds = self.normalize(binds);
   self.bind_count = array_length(self.binds);
-  self.last_input_frame = -1;
-  self.last_input_type_frames = array_create(INPUT.ACTION_COUNT, 0);
   self.settings_mask = INPUT.DEVICE_STATUS_ALL_ACTIVE_MASK;
-
-  // !:
-  self.recording = false;
-  self.time = InputAction.CHORD_TIME_WINDOW;
+  self.last_input_type_frames = array_create(INPUT.ACTION_COUNT, INPUT.ACTION_NONE);
+  self.last_input_frame = INPUT.ACTION_NONE;
 }
 
 
@@ -707,7 +752,7 @@ function InputAction(context, binds, id) constructor
  *
  */
 
-function InputActionCombo(chords, time, context) constructor
+function InputActionCombo(context, check_fn) constructor
 {
   /**
    *
@@ -796,7 +841,7 @@ function InputDevice() constructor
    * @returns {Bool}
    */
 
-  function check(action, key, index = 0)
+  static check = function(action, key, index = 0)
   {
     return InputDevice.funcs[action][InputDevice.sourceof(key)](index, key);
   }
@@ -810,7 +855,7 @@ function InputDevice() constructor
    * @returns {Bool}
    */
 
-  function held(key, index = 0)
+  static held = function(key, index = 0)
   {
     return InputDevice.check(INPUT.ACTION_HELD, key, index);
   }
@@ -824,7 +869,7 @@ function InputDevice() constructor
    * @returns {Bool}
    */
 
-  function pressed(key, index = 0)
+  static pressed = function(key, index = 0)
   {
     return InputDevice.check(INPUT.ACTION_PRESSED, key, index);
   }
@@ -838,7 +883,7 @@ function InputDevice() constructor
    * @returns {Bool}
    */
 
-  function released(key, index = 0)
+  static released = function(key, index = 0)
   {
     return InputDevice.check(INPUT.ACTION_RELEASED, key, index);
   }

@@ -2,14 +2,14 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.12.1
+ * @version 0.12.2
  */
 
 
 
 #region Lib functions
 
-#macro __DIALOG_MANAGER_VERSION__             "0.12.1"
+#macro __DIALOG_MANAGER_VERSION__             "0.12.2"
 #macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/dialog_manager"
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
@@ -1981,6 +1981,7 @@ function DialogManager(lang, data_string, is_file) constructor
       , subdiffcount = 0
       , diffcount = 0
       , result = []
+      , fill = -1
     ;
 
     for (var i = 0; i < diffdata.count; ++i)
@@ -1998,21 +1999,23 @@ function DialogManager(lang, data_string, is_file) constructor
           , level_data = recursion
               ? __diff_level(sl1.container, sl2.container, lv + 1, node.path)
               : undefined
-          , has_diff = recursion && level_data.diffcount
         ;
 
-        diff_incr &= has_diff;
+        diff_incr &= recursion && level_data.diffcount;
 
-        if (has_diff)
+        if (diff_incr)
         {
-          node.items = level_data.items;
-          node.type = DialogManager.DATA.DIFF.OPERATIONS.op_modified;
           subdiffcount += level_data.subdiffcount;
+          node.type = DialogManager.DATA.DIFF.OPERATIONS.op_modified;
+          node.items = level_data.items;
         }
       }
 
+      if (diff_incr) {
+        result[++fill] = node;
+      }
+
       diffcount += diff_incr;
-      result[i] = node;
     }
 
     return {
