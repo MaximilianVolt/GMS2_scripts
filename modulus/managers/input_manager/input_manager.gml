@@ -12,12 +12,12 @@ input_manager.profile(0, {
   a_crouch: [ [[vk_shift], [ord("A")]], [[gp_shoulderl], [gp_padl]] ], // 2 combos of 2 chords of 1 button
   a_jump:   [ [[vk_space]]            , [[gp_a]]                    ],
 
-  c_superjump: input_action_combo_create(function(argv) {
+  c_superjump: function(argv) {
     return argv[0] > .25 && a_crouch.held(30, 45) && a_jump.pressedtimes(5, 30 /* TTL*/);
-  }),
-  c_superdoublejump: input_action_combo_create(function(argv) {
+  },
+  c_superdoublejump: function(argv) {
     return c_superjump.check(15, 25) && a_jump.pressed();
-  }),
+  },
 });
 
 /// O_PLAYER create event
@@ -103,6 +103,9 @@ input_manager = {
  * @version 0.5
  *
  * TO-DO LIST:
+ * +: Make the input context save also the device index in the settings mask
+ * +: Add player_mask to input context to save both player index and profile index
+ * 
  * +: Validate keys and chords' pressing inside specified time window
  * +: Add support for pressing more times inside time window
  * +: Save/load functionalities
@@ -158,26 +161,28 @@ enum INPUT
   ACTION_HELD,
   ACTION_PRESSED,
   ACTION_RELEASED,
+  ACTION_PERFORMED,
   ACTION_COUNT,
 
-  // Input constants
+  // Management constants
   __KEY_MIN_MOUSE = 0x0000,
   __KEY_MAX_MOUSE = 0x0006,
   __KEY_MIN_KEYBOARD,
   __KEY_MAX_KEYBOARD = 0x03FF,
   __KEY_MIN_GAMEPAD,
   __KEY_MAX_GAMEPAD = 0xFFFF,
+  __INPUT_BUFFER_MAX_SIZE = 64,
 
   // Bitmasks
-  __BITMASK_ID_PLAYER_SHIFT = 0,
-  __BITMASK_ID_PLAYER_BITS = 8,
-  __BITMASK_ID_PLAYER_MASK = (1 << INPUT.__BITMASK_ID_PLAYER_BITS) - 1 << INPUT.__BITMASK_ID_PLAYER_SHIFT,
-  __BITMASK_ID_DEVICE_SHIFT = INPUT.__BITMASK_ID_PLAYER_SHIFT + INPUT.__BITMASK_ID_PLAYER_BITS,
-  __BITMASK_ID_DEVICE_BITS = 4,
-  __BITMASK_ID_DEVICE_MASK = (1 << INPUT.__BITMASK_ID_DEVICE_BITS) - 1 << INPUT.__BITMASK_ID_DEVICE_SHIFT,
-  __BITMASK_ID_PROFILE_SHIFT = INPUT.__BITMASK_ID_DEVICE_SHIFT + INPUT.__BITMASK_ID_DEVICE_BITS,
-  __BITMASK_ID_PROFILE_BITS = 4,
-  __BITMASK_ID_PROFILE_MASK = (1 << INPUT.__BITMASK_ID_PROFILE_BITS) - 1 << INPUT.__BITMASK_ID_PROFILE_SHIFT,
+  __BITMASK_BUFFER_ACTION_TYPE_SHIFT = 0,
+  __BITMASK_BUFFER_ACTION_TYPE_BITS = 2,
+  __BITMASK_BUFFER_ACTION_TYPE_MASK = (1 << INPUT.__BITMASK_BUFFER_ACTION_TYPE_BITS) - 1 << INPUT.__BITMASK_BUFFER_ACTION_TYPE_SHIFT,
+  __BITMASK_BUFFER_DEVICE_SHIFT = INPUT.__BITMASK_BUFFER_ACTION_TYPE_SHIFT + INPUT.__BITMASK_BUFFER_ACTION_TYPE_BITS,
+  __BITMASK_BUFFER_DEVICE_BITS = 6,
+  __BITMASK_BUFFER_DEVICE_MASK = (1 << INPUT.__BITMASK_BUFFER_DEVICE_BITS) - 1 << INPUT.__BITMASK_BUFFER_DEVICE_SHIFT,
+  __BITMASK_BUFFER_PROFILE_SHIFT = INPUT.__BITMASK_BUFFER_DEVICE_SHIFT + INPUT.__BITMASK_BUFFER_DEVICE_BITS,
+  __BITMASK_BUFFER_PROFILE_BITS = 4,
+  __BITMASK_BUFFER_PROFILE_MASK = (1 << INPUT.__BITMASK_BUFFER_PROFILE_BITS) - 1 << INPUT.__BITMASK_BUFFER_PROFILE_SHIFT,
   __BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE = 0,
   __BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING,
   __BITMASK_DEVICE_STATUS_FLAG_COUNT,
@@ -331,9 +336,11 @@ function InputManager(player_count, profile_count) constructor
    *
    */
 
-  static step = function()
+  static step = function(update_all = false)
   {
-    array_foreach(self.player_inputs, InputContext.update);
+    if (update_all) {
+      array_foreach(self.player_inputs, InputContext.update);
+    }
 
     ++InputManager.GLOBAL_INPUT_FRAME;
 
@@ -396,6 +403,7 @@ function InputContext(player_index, profiles, settings_mask) constructor
   self.player_index = player_index;
   self.settings_mask = settings_mask;
   self.input_type_frames = array_create(INPUT.ACTION_COUNT, InputManager.GLOBAL_INPUT_FRAME);
+  self.buffer = array_create(INPUT.__INPUT_BUFFER_MAX_SIZE, 0);
 
 
 
@@ -405,7 +413,7 @@ function InputContext(player_index, profiles, settings_mask) constructor
 
   static step = function()
   {
-    ++self.input_type_frames[self.profile_idx];
+    self.input_type_frames[self.profile_idx] = InputManager.GLOBAL_INPUT_FRAME;
 
     return self;
   }
@@ -520,9 +528,11 @@ function InputContext(player_index, profiles, settings_mask) constructor
         , key_count = array_length(keys)
       ;
 
-      for (var j = 0; j < key_count; ++i)
+      for (var j = 0; j < key_count; ++j)
       {
-        var key = keys[i];
+        var key = keys[j]
+          , item = profile[$ key]
+        ;
 
         profile[$ key] = __resolve_profile_item(item);
       }
@@ -539,7 +549,7 @@ function InputContext(player_index, profiles, settings_mask) constructor
 
   static __resolve_profile_item = function(item)
   {
-    if (is_callable(item)) {
+    if (is_callable(item) || is_numeric(item)) {
       return new InputActionCombo(self, item);
     }
 
@@ -754,6 +764,13 @@ function InputAction(context, binds) constructor
 
 function InputActionCombo(context, check_fn) constructor
 {
+  static COMBO_MAP = {
+    combos: [],
+    count: 0,
+  };
+
+
+
   /**
    *
    */
@@ -772,12 +789,25 @@ function InputActionCombo(context, check_fn) constructor
 
 
 
-  self.step = 0;
-  self.time = time;
-  self.time_max = time;
+  /**
+   * 
+   */
+
+  static register = function(func, index = InputActionCombo.COMBO_MAP.count)
+  {
+    var map = InputActionCombo.COMBO_MAP;
+
+    map.funcs[index] = func;
+    ++map.count;
+
+    return index;
+  }
+
+
+
+  self.check_fn_idx = self.register(check_fn);
+  self.check_fn = method(context, variable_clone(InputActionCombo.COMBO_MAP[self.check_fn_idx]));
   self.context = context;
-  self.actions = actions;
-  self.action_count = array_length(actions);
 }
 
 
@@ -788,6 +818,32 @@ function InputActionCombo(context, check_fn) constructor
 
 
 
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * 
+ */
+
+function InputRingBufferData(input, settings_mask)
+{
+  self.time = InputManager.GLOBAL_INPUT_FRAME;
+  self.input = input;
+  self.settings_mask = settings_mask;
+}
 
 
 

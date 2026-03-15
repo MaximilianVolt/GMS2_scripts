@@ -4979,7 +4979,7 @@ function DialogItemContainer(items, parent) constructor
 
   static all_of = function(filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
   {
-    return all_of_until(
+    return self.all_of_until(
       function(item, argv = undefined) { return false; },
       filter_fn,
       argv

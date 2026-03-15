@@ -98,3 +98,17 @@ function hex_pathfinding_reconstruct_path(_target)
 
   return array_reverse(path);
 }
+
+
+
+
+
+
+
+jeremy_countdown = function()
+{
+  return date_day_span(
+    date_current_datetime(),
+    date_create_datetime(2038, 1, 19, 3, 14, 8)
+  );
+}
