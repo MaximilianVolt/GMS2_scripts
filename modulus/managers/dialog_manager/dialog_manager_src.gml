@@ -889,25 +889,25 @@ function DialogRunner(manager) constructor
     dialog_diff *= !maintained_dialog;
 
     return maintained_status
-      | DIALOG_RUNNER.STATUS_FIRST_DIALOG       * (target_position == 0                                                )
-      | DIALOG_RUNNER.STATUS_FIRST_SEQUENCE     * (target_position < 1 << DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_BITS)
-      | DIALOG_RUNNER.STATUS_FIRST_SCENE        * (target_scene_idx == 0                                               )
-      | DIALOG_RUNNER.STATUS_FIRST_OF_SEQUENCE  * (target_dialog_idx == 0                                              )
-      | DIALOG_RUNNER.STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                            )
-      | DIALOG_RUNNER.STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1                       )
-      | DIALOG_RUNNER.STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1                   )
-      | DIALOG_RUNNER.STATUS_MIDDLE_SCENE       * (target_scene_idx == target_scene_count >> 1                         )
-      | DIALOG_RUNNER.STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                             )
-      | DIALOG_RUNNER.STATUS_LAST_SEQUENCE      * (is_last_sequence                                                    )
-      | DIALOG_RUNNER.STATUS_LAST_SCENE         * (is_last_scene                                                       )
-      | DIALOG_RUNNER.STATUS_LAST_OF_SEQUENCE   * (is_last_of_sequence                                                 )
-      | DIALOG_RUNNER.STATUS_LAST_OF_SCENE      * (is_last_of_scene                                                    )
-      | DIALOG_RUNNER.STATUS_ADVANCED_DIALOG    * (dialog_diff > 0                                                     )
-      | DIALOG_RUNNER.STATUS_ADVANCED_SEQUENCE  * (sequence_diff > 0                                                   )
-      | DIALOG_RUNNER.STATUS_ADVANCED_SCENE     * (scene_diff > 0                                                      )
-      | DIALOG_RUNNER.STATUS_RECEDED_DIALOG     * (dialog_diff < 0                                                     )
-      | DIALOG_RUNNER.STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                                   )
-      | DIALOG_RUNNER.STATUS_RECEDED_SCENE      * (scene_diff < 0                                                      )
+      | DIALOG_RUNNER.STATUS_FIRST_DIALOG       * (target_position == 0                                            )
+      | DIALOG_RUNNER.STATUS_FIRST_SEQUENCE     * (target_position <= DIALOG_MANAGER.__BITMASK_POSITION_DIALOG_MASK)
+      | DIALOG_RUNNER.STATUS_FIRST_SCENE        * (target_scene_idx == 0                                           )
+      | DIALOG_RUNNER.STATUS_FIRST_OF_SEQUENCE  * (target_dialog_idx == 0                                          )
+      | DIALOG_RUNNER.STATUS_FIRST_OF_SCENE     * (target_sequence_idx == 0                                        )
+      | DIALOG_RUNNER.STATUS_MIDDLE_OF_SEQUENCE * (target_dialog_idx == target_dialog_count >> 1                   )
+      | DIALOG_RUNNER.STATUS_MIDDLE_OF_SCENE    * (target_sequence_idx == target_sequence_count >> 1               )
+      | DIALOG_RUNNER.STATUS_MIDDLE_SCENE       * (target_scene_idx == target_scene_count >> 1                     )
+      | DIALOG_RUNNER.STATUS_LAST_DIALOG        * (is_last_sequence && is_last_of_sequence                         )
+      | DIALOG_RUNNER.STATUS_LAST_SEQUENCE      * (is_last_sequence                                                )
+      | DIALOG_RUNNER.STATUS_LAST_SCENE         * (is_last_scene                                                   )
+      | DIALOG_RUNNER.STATUS_LAST_OF_SEQUENCE   * (is_last_of_sequence                                             )
+      | DIALOG_RUNNER.STATUS_LAST_OF_SCENE      * (is_last_of_scene                                                )
+      | DIALOG_RUNNER.STATUS_ADVANCED_DIALOG    * (dialog_diff > 0                                                 )
+      | DIALOG_RUNNER.STATUS_ADVANCED_SEQUENCE  * (sequence_diff > 0                                               )
+      | DIALOG_RUNNER.STATUS_ADVANCED_SCENE     * (scene_diff > 0                                                  )
+      | DIALOG_RUNNER.STATUS_RECEDED_DIALOG     * (dialog_diff < 0                                                 )
+      | DIALOG_RUNNER.STATUS_RECEDED_SEQUENCE   * (sequence_diff < 0                                               )
+      | DIALOG_RUNNER.STATUS_RECEDED_SCENE      * (scene_diff < 0                                                  )
     ;
   }
 }
@@ -1114,7 +1114,7 @@ function DialogManager(lang, data_string, is_file) constructor
     if (!is_array(argv))
       argv = [argv];
 
-    return string_ext($"\n\n\n{messages[type]}\n\n", argv);
+    return string_ext($"\n\n\n<<Dialog Manager>>:\n{messages[type]}\n\n", argv);
   }
 
 
@@ -1861,8 +1861,8 @@ function DialogManager(lang, data_string, is_file) constructor
       ? DIALOG_MANAGER.DIFF_SEVERITY_ERROR
       : (
         s_ins > w_ins || s_dels > w_dels || s_movs > w_movs
-        ? DIALOG_MANAGER.DIFF_SEVERITY_WARNING
-        : DIALOG_MANAGER.DIFF_SEVERITY_OK
+          ? DIALOG_MANAGER.DIFF_SEVERITY_WARNING
+          : DIALOG_MANAGER.DIFF_SEVERITY_OK
       )
     ;
   }
