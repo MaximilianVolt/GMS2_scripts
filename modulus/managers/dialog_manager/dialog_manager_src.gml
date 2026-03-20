@@ -638,10 +638,10 @@ function DialogRunner(manager) constructor
       , position = self.position
     ;
 
-    if (u == 2 && dialog_idx != undefined)
+    if (u == DIALOG_ITEM.LEVEL_LINKABLE_COUNT - 1 && dialog_idx != undefined)
       return manager.__get_dialog_relative(dialog_idx, 0, 0);
 
-    if (u && u < 3)
+    if (u && u < DIALOG_ITEM.LEVEL_LINKABLE_COUNT)
     {
       scene_idx ??= 0;
       sequence_idx ??= 0;
