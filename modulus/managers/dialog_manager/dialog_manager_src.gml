@@ -18,8 +18,6 @@ gml_pragma(
   "new DialogRunner(undefined); new DialogManager(0, \"\", false); new DialogScene([], 0); new DialogSequence([], 0, []); new Dialog(\"\", 0, []); new DialogFX(0, []);"
 );
 
-#region Lib functions
-
 
 
 
@@ -43,6 +41,8 @@ gml_pragma(
 
 
 
+
+#region Lib functions
 
 /**
  * @desc `DialogRunner` constructor.
