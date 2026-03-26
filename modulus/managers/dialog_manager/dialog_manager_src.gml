@@ -3276,7 +3276,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
    * @param {Real} [n] The effect position to look for.
    * @param {Function} [filter_fn] The predicate to test against each flow resolver FX. Defaults to a function returning `true`.
    * @param {Array} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX|undefined}
+   * @returns {Struct.DialogFX}
    */
 
   static flowresolver = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
@@ -3293,7 +3293,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
    * @param {Real} [n] The effect position to look for.
    * @param {Function} [filter_fn] The predicate to test against each jump FX. Defaults to a function returning `true`.
    * @param {Array} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX|undefined}
+   * @returns {Struct.DialogFX}
    */
 
   static jump = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
@@ -3310,7 +3310,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
    * @param {Real} [n] The effect position to look for.
    * @param {Function} [filter_fn] The predicate to test against each dispatch FX. Defaults to a function returning `true`.
    * @param {Array} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX|undefined}
+   * @returns {Struct.DialogFX}
    */
 
   static dispatch = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
@@ -3327,7 +3327,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
    * @param {Real} [n] The effect position to look for.
    * @param {Function} [filter_fn] The predicate to test against each fallback FX. Defaults to a function returning `true`.
    * @param {Array} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX|undefined}
+   * @returns {Struct.DialogFX}
    */
 
   static fallback = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
@@ -3344,7 +3344,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
    * @param {Real} [n] The effect position to look for.
    * @param {Function} [filter_fn] The predicate to test against each choice FX. Defaults to a function returning `true`.
    * @param {Array} [argv] The arguments to pass to the effect.
-   * @returns {Struct.DialogFX|undefined}
+   * @returns {Struct.DialogFX}
    */
 
   static choice = function(n = 1, filter_fn = function(fx, argv) { return true; }, argv = undefined)
@@ -4725,7 +4725,7 @@ function DialogItemContainer(items, parent) constructor
    * @param {Real} n The nth occurrence to look for.
    * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
-   * @returns {Struct.DialogItem|undefined}
+   * @returns {Struct.DialogItem}
    */
 
   static nth_of = function(n, filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
@@ -4745,7 +4745,7 @@ function DialogItemContainer(items, parent) constructor
    * @desc Retrieves all dialog items which match a filter.
    * @param {Function} [filter_fn] The predicate to test against each items. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
-   * @returns {Array<Struct.DialogItem|undefined>}
+   * @returns {Array<Struct.DialogItem>}
    */
 
   static all_of = function(filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
@@ -4764,7 +4764,7 @@ function DialogItemContainer(items, parent) constructor
    * @param {Function} [stop_fn] The predicate to test against each FX. Defaults to a function returning `true`.
    * @param {Function} [filter_fn] The predicate to test against each FX. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the filter.
-   * @returns {Array<Struct.DialogItem|undefined>}
+   * @returns {Array<Struct.DialogItem>}
    */
 
   static all_of_until = function(stop_fn = function(item, argv = undefined) { return true; }, filter_fn = function(item, argv = undefined) { return true; }, argv = undefined)
@@ -5077,7 +5077,7 @@ function DialogLinkable(dialog_items, settings_mask, id = undefined) : DialogIte
    * @param {Real} item_idx The index of the item to retrieve.
    * @param {Function} [filter_fn] The predicate to test against each item. Defaults to a function returning `true`.
    * @param {Any|Array<Any>} [argv] The arguments to pass to the filter function.
-   * @returns {Struct.DialogItem|undefined}
+   * @returns {Struct.DialogItem}
    */
 
   static item = function(item_idx, filter_fn = undefined, argv = undefined)
