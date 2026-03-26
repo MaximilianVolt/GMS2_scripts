@@ -2,12 +2,12 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.12.3
+ * @version 0.12.4
  */
 
 
 
-#macro __DIALOG_MANAGER_VERSION__             "0.12.2"
+#macro __DIALOG_MANAGER_VERSION__             "0.12.4"
 #macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/dialog_manager"
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
@@ -3357,52 +3357,6 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
 
   /**
-   * @desc Makes the current dialog derive from a specified fx adding the calling dialog to the fx flow option list. [CHAINABLE]
-   * @param {Struct.DialogFX} fx The effect derive the dialog from.
-   * @param {String} [prompt] The choice's option text.
-   * @param {Real} [index] The specific index where to insert the new option in the option list. Defaults to list length.
-   * @param {Constant.DIALOG_RUNNER|Real} [jump_metadata_settings] The settings mask for the flow option.
-   * @returns {Struct.Dialog}
-   */
-
-  static from = function(fx, prompt = undefined, index = undefined, jump_metadata_settings = 0)
-  {
-    var type = fx.type();
-
-    if (!fx.isflowresolver(type))
-      return self;
-
-    var flow_option_list = fx.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA]
-      , flow_option_count = array_length(flow_option_list)
-      , flow_option = DialogFX.__create_option_flow(self, 0, prompt, jump_metadata_settings)
-    ;
-
-    switch (type)
-    {
-      case DIALOG_FX.TYPE_FLOWRES_JUMP:
-      case DIALOG_FX.TYPE_FLOWRES_FALLBACK:
-        flow_option_list[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION] = flow_option;
-      break;
-
-      case DIALOG_FX.TYPE_FLOWRES_CHOICE:
-      case DIALOG_FX.TYPE_FLOWRES_DISPATCH:
-      {
-        index ??= flow_option_count;
-
-        if (index >= flow_option_count || is_array(flow_option_list[index]))
-          array_insert(flow_option_list, index, flow_option);
-        else
-          flow_option_list[index] = flow_option;
-      }
-      break;
-    }
-
-    return self;
-  }
-
-
-
-  /**
    * @desc Filters the dialog speaker as a bitmask fragment.
    * @param {Constant.DIALOG|Real} [settings_mask] The settings mask.
    * @returns {Real}
@@ -5175,6 +5129,52 @@ function DialogLinkable(dialog_items, settings_mask, id = undefined) : DialogIte
   static position = function()
   {
     return DialogManager.__encode_level_position(self);
+  }
+
+
+
+  /**
+   * @desc Makes the current dialog linkable object derive from a specified fx adding it to the fx flow option list. [CHAINABLE]
+   * @param {Struct.DialogFX} fx The effect derive the dialog from.
+   * @param {String} [prompt] The choice's option text.
+   * @param {Real} [index] The index where to insert the new option in the option list. Defaults to list length.
+   * @param {Constant.DIALOG_RUNNER|Real} [jump_metadata_settings] The settings mask for the flow option.
+   * @returns {Struct.DialogLinkable}
+   */
+
+  static from = function(fx, prompt = undefined, index = undefined, jump_metadata_settings = 0)
+  {
+    var type = fx.type();
+
+    if (!fx.isflowresolver(type))
+      return self;
+
+    var flow_option_list = fx.argv[DIALOG_FX.FX_ARG_FLOWRES_DATA]
+      , flow_option_count = array_length(flow_option_list)
+      , flow_option = DialogFX.__create_option_flow(self, 0, prompt, jump_metadata_settings)
+    ;
+
+    switch (type)
+    {
+      case DIALOG_FX.TYPE_FLOWRES_JUMP:
+      case DIALOG_FX.TYPE_FLOWRES_FALLBACK:
+        flow_option_list[DIALOG_FX.FX_ARG_FLOWRES_DATA_POSITION] = flow_option;
+      break;
+
+      case DIALOG_FX.TYPE_FLOWRES_CHOICE:
+      case DIALOG_FX.TYPE_FLOWRES_DISPATCH:
+      {
+        index ??= flow_option_count;
+
+        if (index >= flow_option_count || is_array(flow_option_list[index]))
+          array_insert(flow_option_list, index, flow_option);
+        else
+          flow_option_list[index] = flow_option;
+      }
+      break;
+    }
+
+    return self;
   }
 
 

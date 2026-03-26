@@ -1,8 +1,3 @@
-/**
- * !: USE BITMASKS TO DETERMINE WHETHER AN INPUT SHOULD BE "LISTENED TO" OR NOT
- * #: EG: { GAMEPAD | KEYBOARD | MOUSE }   <=>   (detected & settings_mask >> InputDevice.sourceof(input)) == STATE_ACTIVE
- */
-
 /// O_INPUT create event
 input_manager = input_manager_create(4, 3);
 
@@ -49,42 +44,6 @@ fsm.state_on_ground = function()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * @desc A complete multi-profile chord/combo-aware input manager.
  * @version 0.5
@@ -105,6 +64,8 @@ fsm.state_on_ground = function()
  * +: InputAction.heldfortimes(n, duration, max, min = 0) (count the released - pressed differences >= duration inside the ttl)
  * +: InputAction.pressedaftertimes(n, pause, max, min = 0) (count all the press differences >= pause inside the ttl)
  * +: InputAction.releasedaftertimes(n, pause, max, min = 0) (count all the release differences >= pause inside the ttl)
+ * 
+ * !: Ensure correct use of settings mask in Struct.InputAction.__check_device_input()
  */
 
 
@@ -200,6 +161,9 @@ enum INPUT
   __BITMASK_INPUT_MASK_SEQUENCE_SHIFT = INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT + INPUT.__BITMASK_INPUT_MASK_CHORD_BITS,
   __BITMASK_INPUT_MASK_SEQUENCE_BITS = 4,
   __BITMASK_INPUT_MASK_SEQUENCE_MASK = (1 << INPUT.__BITMASK_INPUT_MASK_SEQUENCE_BITS) - 1 << INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT,
+  __BITMASK_INPUT_KEYS_SHIFT = INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT + INPUT.__BITMASK_INPUT_MASK_SEQUENCE_BITS,
+  __BITMASK_INPUT_KEYS_BITS = 16,
+  __BITMASK_INPUT_KEYS_MASK = (1 << INPUT.__BITMASK_INPUT_KEYS_BITS) - 1 << INPUT.__BITMASK_INPUT_KEYS_SHIFT,
   DEVICE_STATUS_ANY_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_ANY_SHIFT,
   DEVICE_STATUS_MOUSE_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_MOUSE_SHIFT,
   DEVICE_STATUS_KEYBOARD_MASK = INPUT.__BITMASK_DEVICE_STATUS_MASK << INPUT.__BITMASK_DEVICE_STATUS_KEYBOARD_SHIFT,
@@ -208,8 +172,11 @@ enum INPUT
   DEVICE_STATUS_ALL_ACTIVE_MASK = INPUT.__BITMASK_DEVICE_STATUS_ALTERNATING_MASK << INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE,
   DEVICE_STATUS_ALL_REBINDING_MASK = INPUT.__BITMASK_DEVICE_STATUS_ALTERNATING_MASK << INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_REBINDING,
 
+  // Input info
+  INFO_NONE = 0,
+
   // Error types
-  ERR_UNDEFINED_ERROR_TYPE,
+  ERR_UNDEFINED_ERROR_TYPE = 0,
   ERR_UNDEFINED_DEVICE_TYPE,
   ERR_UNSPECIFIED_INPUT,
   ERR_COUNT,
@@ -247,6 +214,8 @@ enum INPUT
 function InputManager(player_count, profile_count) constructor
 {
   static GLOBAL_INPUT_FRAME = INPUT.ACTION_NONE;
+  static TIME_WINDOW_FRAMES_SEQUENCE = 16;
+  static TIME_WINDOW_FRAMES_CHORD = 5;
 
   self.player_inputs = array_create(player_count);
   self.input_profiles = array_create(profile_count);
@@ -335,10 +304,10 @@ function InputManager(player_count, profile_count) constructor
    *
    */
 
-  static alterprofile = function(player_idx = 0, profile_idx = 0, profile_data = undefined)
+  static alterprofile = function(player_index = 0, profile_idx = 0, profile_data = undefined)
   {
     if (profile_data)
-      self.input(player_idx).profiles[profile_idx] = InputContext.__resolve_profile(profile_data);
+      self.input(player_index).profiles[profile_idx] = InputContext.__resolve_profile(profile_data);
 
     return self;
   }
@@ -428,7 +397,47 @@ function InputManager(player_count, profile_count) constructor
  * 
  */
 
-function InputBitmaskable(settings_mask) constructor
+function InputTimeable() constructor
+{
+  /**
+   * 
+   */
+
+  static time = function()
+  {
+    return InputManager.GLOBAL_INPUT_FRAME;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ *
+ */
+
+function InputBitmaskable(settings_mask) : InputTimeable() constructor
 {
   self.settings_mask = settings_mask;
 
@@ -458,6 +467,17 @@ function InputBitmaskable(settings_mask) constructor
   static __bitmask_flag = function(flag_idx, settings_mask = self.settings_mask)
   {
     return settings_mask >> flag_idx & 1;
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static __bitmask_decode_region = function(shift, mask, settings_mask = self.settings_mask)
+  {
+    return __bitmask_filter(mask, settings_mask) >> shift;
   }
 
 
@@ -542,7 +562,7 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
   self.player_index = player_index;
   self.profile_idx = INPUT.PROFILE_DEFAULT;
   self.settings_mask = settings_mask;
-  self.input_type_frames = array_create(INPUT.ACTION_COUNT, InputManager.GLOBAL_INPUT_FRAME);
+  self.input_type_frames = array_create(INPUT.ACTION_COUNT, self.time());
   self.buffer = array_create(INPUT.__INPUT_BUFFER_MAX_SIZE, 0);
   self.buffer_index = 0;
 
@@ -555,7 +575,7 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
 
   static step = function()
   {
-    self.input_type_frames[self.profile_idx] = InputManager.GLOBAL_INPUT_FRAME;
+    self.input_type_frames[self.profile_idx] = self.time();
 
     return self;
   }
@@ -615,19 +635,6 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
 
 
   /**
-   * @desc Resolves the input action definitions in the input profiles into actual `InputPerformable` instances.
-   * @param {Array} profiles The array of input profiles to resolve.
-   * @return {Array} The array of resolved input profiles with `InputPerformable` instances.
-   */
-
-  static __resolve_profiles = function(profiles)
-  {
-    return array_map(profiles, __resolve_profile);
-  }
-
-
-
-  /**
    *
    */
 
@@ -643,7 +650,7 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
         , item = profile[$ key]
       ;
 
-      profile[$ key] = InputPerformable.resolve(item);
+      profile[$ key] = InputPerformable.resolve(item, self);
     }
 
     return profile;
@@ -651,7 +658,7 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
 
 
 
-  self.profiles = __resolve_profiles(profiles);
+  self.profiles = array_map(profiles, __resolve_profile);
 }
 
 
@@ -685,9 +692,9 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
 function InputPerformable(context, settings_mask) : InputBitmaskable(settings_mask) constructor
 {
   self.context = context;
-  self.settings_mask = settings_mask;
   self.last_input_type = INPUT.ACTION_NONE;
   self.last_input_type_frames = array_create(INPUT.ACTION_COUNT, INPUT.ACTION_NONE);
+  self.last_performed_time = self.time();
 
 
 
@@ -697,14 +704,14 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
    * @return {Struct.InputPerformable} The resolved `InputPerformable` instance corresponding to the given input action definition.
    */
 
-  static resolve = function(item)
+  static resolve = function(item, context = self.context)
   {
     if (is_callable(item) || is_numeric(item)) {
-      return new InputActionCombo(self.context, item);
+      return new InputActionCombo(item, context, 0);
     }
 
     if (!is_instanceof(item, InputActionCombo)) {
-      return new InputAction(self.context, item);
+      return new InputAction(item, context, 0);
     }
 
     return item;
@@ -749,7 +756,7 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
 
 
   /**
-   * 
+   *
    */
 
   static buffercountquery = function(check_fn = function(entry) { return false; }, min_frames, max_frames)
@@ -758,7 +765,7 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
       , context = self.context
       , buffer = context.buffer
       , idx = context.buffer_index
-      , time = InputManager.GLOBAL_INPUT_FRAME
+      , time = self.time()
     ;
 
     while (time - buffer[idx].time < min_frames)
@@ -768,70 +775,6 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
       count += check_fn(buffer[i]);
 
     return count;
-  }
-
-
-
-  /**
-   *
-   * @param min_frames
-   * @param max_frames
-   * @returns
-   */
-
-  function held(min_frames = 0, max_frames = +infinity)
-  {
-    return __validate(INPUT.ACTION_HELD, min_frames, max_frames);
-  }
-
-
-
-  /**
-   *
-   */
-
-  function pressed(max_frames = 1, min_frames = 0)
-  {
-    return __validate(INPUT.ACTION_PRESSED, min_frames, max_frames);
-  }
-
-
-
-  /**
-   *
-   */
-
-  function released(max_frames = 1, min_frames = 0)
-  {
-    return __validate(INPUT.ACTION_RELEASED, min_frames, max_frames);
-  }
-
-
-
-  /**
-   *
-   */
-
-  static __validate = function(input_type, min_frames, max_frames)
-  {
-    return __input_in_range(self.last_input_type_frames[input_type], min_frames, max_frames)
-      && self.check(input_type)
-    ;
-  }
-
-
-
-  /**
-   * @desc Checks whether the last input of a given type was performed within a specified time window.
-   * @param {Real} frame The frame of the last input to check.
-   * @param {Real} minval The minimum number of frames that should have passed since the last input.
-   * @param {Real} maxval The maximum number of frames that should have passed since
-   */
-
-  static __input_in_range = function(frame, minval, maxval)
-  {
-    var val = InputManager.GLOBAL_INPUT_FRAME - frame;
-    return val >= minval && val <= maxval;
   }
 }
 
@@ -863,11 +806,44 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
  *
  */
 
-function InputAction(context, binds) : InputPerformable(context) constructor
+function InputAction(binds, context, settings_mask) : InputPerformable(context, settings_mask) constructor
 {
-  static CHECK_FNS = [ InputDevice.held, InputDevice.pressed, InputDevice.released ];
-  static TIME_WINDOW_FRAMES_SEQUENCE = 15;
-  static TIME_WINDOW_FRAMES_CHORD = 5;
+  /**
+   * 
+   */
+
+  static __check = function(input_type = INPUT.ACTION_HELD, count = 1)
+  {
+    if (self.time() - self.last_performed_time > InputManager.TIME_WINDOW_FRAMES_SEQUENCE) {
+      self.last_input_info = INPUT.INFO_NONE;
+    }
+
+    __record(input_type);
+
+    return __querycount() >= count;
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static __input_info_sequence_idx = function(input_info = self.last_input_info)
+  {
+    return __bitmask_decode_region(INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT, INPUT.__BITMASK_INPUT_MASK_SEQUENCE_MASK, input_info);
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static __input_info_chord_idx = function(input_info = self.last_input_info)
+  {
+    return __bitmask_decode_region(INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT, INPUT.__BITMASK_INPUT_MASK_CHORD_MASK, input_info);
+  }
 
 
 
@@ -875,7 +851,76 @@ function InputAction(context, binds) : InputPerformable(context) constructor
    * !:
    */
 
-  static normalize = function(binds)
+  static __record = function(input_type)
+  {
+    var detected = false;
+
+    for (var i = 0; !detected && i < self.bind_count; ++i)
+      detected |= __check_performed(self.binds[i], input_type);
+
+    if (detected) {
+      self.last_performed_time = __bufferize();
+      self.last_input_info = INPUT.INFO_NONE;
+    }
+
+    return detected;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __check_performed = function(sequence, input_type)
+  {
+    var detected = true
+      , chord_count = array_length(sequence)
+    ;
+
+    for (var i = 0; detected && i < chord_count; ++i)
+    {
+      var key_count = array_length(sequence[i]);
+
+      for (var j = 0; j < key_count; ++j) {
+        self.last_input_info |= __check_device_input(chord[i], input_type) << INPUT.__BITMASK_INPUT_KEYS_SHIFT + j;
+      }
+
+      detected &= (self.last_input_info >> INPUT.__BITMASK_INPUT_KEYS_SHIFT) + 1 >> key_count;
+
+      if (detected) {
+        self.last_chord_time = self.time();
+      }
+    }
+
+    return detected;
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static __check_device_input = function(key, input_type)
+  {
+    var device = InputDevice.sourceof(key)
+      , device_mask = self.settings_mask >> INPUT.__BITMASK_DEVICE_STATUS_FLAG_COUNT * device
+    ;
+
+    return device_mask >> INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE & 1
+      ? InputDevice.check(input_type, key, self.context.player_index)
+      : 0
+    ;
+  }
+
+
+
+  /**
+   * !:
+   */
+
+  static __normalize = function(binds)
   {
     var ret = []
       , temp = binds
@@ -903,89 +948,10 @@ function InputAction(context, binds) : InputPerformable(context) constructor
 
 
 
-  /**
-   *
-   */
-
-  static sequence = function(idx)
-  {
-    return self.binds[idx + self.bind_count * (idx < 0)];
-  }
-
-
-
-  /**
-   *
-   */
-
-  static chord = function(idx, sequence = undefined)
-  {
-    if (sequence)
-      return sequence[idx];
-
-    for (var i = 0; i < self.bind_count; ++i)
-    {
-      var sequence_chord_count = array_length(self.binds[i]);
-
-      if (idx < sequence_chord_count) {
-        return self.binds[i][idx];
-      }
-
-      idx -= sequence_chord_count;
-    }
-
-    return undefined;
-  }
-
-
-
-  /**
-   * !:
-   */
-
-  static check = function(input_type = INPUT.ACTION_HELD)
-  {
-    var detected = false;
-
-    for (var i = 0; i < self.bind_count && !detected; ++i)
-      detected |= __check_sequence(self.sequence(i), input_type);
-
-    if (detected) {
-      self.context.source = InputDevice.sourceof(sequence[0]);
-      self.last_input_frame = InputManager.GLOBAL_INPUT_FRAME;
-      self.last_input_type_frames[input_type] = self.last_input_frame;
-    }
-
-    return detected;
-  }
-
-
-
-  /**
-   *
-   */
-
-  static __check_sequence = function(sequence, input_type)
-  {
-
-  }
-
-
-
-  /**
-   *
-   */
-
-  static __check_chord = function(chord, input_type)
-  {
-
-  }
-
-
-
-  self.binds = self.normalize(binds);
+  self.binds = __normalize(binds);
   self.bind_count = array_length(self.binds);
-  self.last_keystroke_info = 0;
+  self.last_input_info = INPUT.INFO_NONE;
+  self.last_chord_time = self.time();
 }
 
 
@@ -1016,7 +982,7 @@ function InputAction(context, binds) : InputPerformable(context) constructor
  *
  */
 
-function InputActionCombo(context, check_fn) : InputPerformable(context) constructor
+function InputActionCombo(check_fn, context, settings_mask) : InputPerformable(context, settings_mask) constructor
 {
   static COMBO_MAP = {
     combos: [],
