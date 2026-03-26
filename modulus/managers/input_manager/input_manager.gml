@@ -49,12 +49,10 @@ fsm.state_on_ground = function()
  * @version 0.5
  *
  * TO-DO LIST:
- * +: Make the input context save also the device index in the settings mask
- * +: Add player_mask to input context to save both player index and profile index
  *
+ * !: Ensure correct use of settings mask in InputAction.__check_device_input()
  * +: Validate keys and chords' pressing inside specified time window
  * +: Add support for pressing more times inside time window
- * +: Save/load functionalities
  *
  * #: InputAction.held(min = 1, max)
  * #: InputAction.pressed(max, min = 0)
@@ -64,8 +62,8 @@ fsm.state_on_ground = function()
  * +: InputAction.heldfortimes(n, duration, max, min = 0) (count the released - pressed differences >= duration inside the ttl)
  * +: InputAction.pressedaftertimes(n, pause, max, min = 0) (count all the press differences >= pause inside the ttl)
  * +: InputAction.releasedaftertimes(n, pause, max, min = 0) (count all the release differences >= pause inside the ttl)
- * 
- * !: Ensure correct use of settings mask in Struct.InputAction.__check_device_input()
+ *
+ * +: Save/load functionalities
  */
 
 
@@ -159,8 +157,9 @@ enum INPUT
   __BITMASK_INPUT_MASK_CHORD_BITS = 4,
   __BITMASK_INPUT_MASK_CHORD_MASK = (1 << INPUT.__BITMASK_INPUT_MASK_CHORD_BITS) - 1 << INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT,
   __BITMASK_INPUT_MASK_SEQUENCE_SHIFT = INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT + INPUT.__BITMASK_INPUT_MASK_CHORD_BITS,
-  __BITMASK_INPUT_MASK_SEQUENCE_BITS = 4,
+  __BITMASK_INPUT_MASK_SEQUENCE_BITS = 3,
   __BITMASK_INPUT_MASK_SEQUENCE_MASK = (1 << INPUT.__BITMASK_INPUT_MASK_SEQUENCE_BITS) - 1 << INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT,
+  __BITMASK_INPUT_MASK_POSITION_MASK = INPUT.__BITMASK_INPUT_MASK_CHORD_MASK | INPUT.__BITMASK_INPUT_MASK_SEQUENCE_MASK,
   __BITMASK_INPUT_KEYS_SHIFT = INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT + INPUT.__BITMASK_INPUT_MASK_SEQUENCE_BITS,
   __BITMASK_INPUT_KEYS_BITS = 16,
   __BITMASK_INPUT_KEYS_MASK = (1 << INPUT.__BITMASK_INPUT_KEYS_BITS) - 1 << INPUT.__BITMASK_INPUT_KEYS_SHIFT,
@@ -275,7 +274,7 @@ function InputManager(player_count, profile_count) constructor
    * @returns {Struct.InputManager} The input manager instance with the new profile added.
    */
 
-  static createprofile = function(profile_data, profile_idx = 0)
+  static profile_create = function(profile_data, profile_idx = 0)
   {
     var idx = profile_idx + self.profile_count * (profile_idx < 0);
 
@@ -304,7 +303,7 @@ function InputManager(player_count, profile_count) constructor
    *
    */
 
-  static alterprofile = function(player_index = 0, profile_idx = 0, profile_data = undefined)
+  static profile_edit = function(player_index = 0, profile_idx = 0, profile_data = undefined)
   {
     if (profile_data)
       self.input(player_index).profiles[profile_idx] = InputContext.__resolve_profile(profile_data);
@@ -339,7 +338,9 @@ function InputManager(player_count, profile_count) constructor
       for (var i = 0; i < self.player_count; ++i)
         self.player_inputs[i].step();
 
-    return ++InputManager.GLOBAL_INPUT_FRAME;
+    InputManager.GLOBAL_INPUT_FRAME = int64(InputManager.GLOBAL_INPUT_FRAME + 1);
+
+    return InputManager.GLOBAL_INPUT_FRAME;
   }
 
 
@@ -394,18 +395,18 @@ function InputManager(player_count, profile_count) constructor
 
 
 /**
- * 
+ *
  */
 
 function InputTimeable() constructor
 {
   /**
-   * 
+   *
    */
 
   static time = function()
   {
-    return InputManager.GLOBAL_INPUT_FRAME;
+    return int64(InputManager.GLOBAL_INPUT_FRAME);
   }
 }
 
@@ -472,7 +473,7 @@ function InputBitmaskable(settings_mask) : InputTimeable() constructor
 
 
   /**
-   * 
+   *
    */
 
   static __bitmask_decode_region = function(shift, mask, settings_mask = self.settings_mask)
@@ -562,7 +563,7 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
   self.player_index = player_index;
   self.profile_idx = INPUT.PROFILE_DEFAULT;
   self.settings_mask = settings_mask;
-  self.input_type_frames = array_create(INPUT.ACTION_COUNT, self.time());
+  self.input_profile_durations = array_create(INPUT.PROFILE_COUNT, self.time());
   self.buffer = array_create(INPUT.__INPUT_BUFFER_MAX_SIZE, 0);
   self.buffer_index = 0;
 
@@ -575,7 +576,7 @@ function InputContext(player_index, profiles, settings_mask) : InputBitmaskable(
 
   static step = function()
   {
-    self.input_type_frames[self.profile_idx] = self.time();
+    self.input_profile_durations[self.profile_idx] = self.time();
 
     return self;
   }
@@ -809,40 +810,62 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
 function InputAction(binds, context, settings_mask) : InputPerformable(context, settings_mask) constructor
 {
   /**
-   * 
-   */
-
-  static __check = function(input_type = INPUT.ACTION_HELD, count = 1)
-  {
-    if (self.time() - self.last_performed_time > InputManager.TIME_WINDOW_FRAMES_SEQUENCE) {
-      self.last_input_info = INPUT.INFO_NONE;
-    }
-
-    __record(input_type);
-
-    return __querycount() >= count;
-  }
-
-
-
-  /**
-   * 
+   *
    */
 
   static __input_info_sequence_idx = function(input_info = self.last_input_info)
   {
-    return __bitmask_decode_region(INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT, INPUT.__BITMASK_INPUT_MASK_SEQUENCE_MASK, input_info);
+    return __bitmask_decode_region(INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT, INPUT.__BITMASK_INPUT_MASK_SEQUENCE_MASK, input_info) - 1;
   }
 
 
 
   /**
-   * 
+   *
    */
 
   static __input_info_chord_idx = function(input_info = self.last_input_info)
   {
-    return __bitmask_decode_region(INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT, INPUT.__BITMASK_INPUT_MASK_CHORD_MASK, input_info);
+    return __bitmask_decode_region(INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT, INPUT.__BITMASK_INPUT_MASK_CHORD_MASK, input_info) - 1;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __input_info_encode_position = function(input_info, sequence_idx, chord_idx)
+  {
+    return __bitmask_rewrite_region(sequence_idx + 1, INPUT.__BITMASK_INPUT_MASK_SEQUENCE_SHIFT, INPUT.__BITMASK_INPUT_MASK_SEQUENCE_BITS, input_info)
+      | __bitmask_rewrite_region(chord_idx + 1, INPUT.__BITMASK_INPUT_MASK_CHORD_SHIFT, INPUT.__BITMASK_INPUT_MASK_CHORD_BITS, input_info)
+    ;
+  }
+
+
+
+  /**
+   *
+   */
+
+  static __check = function(input_type = INPUT.ACTION_HELD, count = 1)
+  {
+    var time = self.time();
+
+    if (time - self.last_performed_time > InputManager.TIME_WINDOW_FRAMES_SEQUENCE) {
+      self.last_input_info = INPUT.INFO_NONE;
+    }
+
+    if (time - self.last_chord_time > InputManager.TIME_WINDOW_FRAMES_CHORD) {
+      self.last_input_info &= ~INPUT.__BITMASK_INPUT_KEYS_MASK;
+    }
+
+    if (__record(input_type)) {
+      self.last_performed_time = __bufferize();
+      self.last_input_info = INPUT.INFO_NONE;
+    }
+
+    return __querycount() >= count;
   }
 
 
@@ -855,13 +878,10 @@ function InputAction(binds, context, settings_mask) : InputPerformable(context, 
   {
     var detected = false;
 
-    for (var i = 0; !detected && i < self.bind_count; ++i)
-      detected |= __check_performed(self.binds[i], input_type);
-
-    if (detected) {
-      self.last_performed_time = __bufferize();
-      self.last_input_info = INPUT.INFO_NONE;
-    }
+    if (self.last_input_info & INPUT.__BITMASK_INPUT_MASK_POSITION_MASK)
+      detected = __check_performed(__input_info_sequence_idx(), input_type);
+    else for (var i = 0; !detected && i < self.bind_count; ++i)
+      detected |= __check_performed(i, input_type);
 
     return detected;
   }
@@ -872,34 +892,41 @@ function InputAction(binds, context, settings_mask) : InputPerformable(context, 
    *
    */
 
-  static __check_performed = function(sequence, input_type)
+  static __check_performed = function(sequence_idx, input_type)
   {
-    var detected = true
+    var sequence = self.binds[sequence_idx]
       , chord_count = array_length(sequence)
+      , chord_idx = self.last_input_info & INPUT.__BITMASK_INPUT_MASK_POSITION_MASK
+        ? __input_info_chord_idx()
+        : 0
+      , chord = sequence[chord_idx]
+      , key_count = array_length(chord)
+        var key_mask = 0
     ;
 
-    for (var i = 0; detected && i < chord_count; ++i)
-    {
-      var key_count = array_length(sequence[i]);
-
-      for (var j = 0; j < key_count; ++j) {
-        self.last_input_info |= __check_device_input(chord[i], input_type) << INPUT.__BITMASK_INPUT_KEYS_SHIFT + j;
-      }
-
-      detected &= (self.last_input_info >> INPUT.__BITMASK_INPUT_KEYS_SHIFT) + 1 >> key_count;
-
-      if (detected) {
-        self.last_chord_time = self.time();
-      }
+    for (var key = 0; key < key_count; ++key) {
+      key_mask |= __check_device_input(chord[key], input_type) << key;
     }
 
-    return detected;
+    if (key_mask && chord_idx > chord_check_idx) {
+      self.last_input_info = __input_info_encode_position(self.last_input_info, sequence_idx, chord_idx);
+    }
+
+    self.last_input_info |= key_mask << INPUT.__BITMASK_INPUT_KEYS_SHIFT;
+
+    var detected = key_mask + 1 >> key_count;
+
+    if (detected) {
+      self.last_chord_time = self.time();
+    }
+
+    return chord_idx + detected >= chord_count;
   }
 
 
 
   /**
-   * 
+   *
    */
 
   static __check_device_input = function(key, input_type)

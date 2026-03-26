@@ -5135,7 +5135,7 @@ function DialogLinkable(dialog_items, settings_mask, id = undefined) : DialogIte
 
   /**
    * @desc Makes the current dialog linkable object derive from a specified fx adding it to the fx flow option list. [CHAINABLE]
-   * @param {Struct.DialogFX} fx The effect derive the dialog linkable from.
+   * @param {Struct.DialogFX} fx The effect from where the dialog linkable derives.
    * @param {String} [prompt] The choice's option text.
    * @param {Real} [index] The index where to insert the new option in the option list. Defaults to list length.
    * @param {Constant.DIALOG_RUNNER|Real} [jump_metadata_settings] The settings mask for the flow option.
