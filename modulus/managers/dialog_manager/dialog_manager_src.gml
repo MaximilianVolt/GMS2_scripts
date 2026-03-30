@@ -278,8 +278,8 @@ function dialog_fx_create_jump(settings_mask = 0, flow_option = undefined)
  * @param {Constant.DIALOG_FX|Real} [settings_mask] The effect info.
  * @param {Array} [flow_options] The jump options' data.
  * @param {Constant.DIALOG_FX|Real} [fx_indexer_index] The indexer function index to evaluate.
- * @param {Array} [fx_indexer_argv] The arguments of the indexer function.
  * @param {Constant.DIALOG_FX|Real} [fx_condition_index] The condition function index to evaluate.
+ * @param {Array} [fx_indexer_argv] The arguments of the indexer function.
  * @param {Array} [fx_condition_argv] The additional arguments to pass to the condition function.
  * @returns {Struct.DialogFX}
  */
@@ -938,7 +938,7 @@ function DialogRunner(manager) constructor
 
 /**
  * @desc `DialogManager` constructor.
- * @param {String} [lang] The language to load from the file. Overridden if deserialized otherwise. Defaults to `"en"`.
+ * @param {String} lang The language to load from the file. Overridden if deserialized otherwise. Defaults to `"en"`.
  * @param {String|Id.TextFile} data_string The data to parse.
  * @param {Bool} is_file Specifies whether `data_string` is a file (`true`) or not (`false`).
  * @returns {Struct.DialogManager}
@@ -1934,7 +1934,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   /**
    * @desc Returns the unique id for a given level of DialogItem.
-   * @param {Real} level The level of the DialogItem to get the unique id for.
+   * @param {Struct.DialogItem} item The item to get the unique id for.
    * @param {Real} [id] The deserialized id.
    * @returns {Real}
    */
@@ -5020,7 +5020,7 @@ function DialogItem(settings_mask, id) constructor
 
 /**
  * @desc `DialogLinkable` constructor. Used to generalize dialog components' types.
- * @param {Array<DialogLinkable|Any>} dialog_items The items of the dialogical entity.
+ * @param {Array<Struct.DialogLinkable>} dialog_items The items of the dialogical entity.
  * @param {Real} settings_mask The settings mask for the dialogical entity.
  * @param {Real} [id] The optional ID for the dialogical entity. If not provided, an ID will be automatically assigned.
  * @returns {Struct.DialogLinkable}

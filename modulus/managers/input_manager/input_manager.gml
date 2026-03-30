@@ -773,7 +773,7 @@ function InputPerformable(context, settings_mask) : InputBitmaskable(settings_ma
       idx += INPUT.__INPUT_BUFFER_MAX_SIZE * (idx == 0) - 1;
 
     for (; time - buffer[idx].time <= max_frames; idx += INPUT.__INPUT_BUFFER_MAX_SIZE * (idx == 0) - 1)
-      count += check_fn(buffer[i]);
+      count += check_fn(buffer[idx]);
 
     return count;
   }
@@ -852,14 +852,14 @@ function InputAction(binds, context, settings_mask) : InputPerformable(context, 
   {
     var time = self.time();
 
-    if (time - self.last_performed_time > InputManager.TIME_WINDOW_FRAMES_SEQUENCE) {
+    if (self.last_input_info && time - self.last_chord_time > InputManager.TIME_WINDOW_FRAMES_CHORD) {
+      self.last_input_info &= ~INPUT.__BITMASK_INPUT_KEYS_MASK;
+    }
+    else if (time - self.last_chord_time > InputManager.TIME_WINDOW_FRAMES_SEQUENCE) {
       self.last_input_info = INPUT.INFO_NONE;
     }
 
-    if (time - self.last_chord_time > InputManager.TIME_WINDOW_FRAMES_CHORD) {
-      self.last_input_info &= ~INPUT.__BITMASK_INPUT_KEYS_MASK;
-    }
-
+    // +: Do not add "held" actions, optimize press and release
     if (__record(input_type)) {
       self.last_performed_time = __bufferize();
       self.last_input_info = INPUT.INFO_NONE;
@@ -897,30 +897,30 @@ function InputAction(binds, context, settings_mask) : InputPerformable(context, 
     var sequence = self.binds[sequence_idx]
       , chord_count = array_length(sequence)
       , chord_idx = self.last_input_info & INPUT.__BITMASK_INPUT_MASK_POSITION_MASK
-        ? __input_info_chord_idx()
-        : 0
+          ? __input_info_chord_idx()
+          : 0
       , chord = sequence[chord_idx]
       , key_count = array_length(chord)
-        var key_mask = 0
+      , key_mask = 0
     ;
 
-    for (var key = 0; key < key_count; ++key) {
-      key_mask |= __check_device_input(chord[key], input_type) << key;
+    while (key_count--) {
+      key_mask |= __check_device_input(chord[key_count], input_type) << key_count;
     }
 
-    if (key_mask && chord_idx > chord_check_idx) {
+    if (key_mask) {
       self.last_input_info = __input_info_encode_position(self.last_input_info, sequence_idx, chord_idx);
     }
 
     self.last_input_info |= key_mask << INPUT.__BITMASK_INPUT_KEYS_SHIFT;
 
-    var detected = key_mask + 1 >> key_count;
+    var chord_detected = key_mask + 1 >> key_count;
 
-    if (detected) {
+    if (chord_detected) {
       self.last_chord_time = self.time();
     }
 
-    return chord_idx + detected >= chord_count;
+    return chord_idx + chord_detected >= chord_count;
   }
 
 
@@ -936,8 +936,7 @@ function InputAction(binds, context, settings_mask) : InputPerformable(context, 
     ;
 
     return device_mask >> INPUT.__BITMASK_DEVICE_STATUS_FLAG_INDEX_ACTIVE & 1
-      ? InputDevice.check(input_type, key, self.context.player_index)
-      : 0
+      && InputDevice.check(input_type, key, self.context.player_index)
     ;
   }
 
