@@ -315,11 +315,15 @@ function StateMachine(machine_idx, executor) constructor
 
   static __cycle = function(current_state = self.state, target_state = self.state)
   {
-    var cycle = STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP;
+    var cycle = STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP
+      , execution_state = current_state
+    ;
 
-    while (current_state != target_state && cycle--) {
-      target_state = current_state.out() ?? target_state;
-      current_state = target_state.in() ?? target_state;
+    while (execution_state != target_state && cycle--)
+    {
+      target_state = execution_state.out() ?? target_state;
+      execution_state = target_state;
+      target_state = target_state.in() ?? execution_state;
     }
 
     if (!cycle) {
