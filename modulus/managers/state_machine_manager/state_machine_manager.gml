@@ -261,7 +261,7 @@ function StateMachine(machine_idx, executor) constructor
   /**
    * @desc Retrieves the state machine's history of previously active states.
    * @param {Real|Array} [index] Optional index or indices to retrieve specific historical states. If not provided, the entire history array is returned.
-   * @returns {Array<Struct.StateMachineState>|Struct.StateMachineState}
+   * @returns {Array<Struct.StateMachineState>}
    */
 
   static historyget = function(index)
