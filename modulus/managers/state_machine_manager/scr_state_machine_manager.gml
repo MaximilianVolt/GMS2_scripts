@@ -328,7 +328,7 @@ function StateMachine(machine_idx, executor) constructor
 
     if (!cycle) {
       throw StateMachineManager.ERROR(STATE_MACHINE.ERR_INFINITE_RESOLUTION_LOOP, [
-        STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP, current_state.name
+        STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP, execution_state.name
       ]);
     }
 
