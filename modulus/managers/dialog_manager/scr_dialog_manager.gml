@@ -9,8 +9,11 @@
 
 #macro __DIALOG_MANAGER_VERSION__             "0.12.4"
 #macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/dialog_manager"
+
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
 #macro __DIALOG_MANAGER_DESERIALIZER_METHOD__ __from_struct // Must be <__from_struct> or <__from_array>
+
+
 
 // Self-initialization
 gml_pragma(
@@ -356,33 +359,33 @@ function dialog_fx_create_from_struct(data)
   return dialog_fx_create(data.settings_mask, data.argv, data.id);
 }
 
-
-
-
-
-
-
-
-
-
-
-
 #endregion
+
+
+
+
+
+
+
+
+
+
+
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
 #region Main classes
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * @desc `DialogRunner` constructor. Manages runtime state and position in the dialog graph.
@@ -4337,33 +4340,33 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
 #endregion
+
+
+
+
+
+
+
+
+
+
+
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
 #region Support classes
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * @desc `DialogCycleContext` constructor. Provides per-cycle caching for condition and indexer evaluations.

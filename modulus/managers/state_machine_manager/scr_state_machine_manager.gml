@@ -7,31 +7,57 @@
 
 
 
+#macro __STATE_MACHINE_VERSION__              "0.5.2"
+#macro __STATE_MACHINE_LINK__                 "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
+
 #macro __STATE_MACHINE_FIELD_ID__             "id"
 #macro __STATE_MACHINE_FIELD_PARENT_ID__      "parent"
 #macro __STATE_MACHINE_FIELD_IN_FUNCTION__    "in"
 #macro __STATE_MACHINE_FIELD_OUT_FUNCTION__   "out"
 #macro __STATE_MACHINE_FIELD_STATE_FUNCTION__ "run"
 #macro __STATE_MACHINE_FIELD_NAME__           "name"
-#macro __STATE_MACHINE_LINK__                 "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
-#macro __STATE_MACHINE_VERSION__              "0.5.2"
 
 
 
 gml_pragma("global", "new StateMachineManager(); new StateMachineState();");
 
+
+
+
+
+
+
+
+
+
+
+
 // ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 
 #region Lib functions
 
+/**
+ * @desc Registers a state machine template.
+ * @param {Constant.STATE_MACHINE} machine_idx The index of the state machine template to register.
+ * @param {Struct} machine_data The state machine template.
+ * @returns {Struct}
+ */
 
-
-
-
-
-
-
-
+function state_machine_register(machine_idx, machine_data)
+{
+  return StateMachineManager.machine(machine_idx, machine_data);
+}
 
 
 
@@ -39,7 +65,7 @@ gml_pragma("global", "new StateMachineManager(); new StateMachineState();");
  * @desc Creates a state machine instance. Returns the instance for chaining.
  * @param {Constant.STATE_MACHINE} machine_idx The index of the state machine to create.
  * @param {Asset.GMObject|Id.Instance} executor The executor object for the state machine.
- * @returns {Struct.StateMachine} The created state machine instance.
+ * @returns {Struct.StateMachine}
  */
 
 function state_machine_create(machine_idx, executor)
