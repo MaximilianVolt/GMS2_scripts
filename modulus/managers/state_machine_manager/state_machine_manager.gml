@@ -2,18 +2,19 @@
  * @desc A lightweight index-based state machine manager.
  * @link https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager
  * @author @MaximilianVolt
- * @version 0.5.1
+ * @version 0.5.2
  */
 
 
 
-#macro __STATE_MACHINE_FIELD_NAME_ID__             "id"
-#macro __STATE_MACHINE_FIELD_NAME_PARENT_ID__      "parent"
-#macro __STATE_MACHINE_FIELD_NAME_IN_FUNCTION__    "in"
-#macro __STATE_MACHINE_FIELD_NAME_OUT_FUNCTION__   "out"
-#macro __STATE_MACHINE_FIELD_NAME_STATE_FUNCTION__ "run"
-#macro __STATE_MACHINE_LINK__                      "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
-#macro __STATE_MACHINE_VERSION__                   "0.5.1"
+#macro __STATE_MACHINE_FIELD_ID__             "id"
+#macro __STATE_MACHINE_FIELD_PARENT_ID__      "parent"
+#macro __STATE_MACHINE_FIELD_IN_FUNCTION__    "in"
+#macro __STATE_MACHINE_FIELD_OUT_FUNCTION__   "out"
+#macro __STATE_MACHINE_FIELD_STATE_FUNCTION__ "run"
+#macro __STATE_MACHINE_FIELD_NAME__           "name"
+#macro __STATE_MACHINE_LINK__                 "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
+#macro __STATE_MACHINE_VERSION__              "0.5.2"
 
 
 
@@ -135,7 +136,7 @@ function StateMachineManager() constructor
     static messages = [
       "UNKNOWN ERROR TYPE: {0}",
       "CIRCULAR INHERITANCE DETECTED. VIOLATING STATE: {0}",
-      "INFINITE RESOLUTION LOOP DETECTED: EXCEEDED SAFE LIMIT OF {0} ITERATIONS",
+      "INFINITE RESOLUTION LOOP DETECTED: EXCEEDED SAFE LIMIT OF {0} ITERATIONS. LAST RESOLVED STATE: {1}",
     ];
 
     if (type < 0 || type >= STATE_MACHINE.ERR_COUNT)
@@ -323,7 +324,7 @@ function StateMachine(machine_idx, executor) constructor
 
     if (!cycle) {
       throw StateMachineManager.ERROR(STATE_MACHINE.ERR_INFINITE_RESOLUTION_LOOP, [
-        STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP
+        STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP, current_state.name
       ]);
     }
 
@@ -355,11 +356,12 @@ function StateMachine(machine_idx, executor) constructor
           ? StateMachineState.fromfunction(self, state_data)
           : new StateMachineState(
               self,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME_ID__            ) ? state_data[$ __STATE_MACHINE_FIELD_NAME_ID__            ] : self.yieldid(),
-              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME_STATE_FUNCTION__) ? state_data[$ __STATE_MACHINE_FIELD_NAME_STATE_FUNCTION__] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME_IN_FUNCTION__   ) ? state_data[$ __STATE_MACHINE_FIELD_NAME_IN_FUNCTION__   ] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME_OUT_FUNCTION__  ) ? state_data[$ __STATE_MACHINE_FIELD_NAME_OUT_FUNCTION__  ] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME_PARENT_ID__     ) ? state_data[$ __STATE_MACHINE_FIELD_NAME_PARENT_ID__     ] : undefined
+              struct_exists(state_data, __STATE_MACHINE_FIELD_ID__            ) ? state_data[$ __STATE_MACHINE_FIELD_ID__            ] : self.yieldid(),
+              struct_exists(state_data, __STATE_MACHINE_FIELD_STATE_FUNCTION__) ? state_data[$ __STATE_MACHINE_FIELD_STATE_FUNCTION__] : undefined,
+              struct_exists(state_data, __STATE_MACHINE_FIELD_IN_FUNCTION__   ) ? state_data[$ __STATE_MACHINE_FIELD_IN_FUNCTION__   ] : undefined,
+              struct_exists(state_data, __STATE_MACHINE_FIELD_OUT_FUNCTION__  ) ? state_data[$ __STATE_MACHINE_FIELD_OUT_FUNCTION__  ] : undefined,
+              struct_exists(state_data, __STATE_MACHINE_FIELD_PARENT_ID__     ) ? state_data[$ __STATE_MACHINE_FIELD_PARENT_ID__     ] : undefined,
+              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME__          ) ? state_data[$ __STATE_MACHINE_FIELD_NAME__          ] : key
             )
       ;
 
@@ -452,10 +454,11 @@ function StateMachine(machine_idx, executor) constructor
  * @param {Function} [in_fn] Optional function to execute when entering the state.
  * @param {Function} [out_fn] Optional function to execute when exiting the state.
  * @param {Real|Struct.StateMachineState} [parent_id] Optional ID or reference to the parent state for inheritance.
+ * @param {String} [name] Optional name of the state for debugging purposes.
  * @returns {Struct.StateMachineState}
  */
 
-function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constructor
+function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) constructor
 {
   static __FUNC_EMPTY = function() {};
 
@@ -469,6 +472,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
   self.in_fn = method(self, in_fn ?? __FUNC_EMPTY);
   self.out_fn = method(self, out_fn ?? __FUNC_EMPTY);
 
+  self.name = name ?? $"state_{self.id}";
   self.fsm = machine;
   self.parent = parent_id;
   self.executor = machine.executor;
