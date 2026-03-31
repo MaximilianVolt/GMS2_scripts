@@ -259,7 +259,7 @@ function StateMachine(machine_idx, executor) constructor
 
 
   /**
-   * 
+   *
    */
 
   static history = function(index)
