@@ -262,7 +262,7 @@ function StateMachine(machine_idx, executor) constructor
    *
    */
 
-  static history = function(index)
+  static historyget = function(index)
   {
     if (is_undefined(index))
       return undefined;
