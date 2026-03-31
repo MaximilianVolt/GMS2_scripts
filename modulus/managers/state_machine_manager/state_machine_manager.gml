@@ -2,7 +2,7 @@
  * @desc A lightweight index-based state machine manager.
  * @link https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager
  * @author @MaximilianVolt
- * @version 0.5.0
+ * @version 0.5.1
  */
 
 
@@ -13,7 +13,7 @@
 #macro __STATE_MACHINE_FIELD_NAME_OUT_FUNCTION__   "out"
 #macro __STATE_MACHINE_FIELD_NAME_STATE_FUNCTION__ "run"
 #macro __STATE_MACHINE_LINK__                      "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
-#macro __STATE_MACHINE_VERSION__                   "0.5.0"
+#macro __STATE_MACHINE_VERSION__                   "0.5.1"
 
 
 
@@ -37,7 +37,7 @@ gml_pragma("global", "new StateMachineManager();");
 /**
  * @desc Creates a state machine instance. Returns the instance for chaining.
  * @param {Constant.STATE_MACHINE} machine_idx The index of the state machine to create.
- * @param {Asset.GMObject} executor The executor object for the state machine.
+ * @param {Asset.GMObject|Id.Instance} executor The executor object for the state machine.
  * @returns {Struct.StateMachine} The created state machine instance.
  */
 
@@ -84,7 +84,7 @@ function StateMachineManager() constructor
 {
   /**
    * @desc Enum for state machine and state indices, as well as error types.
-   * @desc `FSM_*` constants refer to state machine and state indices.
+   * @desc `FSM_*` constants refer to state machine and state indices and options.
    * @desc `ERR_*` constants refer to error types.
    * @desc `ERRCHECK_*` constants refer to error check limits.
    */
@@ -103,6 +103,9 @@ function StateMachineManager() constructor
     FSM_PLAYER_STATE_COUNT,
 
     // ...
+
+    // State machine options
+    FSM_HISTORY_SIZE = 8,
 
     // Error
     ERR_UNDEFINED_ERROR_TYPE = 0,
@@ -229,10 +232,11 @@ function StateMachine(machine_idx, executor) constructor
 
     var initial_state = self.state_map[$ state_id];
 
-    self.state = execute_transition
-      ? __cycle(initial_state, initial_state.input(argv_initial_state).in())
-      : initial_state
-    ;
+    self.state = __update_history(
+      execute_transition
+        ? __cycle(initial_state, initial_state.input(argv_initial_state).in())
+        : initial_state
+    );
 
     return self;
   }
@@ -255,6 +259,30 @@ function StateMachine(machine_idx, executor) constructor
 
 
   /**
+   * 
+   */
+
+  static history = function(index)
+  {
+    if (is_undefined(index))
+      return undefined;
+
+    if (!is_array(index))
+      index = [index];
+
+    var register_count = min(self.history_size, STATE_MACHINE.FSM_HISTORY_SIZE)
+      , ret = []
+    ;
+
+    for (var i = array_length(index) - 1; i >= 0; --i)
+      ret[i] = self.history[index[i] + register_count * (index[i] < 0)];
+
+    return ret;
+  }
+
+
+
+  /**
    * @desc Determines the target state resolving transition cycles returning the resolved state.
    * @param {Array} [argv_current_state] Optional input arguments for the current state. If not provided, the current state's input will be used.
    * @returns {Struct.StateMachineState}
@@ -263,10 +291,13 @@ function StateMachine(machine_idx, executor) constructor
   static __step = function(argv_current_state)
   {
     var current_state = self.state
-      , target_state = current_state.input(argv_current_state).run() ?? current_state
+      , target_state = current_state.input(argv_current_state).run()
     ;
 
-    return __cycle(current_state, target_state);
+    return target_state
+      ? __update_history(__cycle(current_state, target_state ?? current_state))
+      : current_state
+    ;
   }
 
 
@@ -361,10 +392,29 @@ function StateMachine(machine_idx, executor) constructor
 
 
 
+  /**
+   * @desc Updates the state machine's history with the new state and returns it.
+   * @param {Struct.StateMachineState} new_state The new state to add to the history.
+   * @returns {Struct.StateMachineState}
+   */
+
+  static __update_history = function(new_state)
+  {
+    array_insert(self.history, 0, new_state);
+    array_resize(self.history, STATE_MACHINE.FSM_HISTORY_SIZE);
+    ++self.history_size;
+
+    return new_state;
+  }
+
+
+
   self.state_map = {};
   self.state_count = 0;
   self.executor = executor;
   self.state_id_generator = STATE_MACHINE.FSM_STATE_NONE;
+  self.history = array_create(STATE_MACHINE.FSM_HISTORY_SIZE, undefined);
+  self.history_size = 0;
   __resolve(machine_idx);
 }
 
@@ -446,7 +496,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
 
   static input = function(argv)
   {
-    if (argv == undefined)
+    if (is_undefined(argv))
       return self;
 
     self.input_array = is_array(argv) ? argv : [argv];
@@ -465,7 +515,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
 
   static inputget = function(index = undefined)
   {
-    if (index == undefined)
+    if (is_undefined(index))
       return self.input_array;
 
     if (!is_array(index))
@@ -490,7 +540,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
 
   static inputadd = function(argv, index = self.input_count)
   {
-    if (argv == undefined)
+    if (is_undefined(argv))
       return self;
 
     self.input_array[index] = argv;
@@ -526,7 +576,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
 
   static output = function(argv)
   {
-    if (argv == undefined)
+    if (is_undefined(argv))
       return self;
 
     self.output_array = is_array(argv) ? argv : [argv];
@@ -545,7 +595,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
 
   static outputget = function(index = undefined)
   {
-    if (index == undefined)
+    if (is_undefined(index))
       return self.output_array;
 
     if (!is_array(index))
@@ -570,7 +620,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
 
   static outputadd = function(argv, index = self.output_count)
   {
-    if (argv == undefined)
+    if (is_undefined(argv))
       return self;
 
     self.output_array[index] = argv;
