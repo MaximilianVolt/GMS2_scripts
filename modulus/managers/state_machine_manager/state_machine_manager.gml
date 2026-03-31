@@ -346,6 +346,7 @@ function StateMachine(machine_idx, executor) constructor
     ;
 
     self.state_count = array_length(keys);
+    self.state_id_generator = self.state_count;
 
     // ID mapping
     for (var i = 0; i < self.state_count; ++i)
@@ -353,7 +354,7 @@ function StateMachine(machine_idx, executor) constructor
       var key = keys[i]
         , state_data = machine_data[$ key]
         , state = is_callable(state_data)
-          ? StateMachineState.fromfunction(self, state_data)
+          ? StateMachineState.fromfunction(self, state_data, key)
           : new StateMachineState(
               self,
               struct_exists(state_data, __STATE_MACHINE_FIELD_ID__            ) ? state_data[$ __STATE_MACHINE_FIELD_ID__            ] : self.yieldid(),
@@ -487,12 +488,13 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @desc Creates a state struct from a function. The function becomes the `run` method of the state, and the state is assigned a unique ID. Returns the created state struct.
    * @param {Struct.StateMachine} machine The state machine to which this state belongs.
    * @param {Function} run_fn The function to execute when the state is run.
+   * @param {String} [name] Optional name of the state for debugging purposes.
    * @returns {Struct.StateMachineState}
    */
 
-  static fromfunction = function(machine, run_fn)
+  static fromfunction = function(machine, run_fn, name)
   {
-    return new StateMachineState(machine, machine.yieldid(), run_fn, undefined, undefined, STATE_MACHINE.FSM_STATE_NONE);
+    return new StateMachineState(machine, machine.yieldid(), run_fn, undefined, undefined, STATE_MACHINE.FSM_STATE_NONE, name);
   }
 
 
