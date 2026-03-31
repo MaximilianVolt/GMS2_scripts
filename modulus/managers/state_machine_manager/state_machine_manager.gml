@@ -17,7 +17,7 @@
 
 
 
-gml_pragma("global", "new StateMachineManager();");
+gml_pragma("global", "new StateMachineManager(); new StateMachineState();");
 
 // ----------------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ function StateMachineManager() constructor
     // ...
 
     // State machine options
-    FSM_HISTORY_SIZE = 8,
+    FSM_HISTORY_SIZE = 4,
 
     // Error
     ERR_UNDEFINED_ERROR_TYPE = 0,
@@ -267,7 +267,7 @@ function StateMachine(machine_idx, executor) constructor
   static historyget = function(index)
   {
     if (is_undefined(index))
-      return undefined;
+      return self.history;
 
     if (!is_array(index))
       index = [index];
@@ -460,6 +460,9 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id) constr
   static __FUNC_EMPTY = function() {};
 
 
+
+  if (!machine)
+    return self;
 
   self.id = machine.yieldid(id);
   self.run_fn = method(self, run_fn ?? __FUNC_EMPTY);
