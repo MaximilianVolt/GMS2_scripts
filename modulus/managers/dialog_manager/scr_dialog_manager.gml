@@ -34,18 +34,18 @@ gml_pragma(
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
 #region Lib functions
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @desc `DialogRunner` constructor.
@@ -359,33 +359,33 @@ function dialog_fx_create_from_struct(data)
   return dialog_fx_create(data.settings_mask, data.argv, data.id);
 }
 
+
+
+
+
+
+
+
+
+
+
+
 #endregion
-
-
-
-
-
-
-
-
-
-
-
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
 #region Main classes
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @desc `DialogRunner` constructor. Manages runtime state and position in the dialog graph.
@@ -531,6 +531,8 @@ function DialogRunner(manager) constructor
 
 
   static __CONSTRUCTOR_ARGC = argument_count;
+
+
 
   self.manager = manager;
 
@@ -2637,6 +2639,9 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
     __BITMASK_TAG_BITS = 5,
     __BITMASK_TAG_MASK = (1 << DIALOG_SCENE.__BITMASK_TAG_BITS) - 1 << DIALOG_SCENE.__BITMASK_TAG_SHIFT,
   }
+
+
+
   static __CONSTRUCTOR_ARGC = argument_count;
   static __LEVEL = DIALOG_ITEM.LEVEL_SCENE;
 
@@ -4340,33 +4345,33 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
 #endregion
-
-
-
-
-
-
-
-
-
-
-
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
 #region Support classes
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @desc `DialogCycleContext` constructor. Provides per-cycle caching for condition and indexer evaluations.
@@ -4379,6 +4384,8 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 function DialogCycleContext(runner, position, target_position) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
+
+
 
   self.runner = runner;
   self.dialog = runner.manager.__to_dialog(position);
@@ -4534,6 +4541,10 @@ function DialogCycleContext(runner, position, target_position) constructor
 
 function DialogItemContainer(items, parent) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
+
+
+
   self.item_count = 0;
   self.items = [];
 
@@ -5031,6 +5042,10 @@ function DialogItem(settings_mask, id) constructor
 
 function DialogLinkable(dialog_items, settings_mask, id = undefined) : DialogItem(settings_mask, id) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
+
+
+
   self.container = new DialogItemContainer(dialog_items, self);
 
 

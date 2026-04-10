@@ -34,18 +34,18 @@ gml_pragma("global", "new StateMachineManager(); new StateMachineState();");
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
 #region Lib functions
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @desc Registers a state machine template.
@@ -146,6 +146,7 @@ function StateMachineManager() constructor
 
 
 
+  static __CONSTRUCTOR_ARGC = argument_count;
   static MACHINES = array_create(STATE_MACHINE.FSM_COUNT, undefined);
 
 
@@ -229,6 +230,10 @@ function StateMachineManager() constructor
 
 function StateMachine(machine_idx, executor) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
+
+
+
   /**
    * @desc Generates a unique state ID. If an ID is provided, it ensures that the generated ID is greater than or equal to the provided ID.
    * @param {Real} [id] Optional ID to ensure the generated ID is greater.
@@ -291,7 +296,7 @@ function StateMachine(machine_idx, executor) constructor
    * @returns {Array<Struct.StateMachineState>}
    */
 
-  static historyget = function(index)
+  static historyget = function(index = undefined)
   {
     if (is_undefined(index))
       return self.history;
@@ -339,7 +344,7 @@ function StateMachine(machine_idx, executor) constructor
    * @returns {Struct.StateMachineState}
    */
 
-  static __cycle = function(current_state = self.state, target_state = self.state)
+  static __cycle = function(current_state, target_state)
   {
     var cycle = STATE_MACHINE.ERRCHECK_INFINITE_RESOLUTION_LOOP
       , execution_state = current_state
@@ -491,6 +496,7 @@ function StateMachine(machine_idx, executor) constructor
 
 function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) constructor
 {
+  static __CONSTRUCTOR_ARGC = argument_count;
   static __FUNC_EMPTY = function() {};
 
 
