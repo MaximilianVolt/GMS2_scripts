@@ -7,10 +7,29 @@
  *
  * !: Stick to a single timesource per sound. BGMs will be arrays of tracks -> 1 timesource/track
  * !: Have a way to know which loop has to be "consumed". If no loop is "marked for consumption", consume all iterations with the amount needed for each loop.
- * +: Add Sound.onloopenter(fn, loop), Sound.onloopleave(fn, loop), Sound.onloop(fn, loop), Sound.every(time, fn)
+ * 
+ * #: BASE SOUND FUNCTIONALITY
+ * +: Implement options for sorting loops
+ * +: Add Sound.loop_data being a matrix LOOP_COUNT x 2 to account for loop iterations and max iterations for each loop
+ * +: Implement options for increasing the cap of the max loop iterations
+ * +: Implement timesources and ensure that all play/pause/pitch/move methods properly update them
+ * +: Loops are considered only if active (SoundLoop.status), else they are skipped without counting them
+ * +: Add SoundLoop.parent() to find the parent loop if existent (p.start < l.start && p.end > l.end)
+ * +: Add SoundLoop.onenter(fn), SoundLoop.onleave(fn), SoundLoop.onloop(fn), Sound.every(time, fn)
+ * +: Add Sound.clone() to copy asset data (without sound instances)
+ * 
+ * #: BGM SOUND FUNCTIONALITY
+ * +: Ensure all BGM channels work correctly (channels for sync groups)
+ * +: Resolve dynamic BPM and tempo sections time resolutions: calculate beats (quarters) and use them to calculate the integral to get the time
  * +: Add SoundBGM.every(time, unit, fn), SoundBGM.onbeat(fn, [beat]), SoundBGM.onmeasure(fn, [measure])
+ * 
+ * #: SOUND MANAGER FUNCTIONALITY
+ * +: Add methods to operate with sound buses and effects
+ * +: Add sound queues and lists and have settings to allow multiple tracks to fade in/out
+ *
+ * #: MUSIC MANAGER FUNCTIONALITY
+ * +: Add methods to transition between tracks allowing for fade-in/out channels with prior riffs and stuff
  */
-
 
 
 
@@ -26,13 +45,54 @@ function SoundManager() constructor
 
   enum SOUND_MANAGER
   {
+    // Sound priority
     SOUND_PRIORITY_NONE,
     SOUND_PRIORITY_UNCATEGORIZED,
     SOUND_PRIORITY_BGM,
     SOUND_PRIORITY_BGS,
     SOUND_PRIORITY_SFX,
+    SOUND_PRIORITY_COUNT,
+
+    // Bitmasks
+    LOOP_OPTION_SORT_SHORTEST_FIRST = 0,
+    LOOP_OPTION_SORT_LONGEST_FIRST,
+    LOOP_OPTION_SORT_COUNT,
+    __BITMASK_LOOP_OPTION_SORT_SHIFT = 0,
+    __BITMASK_LOOP_OPTION_SORT_BITS = 2,
+    __BITMASK_LOOP_OPTION_SORT_MASK = (1 << SOUND_MANAGER.__BITMASK_LOOP_OPTION_SORT_BITS) - 1 << SOUND_MANAGER.__BITMASK_LOOP_OPTION_SORT_SHIFT,
+
+    // Settings indices
+    __BITMASK_LOOP_SETTINGS_SHIFT = SOUND_MANAGER.__BITMASK_LOOP_OPTION_SORT_SHIFT + SOUND_MANAGER.__BITMASK_LOOP_OPTION_SORT_BITS,
+    __BITMASK_FLAG_INDEX_LOOP_SETTING_REFRESH_INNER = 0,
+    __BITMASK_FLAG_LOOP_SETTINGS_COUNT,
+    __BITMASK_LOOP_SETTINGS_MASK = (1 << SOUND_MANAGER.__BITMASK_FLAG_LOOP_SETTINGS_COUNT) - 1 << SOUND_MANAGER.__BITMASK_LOOP_SETTINGS_SHIFT,
+
+    // Settings values
+    LOOP_SETTING_REFRESH_INNER = 1 << SOUND_MANAGER.__BITMASK_FLAG_INDEX_LOOP_SETTING_REFRESH_INNER + SOUND_MANAGER.__BITMASK_LOOP_SETTINGS_SHIFT,
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 
 
@@ -44,6 +104,28 @@ function MusicManager() : SoundManager() constructor
 {
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 
 
@@ -64,12 +146,20 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
     LOOP_ARG_ITERATIONS,
     LOOP_ARG_ON_START_FUNC,
     LOOP_ARG_ON_END_FUNC,
+    LOOP_ARG_ACTIVE,
     LOOP_ARG_COUNT,
 
     TIMESOURCE_MAIN = 0,
 
     LISTENER_MASK_ALL = -1,
     LISTENER_MASK_NONE,
+
+    __BITMASK_LOOP_STATUS_SHIFT = 0,
+    __BITMASK_FLAG_INDEX_LOOP_STATUS_ACTIVE = 0,
+    __BITMASK_FLAG_LOOP_STATUS_COUNT,
+    __BITMASK_LOOP_STATUS_MASK = (1 << SOUND.__BITMASK_FLAG_LOOP_STATUS_COUNT) - 1 << SOUND.__BITMASK_LOOP_STATUS_SHIFT,
+
+    LOOP_STATUS_ACTIVE = 1 << SOUND.__BITMASK_LOOP_STATUS_SHIFT + SOUND.__BITMASK_FLAG_INDEX_LOOP_STATUS_ACTIVE,
   }
 
 
@@ -83,8 +173,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
   self.gain_level = gain_level;
   self.pitch_level = pitch_level;
   self.priority = priority;
-  self.loop_iterations = 0;
-  self.loop_count = 0;
+  self.loop_iteration_data = [];
   self.loop_idx = 0;
   self.loops = [];
 
@@ -213,7 +302,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
 
   static done = function()
   {
-    return !(self.loop_iterations || self.inst && audio_exists(self.inst));
+    return !(self.loop_idx >= self.loop_count || self.inst && audio_exists(self.inst));
   }
 
 
@@ -277,7 +366,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
   static loop = function(loop_iterations = infinity)
   {
     // !: Fix time source
-    self.loop_iterations = loop_iterations;
+    self.loop_iterations = loop_iterations; // !:
 
     return self;
   }
@@ -288,7 +377,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
    *
    */
 
-  static loopget = function(loop_idx = 0)
+  static loop_get = function(loop_idx = 0)
   {
     return self.loops[loop_idx + self.loop_count * (loop_idx < 0)];
   }
@@ -348,7 +437,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
 
   static time_to_loop_start = function(loop_idx, pitch_level = undefined)
   {
-    return self.time_delta(self.loopget(loop_idx).start, pitch_level);
+    return self.time_delta(self.loop_get(loop_idx).start, pitch_level);
   }
 
 
@@ -359,7 +448,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
 
   static time_to_loop_end = function(loop_idx, pitch_level = undefined)
   {
-    return self.time_delta(self.loopget(loop_idx).end, pitch_level);
+    return self.time_delta(self.loop_get(loop_idx).end, pitch_level);
   }
 
 
@@ -384,7 +473,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
 
   static move_to_loop_start = function(loop_idx)
   {
-    return self.move_to(self.loopget(loop_idx).start);
+    return self.move_to(self.loop_get(loop_idx).start);
   }
 
 
@@ -395,7 +484,7 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
 
   static move_to_loop_end = function(loop_idx)
   {
-    return self.move_to(self.loopget(loop_idx).end);
+    return self.move_to(self.loop_get(loop_idx).end);
   }
 
 
@@ -494,7 +583,13 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
       self.loops[i] = SoundLoop.fromarray(loop_data[i]);
     }
 
+    // +: Sort loops
+
     self.loop_count = loop_count;
+    self.loop_iteration_data = array_create(loop_count);
+
+    for (var i = 0; i < loop_count; ++i)
+      self.loop_iteration_data = self.loops[i].iterdata();
 
     return self;
   }
@@ -506,11 +601,33 @@ function Sound(asset, loops, pitch_level, gain_level, priority) constructor
 
 
 
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  *
  */
 
-function SoundLoop(start, end, iterations, onstart_fn, onend_fn) constructor
+function SoundLoop(start, end, iterations, onstart_fn, onend_fn, status) constructor
 {
   static __CONSTRUCTOR_ARGC = argument_count;
 
@@ -521,6 +638,7 @@ function SoundLoop(start, end, iterations, onstart_fn, onend_fn) constructor
   self.end = max(end, 0);
   self.onstart_fn = onstart_fn;
   self.onend_fn = onend_fn;
+  self.status = status;
 
 
 
@@ -528,9 +646,9 @@ function SoundLoop(start, end, iterations, onstart_fn, onend_fn) constructor
    *
    */
 
-  static create = function(start = 0, end = infinity, iterations = 0, onstart_fn = undefined, onend_fn = undefined)
+  static create = function(start = 0, end = infinity, iterations = 0, onstart_fn = undefined, onend_fn = undefined, status = SOUND.LOOP_STATUS_ACTIVE)
   {
-    return new SoundLoop(start, end, iterations, onstart_fn, onend_fn);
+    return new SoundLoop(start, end, iterations, onstart_fn, onend_fn, status);
   }
 
 
@@ -549,6 +667,22 @@ function SoundLoop(start, end, iterations, onstart_fn, onend_fn) constructor
       argc > SOUND.LOOP_ARG_ITERATIONS    ? data[SOUND.LOOP_ARG_ITERATIONS]    : undefined,
       argc > SOUND.LOOP_ARG_ON_START_FUNC ? data[SOUND.LOOP_ARG_ON_START_FUNC] : undefined,
       argc > SOUND.LOOP_ARG_ON_END_FUNC   ? data[SOUND.LOOP_ARG_ON_END_FUNC]   : undefined,
+      argc > SOUND.LOOP_ARG_ACTIVE        ? data[SOUND.LOOP_ARG_ACTIVE]        : undefined,
+    );
+  }
+
+
+
+  /**
+   * 
+   */
+
+  static compare = function(loop)
+  {
+    return sign(
+      self.end == loop.end
+        ? self.duration() - loop.duration()
+        : self.end - loop.end
     );
   }
 
@@ -590,7 +724,40 @@ function SoundLoop(start, end, iterations, onstart_fn, onend_fn) constructor
 
     return self;
   }
+
+
+
+  /**
+   * 
+   */
+
+  static iterdata = function()
+  {
+    return [0, self.iterations];
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 
 
@@ -684,6 +851,28 @@ function SoundTimeSource(sound, timesource_idx, time, callback, args) constructo
 
 
 
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  *
  */
@@ -695,6 +884,28 @@ function SoundSFX() : Sound() constructor
 
 
 
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  *
  */
@@ -703,6 +914,28 @@ function SoundBGS() : Sound() constructor
 {
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 
 
