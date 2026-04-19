@@ -18,9 +18,9 @@
 #macro __FSM_FIELD_NAME__           "name"
 
 #macro FSM                          fsm
+#macro FSM_EXECUTOR                 executor
 #macro FSM_STATE_ID                 id
 #macro FSM_STATE_PARENT             parent
-#macro FSM_STATE_EXECUTOR           executor
 #macro FSM_STATE_NAME               name
 #macro FSM_STATE_RUN                run
 #macro FSM_STATE_IN                 in
