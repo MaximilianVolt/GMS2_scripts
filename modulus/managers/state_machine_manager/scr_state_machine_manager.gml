@@ -466,6 +466,7 @@ function StateMachine(machine_idx, executor) constructor
 
 
 
+  self.state = undefined;
   self.state_map = {};
   self.state_count = 0;
   self.executor = executor;
