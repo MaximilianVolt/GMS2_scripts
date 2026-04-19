@@ -16,6 +16,7 @@
 #macro __STATE_MACHINE_FIELD_OUT_FUNCTION__   "out"
 #macro __STATE_MACHINE_FIELD_STATE_FUNCTION__ "run"
 #macro __STATE_MACHINE_FIELD_NAME__           "name"
+#macro FSM                                    fsm
 
 
 
@@ -510,7 +511,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
   self.out_fn = method(self, out_fn ?? __FUNC_EMPTY);
 
   self.name = name ?? $"state_{self.id}";
-  self.fsm = machine;
+  self.FSM = machine;
   self.parent = parent_id;
   self.executor = machine.executor;
   self.input_array = [];
