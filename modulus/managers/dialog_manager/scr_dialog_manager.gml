@@ -868,7 +868,7 @@ function DialogRunner(manager) constructor
    * @param {Real} [scene_diff] The signed amount of scenes traveled from the previous position.
    * @param {Real} [sequence_diff] The signed amount of sequences traveled from the previous position.
    * @param {Real} [dialog_diff] The signed amount of dialogs traveled from the previous position.
-   * @param {Bool} [maintained_status] The status flag for any maintained position.
+   * @param {Real} [maintained_status] The status flag for any maintained position.
    * @returns {Real} A bitmask of status flags indicating position state and movement.
    */
 
@@ -1485,10 +1485,8 @@ function DialogManager(lang, data_string, is_file) constructor
 
   /**
    * @desc Calculates the differences between two lists of items, returning a tree of differences with stats and severity calculated based on the provided tolerance parameters.
-   * @param {Array} l1 The first list of items.
-   * @param {Real} n The number of items in the first list.
-   * @param {Array} l2 The second list of items.
-   * @param {Real} m The number of items in the second list.
+   * @param {Struct.DialogItemContainer} c1 The first container of items.
+   * @param {Struct.DialogItemContainer} c2 The second container of items.
    * @param {Real} lv The current level of the recursion, used for path generation. Defaults to `0`.
    * @param {String} path The current path in the tree, used for node identification. Defaults to `"DialogManager.{self.lang}"`.
    * @returns {Struct}
@@ -1622,7 +1620,7 @@ function DialogManager(lang, data_string, is_file) constructor
   /**
    * @desc Resolves move operations in a list of diff nodes.
    * @param {Array} nodelist The list of diff nodes to resolve.
-   * @returns {Array}
+   * @returns {Struct}
    */
 
   static __diff_resolve_moves = function(nodelist, node_count = 0)
@@ -1701,7 +1699,7 @@ function DialogManager(lang, data_string, is_file) constructor
    * @desc Computes the stats for each level of the diff tree, returning an array with the stats indexed by level.
    * @param {Array} nodelist The list of diff nodes to compute the stats from.
    * @param {Array} level_stats The array to store the stats in. If `undefined`, a new array will be created. Defaults to `undefined`.
-   * @returns {Array}
+   * @returns {Array<Struct>}
    */
 
   static __diff_stats_compute_level = function(nodelist, level_stats = undefined)
@@ -1852,10 +1850,10 @@ function DialogManager(lang, data_string, is_file) constructor
 
 
   /**
-   * @desc Updates the severity of each node in the diff tree based on the provided tolerance parameters, returning a summary of the number of violating nodes and the maximum severity found.
-   * @param {Array} nodelist The list of diff nodes to update the severity of.
-   * @param {Array} diff_tolerance_params The array with the tolerance parameters indexed by level.
-   * @returns {Struct}
+   * @desc Evaluates the severity given the level stats.
+   * @param {Struct} stat The struct containing the stats.
+   * @param {Array} level_stats The array with the tolerance parameters indexed by level.
+   * @returns {Real}
    */
 
   static __diff_stat_severity = function(stat, level_stats)
@@ -4556,7 +4554,7 @@ function DialogItemContainer(items, parent) constructor
   /**
    * @desc Retrieves the list of dialog linkable items.
    * @param {Real} item_idx The index of the item to retrieve. Supports negative indexing.
-   * @returns {Array<Struct.DialogItem>}
+   * @returns {Struct.DialogItem}
    */
 
   static item = function(item_idx)
