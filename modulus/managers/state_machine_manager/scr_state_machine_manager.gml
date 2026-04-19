@@ -17,6 +17,7 @@
 #macro __STATE_MACHINE_FIELD_STATE_FUNCTION__ "run"
 #macro __STATE_MACHINE_FIELD_NAME__           "name"
 #macro FSM                                    fsm
+#macro PARENT                                 parent
 
 
 
@@ -413,19 +414,19 @@ function StateMachine(machine_idx, executor) constructor
         , iter = state
       ;
 
-      if (!state.parent)
+      if (!state.PARENT)
         continue;
 
-      for (var j = 0; iter.parent && j < self.state_count; ++j)
-        iter = self.state_map[$ iter.parent];
+      for (var j = 0; iter.PARENT && j < self.state_count; ++j)
+        iter = self.state_map[$ iter.PARENT];
 
-      if (iter.parent) {
+      if (iter.PARENT) {
         throw StateMachineManager.ERROR(STATE_MACHINE.ERR_CIRCULAR_INHERITANCE, [
           keys[i]
         ]);
       }
 
-      state.parent = self.state_map[$ state.parent];
+      state.PARENT = self.state_map[$ state.PARENT];
     }
 
     return self;
@@ -512,7 +513,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
 
   self.name = name ?? $"state_{self.id}";
   self.FSM = machine;
-  self.parent = parent_id;
+  self.PARENT = parent_id;
   self.executor = machine.executor;
   self.input_array = [];
   self.output_array = [];
