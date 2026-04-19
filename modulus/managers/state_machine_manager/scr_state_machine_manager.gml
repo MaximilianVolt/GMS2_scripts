@@ -2,22 +2,37 @@
  * @desc A lightweight index-based state machine manager.
  * @link https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager
  * @author @MaximilianVolt
- * @version 0.5.2
+ * @version 0.5.3
  */
 
 
 
-#macro __STATE_MACHINE_VERSION__              "0.5.2"
-#macro __STATE_MACHINE_LINK__                 "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
+#macro __STATE_MACHINE_VERSION__    "0.5.3"
+#macro __STATE_MACHINE_LINK__       "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/state_machine_manager"
 
-#macro __STATE_MACHINE_FIELD_ID__             "id"
-#macro __STATE_MACHINE_FIELD_PARENT_ID__      "parent"
-#macro __STATE_MACHINE_FIELD_IN_FUNCTION__    "in"
-#macro __STATE_MACHINE_FIELD_OUT_FUNCTION__   "out"
-#macro __STATE_MACHINE_FIELD_STATE_FUNCTION__ "run"
-#macro __STATE_MACHINE_FIELD_NAME__           "name"
-#macro FSM                                    fsm
-#macro PARENT                                 parent
+#macro __FSM_FIELD_ID__             "id"
+#macro __FSM_FIELD_PARENT_ID__      "parent"
+#macro __FSM_FIELD_IN_FUNCTION__    "in"
+#macro __FSM_FIELD_OUT_FUNCTION__   "out"
+#macro __FSM_FIELD_STATE_FUNCTION__ "run"
+#macro __FSM_FIELD_NAME__           "name"
+
+#macro FSM                          fsm
+#macro FSM_STATE_ID                 id
+#macro FSM_STATE_PARENT             parent
+#macro FSM_STATE_EXECUTOR           executor
+#macro FSM_STATE_NAME               name
+#macro FSM_STATE_RUN                run
+#macro FSM_STATE_IN                 in
+#macro FSM_STATE_INPUT              input
+#macro FSM_STATE_INPUT_GET          inputget
+#macro FSM_STATE_INPUT_ADD          inputadd
+#macro FSM_STATE_INPUT_CLEAR        inputclear
+#macro FSM_STATE_OUT                out
+#macro FSM_STATE_OUTPUT             output
+#macro FSM_STATE_OUTPUT_GET         outputget
+#macro FSM_STATE_OUTPUT_ADD         outputadd
+#macro FSM_STATE_OUTPUT_CLEAR       outputclear
 
 
 
@@ -262,13 +277,13 @@ function StateMachine(machine_idx, executor) constructor
   static start = function(state_id = STATE_MACHINE.FSM_STATE_NONE, execute_transition = false, argv_initial_state = undefined)
   {
     if (is_instanceof(state_id, StateMachineState))
-      state_id = state_id.id;
+      state_id = state_id.FSM_STATE_ID;
 
     var initial_state = self.state_map[$ state_id];
 
     self.state = __update_history(
       execute_transition
-        ? __cycle(initial_state, initial_state.input(argv_initial_state).in())
+        ? __cycle(initial_state, initial_state.INPUT(argv_initial_state).FSM_STATE_IN())
         : initial_state
     );
 
@@ -327,7 +342,7 @@ function StateMachine(machine_idx, executor) constructor
   static __step = function(argv_current_state)
   {
     var current_state = self.state
-      , target_state = current_state.input(argv_current_state).run()
+      , target_state = current_state.FSM_STATE_INPUT(argv_current_state).FSM_STATE_RUN()
     ;
 
     return target_state
@@ -354,9 +369,9 @@ function StateMachine(machine_idx, executor) constructor
 
     while (execution_state != target_state && cycle--)
     {
-      target_state = execution_state.out() ?? target_state;
+      target_state = execution_state.FSM_STATE_OUT() ?? target_state;
       execution_state = target_state;
-      target_state = target_state.in() ?? execution_state;
+      target_state = execution_state.FSM_STATE_IN() ?? execution_state;
     }
 
     if (!cycle) {
@@ -394,16 +409,16 @@ function StateMachine(machine_idx, executor) constructor
           ? StateMachineState.fromfunction(self, state_data, key)
           : new StateMachineState(
               self,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_ID__            ) ? state_data[$ __STATE_MACHINE_FIELD_ID__            ] : self.yieldid(),
-              struct_exists(state_data, __STATE_MACHINE_FIELD_STATE_FUNCTION__) ? state_data[$ __STATE_MACHINE_FIELD_STATE_FUNCTION__] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_IN_FUNCTION__   ) ? state_data[$ __STATE_MACHINE_FIELD_IN_FUNCTION__   ] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_OUT_FUNCTION__  ) ? state_data[$ __STATE_MACHINE_FIELD_OUT_FUNCTION__  ] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_PARENT_ID__     ) ? state_data[$ __STATE_MACHINE_FIELD_PARENT_ID__     ] : undefined,
-              struct_exists(state_data, __STATE_MACHINE_FIELD_NAME__          ) ? state_data[$ __STATE_MACHINE_FIELD_NAME__          ] : key
+              struct_exists(state_data, __FSM_FIELD_ID__            ) ? state_data.FSM_STATE_ID     : self.yieldid(),
+              struct_exists(state_data, __FSM_FIELD_STATE_FUNCTION__) ? state_data.FSM_STATE_RUN    : undefined,
+              struct_exists(state_data, __FSM_FIELD_IN_FUNCTION__   ) ? state_data.FSM_STATE_IN     : undefined,
+              struct_exists(state_data, __FSM_FIELD_OUT_FUNCTION__  ) ? state_data.FSM_STATE_OUT    : undefined,
+              struct_exists(state_data, __FSM_FIELD_PARENT_ID__     ) ? state_data.FSM_STATE_PARENT : undefined,
+              struct_exists(state_data, __FSM_FIELD_NAME__          ) ? state_data.FSM_STATE_NAME   : key
             )
       ;
 
-      self.state_map[$ state.id] = state;
+      self.state_map[$ state.FSM_STATE_ID] = state;
       self[$ key] = state;
     }
 
@@ -414,19 +429,19 @@ function StateMachine(machine_idx, executor) constructor
         , iter = state
       ;
 
-      if (!state.PARENT)
+      if (!state.FSM_STATE_PARENT)
         continue;
 
-      for (var j = 0; iter.PARENT && j < self.state_count; ++j)
-        iter = self.state_map[$ iter.PARENT];
+      for (var j = 0; iter.FSM_STATE_PARENT && j < self.state_count; ++j)
+        iter = self.state_map[$ iter.FSM_STATE_PARENT];
 
-      if (iter.PARENT) {
+      if (iter.FSM_STATE_PARENT) {
         throw StateMachineManager.ERROR(STATE_MACHINE.ERR_CIRCULAR_INHERITANCE, [
           keys[i]
         ]);
       }
 
-      state.PARENT = self.state_map[$ state.PARENT];
+      state.FSM_STATE_PARENT = self.state_map[$ state.FSM_STATE_PARENT];
     }
 
     return self;
@@ -506,15 +521,15 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
   if (!machine)
     return self;
 
-  self.id = machine.yieldid(id);
+  self.FSM_STATE_ID = machine.yieldid(id);
   self.run_fn = method(self, run_fn ?? __FUNC_EMPTY);
   self.in_fn = method(self, in_fn ?? __FUNC_EMPTY);
   self.out_fn = method(self, out_fn ?? __FUNC_EMPTY);
 
-  self.name = name ?? $"state_{self.id}";
   self.FSM = machine;
-  self.PARENT = parent_id;
-  self.executor = machine.executor;
+  self.FSM_STATE_NAME = name ?? $"state_{self.id}";
+  self.FSM_STATE_PARENT = parent_id;
+  self.FSM_STATE_EXECUTOR = machine.executor;
   self.input_array = [];
   self.output_array = [];
   self.input_count = 0;
@@ -543,7 +558,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static input = function(argv)
+  static FSM_STATE_INPUT = function(argv)
   {
     if (is_undefined(argv))
       return self;
@@ -562,7 +577,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Array<Any>} The requested input value(s) or the entire input array if no index is provided.
    */
 
-  static inputget = function(index = undefined)
+  static FSM_STATE_INPUT_GET = function(index = undefined)
   {
     if (is_undefined(index))
       return self.input_array;
@@ -587,7 +602,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static inputadd = function(argv, index = self.input_count)
+  static FSM_STATE_INPUT_ADD = function(argv, index = self.input_count)
   {
     if (is_undefined(argv))
       return self;
@@ -605,7 +620,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Array} A copy of the cleared input array.
    */
 
-  static inputclear = function()
+  static FSM_STATE_INPUT_CLEAR = function()
   {
     var copy = variable_clone(self.input_array);
 
@@ -623,7 +638,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static output = function(argv)
+  static FSM_STATE_OUTPUT = function(argv)
   {
     if (is_undefined(argv))
       return self;
@@ -642,7 +657,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Array<Any>} The requested output value(s) or the entire output array if no index is provided.
    */
 
-  static outputget = function(index = undefined)
+  static FSM_STATE_OUTPUT_GET = function(index = undefined)
   {
     if (is_undefined(index))
       return self.output_array;
@@ -667,7 +682,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static outputadd = function(argv, index = self.output_count)
+  static FSM_STATE_OUTPUT_ADD = function(argv, index = self.output_count)
   {
     if (is_undefined(argv))
       return self;
@@ -685,7 +700,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Array} A copy of the cleared output array.
    */
 
-  static outputclear = function()
+  static FSM_STATE_OUTPUT_CLEAR = function()
   {
     var copy = variable_clone(self.output_array);
 
@@ -703,7 +718,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static in = function(argv = undefined)
+  static FSM_STATE_IN = function(argv = undefined)
   {
     return self.in_fn(argv ?? self.input_array);
   }
@@ -716,7 +731,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static run = function(argv = undefined)
+  static FSM_STATE_RUN = function(argv = undefined)
   {
     return self.run_fn(argv ?? self.input_array);
   }
@@ -729,7 +744,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
    * @returns {Struct.StateMachineState}
    */
 
-  static out = function(argv = undefined)
+  static FSM_STATE_OUT = function(argv = undefined)
   {
     return self.out_fn(argv ?? self.input_array);
   }
