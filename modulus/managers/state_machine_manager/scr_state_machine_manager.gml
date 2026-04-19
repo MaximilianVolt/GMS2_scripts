@@ -529,7 +529,7 @@ function StateMachineState(machine, id, run_fn, in_fn, out_fn, parent_id, name) 
   self.FSM = machine;
   self.FSM_STATE_NAME = name ?? $"state_{self.id}";
   self.FSM_STATE_PARENT = parent_id;
-  self.FSM_STATE_EXECUTOR = machine.executor;
+  self.FSM_EXECUTOR = machine.executor;
   self.input_array = [];
   self.output_array = [];
   self.input_count = 0;
