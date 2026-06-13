@@ -105,14 +105,14 @@ var custom_fx_indexing_function_index = DialogFX.register(
 // 0. Flow option creation (oftentimes not needed directly)
 var flow_option_absolute = dialog_fx_create_flow_option(
   DIALOG_MANAGER.POSITION_CODE_SCENE_FIRST,
-  DIALOG_RUNNER.JUMP_SETTING_TYPE_ABSOLUTE,
+  DIALOG_RUNNER.JUMP_OPTION_TYPE_ABSOLUTE,
   "Prompt text for absolute flow option",
   0
 );
 
 var flow_option_relative = dialog_fx_create_flow_option(
   +8,
-  DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE, // DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE is already encoded
+  DIALOG_RUNNER.JUMP_OPTION_UNIT_SEQUENCE, // DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE is already encoded
   "Prompt text for relative flow option",
   0
 );
@@ -400,12 +400,11 @@ DIALOG_RUNNER.JUMP_UNIT_DIALOG                            // Defines a jump unit
 DIALOG_RUNNER.JUMP_UNIT_SEQUENCE                          // Defines a jump unit index for sequence units. Not to use with option bitmasks.
 DIALOG_RUNNER.JUMP_UNIT_SCENE                             // Defines a jump unit index for scene units. Not to use with option bitmasks.
 
-DIALOG_RUNNER.JUMP_SETTING_TYPE_ABSOLUTE                  // Encodes setting related to absolute jumps
-DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE                  // Encodes setting related to relative jumps
-DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG                    // Encodes setting related to dialog unit jumps
-DIALOG_RUNNER.JUMP_SETTING_UNIT_SEQUENCE                  // Encodes setting related to sequence unit jumps
-DIALOG_RUNNER.JUMP_SETTING_UNIT_SCENE                     // Encodes setting related to scene unit jumps
-DIALOG_RUNNER.JUMP_SETTING_CHOICE                         // Encodes setting related to choice jumps
+DIALOG_RUNNER.JUMP_OPTION_TYPE_ABSOLUTE                   // Encodes setting related to absolute jumps
+DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE                   // Encodes setting related to relative jumps
+DIALOG_RUNNER.JUMP_OPTION_UNIT_DIALOG                     // Encodes setting related to dialog unit jumps
+DIALOG_RUNNER.JUMP_OPTION_UNIT_SEQUENCE                   // Encodes setting related to sequence unit jumps
+DIALOG_RUNNER.JUMP_OPTION_UNIT_SCENE                      // Encodes setting related to scene unit jumps
 DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_ENTER             // Encodes setting related to the bypassing of on-enter triggered dialog fx
 DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_STAY              // Encodes setting related to the bypassing of on-stay triggered dialog fx
 DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_LEAVE             // Encodes setting related to the bypassing of on-leave triggered dialog fx
@@ -450,7 +449,7 @@ DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_MAX               // Diff algorithm tole
 DIALOG_MANAGER.DIFF_ARG_TOLERANCE_INSERTIONS_WARNING      // Diff algorithm tolerance for warning-raising insertion counts
 DIALOG_MANAGER.DIFF_ARG_TOLERANCE_DELETIONS_WARNING       // Diff algorithm tolerance for warning-raising deletion counts
 DIALOG_MANAGER.DIFF_ARG_TOLERANCE_MOVES_WARNING           // Diff algorithm tolerance for warning-raising moves counts
-DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT                   // Diff algorithm tolerance argoment count
+DIALOG_MANAGER.DIFF_ARG_TOLERANCES_COUNT                  // Diff algorithm tolerance argoment count
 
 DIALOG_MANAGER.ERR_UNDEFINED_ERROR_TYPE                   // Error raised when error type is unknown
 DIALOG_MANAGER.ERR_SERIALIZATION_FAILED                   // Error raised when serialization fails (invalid dialogical structure)

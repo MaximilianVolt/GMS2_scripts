@@ -2,12 +2,12 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.12.4
+ * @version 0.12.5
  */
 
 
 
-#macro __DIALOG_MANAGER_VERSION__             "0.12.4"
+#macro __DIALOG_MANAGER_VERSION__             "0.12.5"
 #macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/dialog_manager"
 
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
@@ -405,7 +405,7 @@ function DialogRunner(manager) constructor
   {
     // Argument positions
     ARG_DIALOG_MANAGER = 0,
-    ARG_COUNT,
+    ARGS_COUNT,
 
     // Status info indices
     __BITMASK_STATUS_SHIFT = 0,
@@ -483,26 +483,26 @@ function DialogRunner(manager) constructor
     // Jump settings
     JUMP_TYPE_ABSOLUTE = 0,
     JUMP_TYPE_RELATIVE,
-    JUMP_TYPE_COUNT,
-    __BITMASK_JUMP_SETTING_RESOLUTION_SHIFT = 0,
-    __BITMASK_JUMP_SETTING_TYPE_SHIFT = DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_SHIFT,
-    __BITMASK_JUMP_SETTING_TYPE_BITS = 1,
-    __BITMASK_JUMP_SETTING_TYPE_MASK = (1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_BITS) - 1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT,
-    JUMP_SETTING_TYPE_ABSOLUTE = DIALOG_RUNNER.JUMP_TYPE_ABSOLUTE << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT,
-    JUMP_SETTING_TYPE_RELATIVE = DIALOG_RUNNER.JUMP_TYPE_RELATIVE << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT,
+    JUMP_TYPES_COUNT,
+    __BITMASK_JUMP_OPTION_RESOLUTION_SHIFT = 0,
+    __BITMASK_JUMP_OPTION_TYPE_SHIFT = DIALOG_RUNNER.__BITMASK_JUMP_OPTION_RESOLUTION_SHIFT,
+    __BITMASK_JUMP_OPTION_TYPE_BITS = 1,
+    __BITMASK_JUMP_OPTION_TYPE_MASK = (1 << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_BITS) - 1 << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_SHIFT,
+    JUMP_OPTION_TYPE_ABSOLUTE = DIALOG_RUNNER.JUMP_TYPE_ABSOLUTE << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_SHIFT,
+    JUMP_OPTION_TYPE_RELATIVE = DIALOG_RUNNER.JUMP_TYPE_RELATIVE << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_SHIFT,
     JUMP_UNIT_DIALOG = 0,
     JUMP_UNIT_SEQUENCE,
     JUMP_UNIT_SCENE,
-    JUMP_UNIT_COUNT,
-    __BITMASK_JUMP_SETTING_UNIT_SHIFT = DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT + DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_BITS,
-    __BITMASK_JUMP_SETTING_UNIT_BITS = 2,
-    __BITMASK_JUMP_SETTING_UNIT_MASK = (1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_BITS) - 1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT,
-    JUMP_SETTING_UNIT_DIALOG = DIALOG_RUNNER.JUMP_UNIT_DIALOG << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE,
-    JUMP_SETTING_UNIT_SEQUENCE = DIALOG_RUNNER.JUMP_UNIT_SEQUENCE << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE,
-    JUMP_SETTING_UNIT_SCENE = DIALOG_RUNNER.JUMP_UNIT_SCENE << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT | DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE,
-    __BITMASK_JUMP_SETTING_RESOLUTION_BITS = DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_BITS + DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_BITS,
-    __BITMASK_JUMP_SETTING_RESOLUTION_MASK = (1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_BITS) - 1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_SHIFT,
-    __BITMASK_JUMP_SETTING_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_SHIFT + DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_BITS,
+    JUMP_UNITS_COUNT,
+    __BITMASK_JUMP_OPTION_UNIT_SHIFT = DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_SHIFT + DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_BITS,
+    __BITMASK_JUMP_OPTION_UNIT_BITS = 2,
+    __BITMASK_JUMP_OPTION_UNIT_MASK = (1 << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_BITS) - 1 << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_SHIFT,
+    JUMP_OPTION_UNIT_DIALOG = DIALOG_RUNNER.JUMP_UNIT_DIALOG << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_SHIFT | DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE,
+    JUMP_OPTION_UNIT_SEQUENCE = DIALOG_RUNNER.JUMP_UNIT_SEQUENCE << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_SHIFT | DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE,
+    JUMP_OPTION_UNIT_SCENE = DIALOG_RUNNER.JUMP_UNIT_SCENE << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_SHIFT | DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE,
+    __BITMASK_JUMP_SETTING_RESOLUTION_BITS = DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_BITS + DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_BITS,
+    __BITMASK_JUMP_SETTING_RESOLUTION_MASK = (1 << DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_BITS) - 1 << DIALOG_RUNNER.__BITMASK_JUMP_OPTION_RESOLUTION_SHIFT,
+    __BITMASK_JUMP_SETTING_BEHAVIOUR_SHIFT = DIALOG_RUNNER.__BITMASK_JUMP_OPTION_RESOLUTION_SHIFT + DIALOG_RUNNER.__BITMASK_JUMP_SETTING_RESOLUTION_BITS,
     __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_ENTER,
     __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_STAY,
     __BITMASK_FLAG_INDEX_JUMP_SETTING_BYPASS_FX_ON_LEAVE,
@@ -646,11 +646,10 @@ function DialogRunner(manager) constructor
       , position = self.position
     ;
 
-    if (u == DIALOG_ITEM.LEVEL_LINKABLE_COUNT - 1 && dialog_idx != undefined)
+    if (u == DIALOG_ITEM.LEVELS_LINKABLE_COUNT - 1 && dialog_idx != undefined)
       return manager.__get_dialog_relative(dialog_idx, 0, 0);
 
-    if (u && u < DIALOG_ITEM.LEVEL_LINKABLE_COUNT)
-    {
+    if (u && u < DIALOG_ITEM.LEVELS_LINKABLE_COUNT) {
       scene_idx ??= 0;
       sequence_idx ??= 0;
       dialog_idx ??= 0;
@@ -719,7 +718,7 @@ function DialogRunner(manager) constructor
    * @returns {Struct} { position: Struct.DialogLinkable, status: Constant.DIALOG_RUNNER|Real }
    */
 
-  static delta = function(shift = 0, unit = DIALOG_RUNNER.JUMP_SETTING_UNIT_DIALOG, start_position = self.position, jump_settings = 0)
+  static delta = function(shift = 0, unit = DIALOG_RUNNER.JUMP_OPTION_UNIT_DIALOG, start_position = self.position, jump_settings = 0)
   {
     return manager.delta(shift, unit, start_position, jump_settings);
   }
@@ -735,7 +734,7 @@ function DialogRunner(manager) constructor
    * @returns {Struct.DialogRunner}
    */
 
-  static predict = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, start_position = self.position, argv = undefined)
+  static predict = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE, start_position = self.position, argv = undefined)
   {
     return self.clone().advance(shift, jump_settings, start_position, argv);
   }
@@ -751,7 +750,7 @@ function DialogRunner(manager) constructor
    * @returns {Struct.DialogRunner}
    */
 
-  static advance = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE, prev_position = self.position, argv = undefined)
+  static advance = function(shift = 1, jump_settings = DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE, prev_position = self.position, argv = undefined)
   {
     var manager = self.manager;
     prev_position = manager.__to_position(prev_position);
@@ -965,7 +964,7 @@ function DialogManager(lang, data_string, is_file) constructor
     // Argument positions
     ARG_DATA_STRING = 0,
     ARG_IS_FILE,
-    ARG_COUNT,
+    ARGS_COUNT,
 
     // Positioning codes
     POSITION_CODE_SCENE_LAST = -14,
@@ -983,7 +982,7 @@ function DialogManager(lang, data_string, is_file) constructor
     POSITION_CODE_SEQUENCE_PREVIOUS,
     POSITION_CODE_SEQUENCE_FIRST,
     POSITION_CODE_NONE,
-    POSITION_CODE_COUNT = 1 - DIALOG_MANAGER.POSITION_CODE_SCENE_LAST,
+    POSITION_CODES_COUNT = 1 - DIALOG_MANAGER.POSITION_CODE_SCENE_LAST,
 
     // Diff data codes
     DIFF_LEVEL_SCENE = 0,
@@ -993,13 +992,14 @@ function DialogManager(lang, data_string, is_file) constructor
     DIFF_SEVERITY_OK = 0,
     DIFF_SEVERITY_WARNING,
     DIFF_SEVERITY_ERROR,
+    DIFF_SEVERITIES_COUNT,
     DIFF_ARG_TOLERANCE_INSERTIONS_MAX = 0,
     DIFF_ARG_TOLERANCE_DELETIONS_MAX,
     DIFF_ARG_TOLERANCE_MOVES_MAX,
     DIFF_ARG_TOLERANCE_INSERTIONS_WARNING,
     DIFF_ARG_TOLERANCE_DELETIONS_WARNING,
     DIFF_ARG_TOLERANCE_MOVES_WARNING,
-    DIFF_ARG_TOLERANCE_COUNT,
+    DIFF_ARG_TOLERANCES_COUNT,
 
     // Positioning masks
     __ID_SEPARATOR = 100000000,
@@ -1026,7 +1026,7 @@ function DialogManager(lang, data_string, is_file) constructor
     ERR_TEXT_OVERFLOW,
     ERR_MAX_FX_CAPACITY_REACHED,
     ERR_INFINITE_FX_LOOP_DETECTED,
-    ERR_COUNT,
+    ERRS_COUNT,
 
     // Error checks
     ERRCHECK_JUMP_INFINITE_LOOP_TRESHOLD = 32,
@@ -1113,8 +1113,7 @@ function DialogManager(lang, data_string, is_file) constructor
       "INFINITE FX RESOLUTION LOOP DETECTED - ITERATION {0}: ENSURE FX SIGNALS ALLOW CORRECTNESS IN EXECUTION\n\nCRASH CONTEXT DATA: {1}",
     ];
 
-    if (type < 0 || type >= DIALOG_MANAGER.ERR_COUNT)
-    {
+    if (type < 0 || type >= DIALOG_MANAGER.ERRS_COUNT) {
       argv = [type];
       type = DIALOG_MANAGER.ERR_UNDEFINED_ERROR_TYPE;
     }
@@ -1284,7 +1283,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static delta = function(shift, unit, start_position, jump_settings)
   {
-    return __resolve_position_relative(shift, __resolve_position_absolute(start_position), jump_settings & ~DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK | __encode_jump_setting_unit(unit));
+    return __resolve_position_relative(shift, __resolve_position_absolute(start_position), jump_settings & ~DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_MASK | __encode_jump_setting_unit(unit));
   }
 
 
@@ -1449,10 +1448,10 @@ function DialogManager(lang, data_string, is_file) constructor
   static diff_tolerance_params_create = function(fx_params_ins_del_mov = undefined, dialog_params_ins_del_mov = undefined, sequence_params_ins_del_mov = undefined, scene_params_ins_del_mov = undefined)
   {
     return [
-      __diff_tolerance_param_item(scene_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
-      __diff_tolerance_param_item(sequence_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
-      __diff_tolerance_param_item(dialog_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
-      __diff_tolerance_param_item(fx_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCE_COUNT, 0)),
+      __diff_tolerance_param_item(scene_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCES_COUNT, 0)),
+      __diff_tolerance_param_item(sequence_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCES_COUNT, 0)),
+      __diff_tolerance_param_item(dialog_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCES_COUNT, 0)),
+      __diff_tolerance_param_item(fx_params_ins_del_mov ?? array_create(DIALOG_MANAGER.DIFF_ARG_TOLERANCES_COUNT, 0)),
     ];
   }
 
@@ -1704,7 +1703,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __diff_stats_compute_level = function(nodelist, level_stats = undefined)
   {
-    level_stats ??= array_map(array_create(DIALOG_ITEM.LEVEL_COUNT), __diff_stats_empty);
+    level_stats ??= array_map(array_create(DIALOG_ITEM.LEVELS_COUNT), __diff_stats_empty);
 
     var node_count = array_length(nodelist);
 
@@ -2063,7 +2062,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_level_position = function(item)
   {
-    var idx = array_create(DIALOG_ITEM.LEVEL_LINKABLE_COUNT, 0);
+    var idx = array_create(DIALOG_ITEM.LEVELS_LINKABLE_COUNT, 0);
 
     for (var lv = item.__level(); lv >= 0; --lv) {
       idx[lv] = item.index();
@@ -2169,7 +2168,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_jump_setting_type = function(jump_type)
   {
-    return __bitmask_encode(jump_type, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT);
+    return __bitmask_encode(jump_type, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_MASK, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_SHIFT);
   }
 
 
@@ -2182,7 +2181,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __encode_jump_setting_unit = function(jump_unit)
   {
-    return __bitmask_encode(jump_unit, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT);
+    return __bitmask_encode(jump_unit, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_MASK, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_SHIFT);
   }
 
 
@@ -2234,7 +2233,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_jump_setting_type = function(jump_settings)
   {
-    return __bitmask_decode(jump_settings, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_TYPE_SHIFT);
+    return __bitmask_decode(jump_settings, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_MASK, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_TYPE_SHIFT);
   }
 
 
@@ -2247,7 +2246,7 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __decode_jump_setting_unit = function(jump_settings)
   {
-    return __bitmask_decode(jump_settings, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_MASK, DIALOG_RUNNER.__BITMASK_JUMP_SETTING_UNIT_SHIFT);
+    return __bitmask_decode(jump_settings, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_MASK, DIALOG_RUNNER.__BITMASK_JUMP_OPTION_UNIT_SHIFT);
   }
 
 
@@ -2429,10 +2428,10 @@ function DialogManager(lang, data_string, is_file) constructor
 
   static __resolve_position = function(position, prev_position = 0, jump_settings = 0)
   {
-    if (__decode_jump_setting_type(jump_settings) == DIALOG_RUNNER.JUMP_SETTING_TYPE_RELATIVE)
-      return self.__resolve_position_relative(position, prev_position, jump_settings).position;
-
-    return self.__resolve_position_absolute(position, prev_position, jump_settings);
+    return __decode_jump_setting_type(jump_settings) == DIALOG_RUNNER.JUMP_OPTION_TYPE_RELATIVE
+      ? __resolve_position_relative(position, prev_position, jump_settings).position
+      : __resolve_position_absolute(position, prev_position, jump_settings)
+    ;
   }
 
 
@@ -2597,36 +2596,36 @@ function DialogScene(sequences, settings_mask, id = undefined) : DialogLinkable(
     ARG_SEQUENCES = 0,
     ARG_SETTINGS_MASK,
     ARG_ID,
-    ARG_COUNT,
-    ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARG_COUNT,
-    ARG_COUNT_DESERIALIZATION,
+    ARGS_COUNT,
+    ARG_SEQUENCE_COUNT = DIALOG_SCENE.ARGS_COUNT,
+    ARGS_COUNT_DESERIALIZATION,
 
     // Scene bg
     BG_NONE = 0,
       // ...
-    BG_COUNT,
+    BGS_COUNT,
     BG_DEFAULT = DIALOG_SCENE.BG_NONE,
 
     // Scene bgm
     BGM_NONE = 0,
       // ...
-    BGM_COUNT,
+    BGMS_COUNT,
     BGM_DEFAULT = DIALOG_SCENE.BGM_NONE,
 
     // Scene bgs
     BGS_NONE = 0,
       // ...
-    BGS_COUNT,
+    BGSS_COUNT,
     BGS_DEFAULT = DIALOG_SCENE.BGS_NONE,
 
     // Scene tags
     TAG_NONE = 0,
       // ...
-    TAG_COUNT,
+    TAGS_COUNT,
     TAG_DEFAULT = DIALOG_SCENE.TAG_NONE,
 
     // Settings masks
-    __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVEL_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_SCENE - 1) - 1,
+    __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVELS_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_SCENE - 1) - 1,
     __BITMASK_BG_SHIFT = 0,
     __BITMASK_BG_BITS = 7,
     __BITMASK_BG_MASK = (1 << DIALOG_SCENE.__BITMASK_BG_BITS) - 1 << DIALOG_SCENE.__BITMASK_BG_SHIFT,
@@ -2885,19 +2884,19 @@ function DialogSequence(dialogs, settings_mask, speakers, id = undefined) : Dial
     ARG_DIALOGS = 0,
     ARG_SETTINGS_MASK,
     ARG_SPEAKERS,
-    ARG_COUNT,
-    ARG_DIALOG_COUNT = DIALOG_SEQUENCE.ARG_COUNT,
+    ARGS_COUNT,
+    ARG_DIALOG_COUNT = DIALOG_SEQUENCE.ARGS_COUNT,
     ARG_ID,
-    ARG_COUNT_DESERIALIZATION,
+    ARGS_COUNT_DESERIALIZATION,
 
     // Sequence tags
     TAG_NONE = 0,
       // ...
-    TAG_COUNT,
+    TAGS_COUNT,
     TAG_DEFAULT = DIALOG_SEQUENCE.TAG_NONE,
 
     // Settings masks
-    __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVEL_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_SEQUENCE - 1) - 1,
+    __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVELS_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_SEQUENCE - 1) - 1,
     __BITMASK_TAG_SHIFT = 0,
     __BITMASK_TAG_BITS = 5,
     __BITMASK_TAG_MASK = (1 << DIALOG_SEQUENCE.__BITMASK_TAG_BITS) - 1 << DIALOG_SEQUENCE.__BITMASK_TAG_SHIFT,
@@ -2963,8 +2962,7 @@ function DialogSequence(dialogs, settings_mask, speakers, id = undefined) : Dial
         , speaker = dialog.speaker()
       ;
 
-      if (!struct_exists(map, speaker))
-      {
+      if (!struct_exists(map, speaker)) {
         struct_set(map, speaker, count);
         self.speakers[count++] = speaker;
       }
@@ -3115,22 +3113,22 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
     ARG_SETTINGS_MASK,
     ARG_FX_MAP,
     ARG_ID,
-    ARG_COUNT,
-    ARG_FX_COUNT = DIALOG.ARG_COUNT,
-    ARG_COUNT_DESERIALIZATION,
+    ARGS_COUNT,
+    ARG_FX_COUNT = DIALOG.ARGS_COUNT,
+    ARGS_COUNT_DESERIALIZATION,
 
     // Speakers
     SPEAKER_NONE = 0,
     SPEAKER_SYSTEM,
     SPEAKER_NARRATOR,
       // ...
-    SPEAKER_COUNT,
+    SPEAKERS_COUNT,
     SPEAKER_DEFAULT = DIALOG.SPEAKER_NONE,
 
     // Emotions
     EMOTION_NONE = 0,
       // ...
-    EMOTION_COUNT,
+    EMOTIONS_COUNT,
     EMOTION_DEFAULT = DIALOG.EMOTION_NONE,
 
     // Anchors
@@ -3138,23 +3136,23 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
     ANCHOR_CENTER,
     ANCHOR_TOP,
       // ...
-    ANCHOR_COUNT,
+    ANCHORS_COUNT,
     ANCHOR_DEFAULT = DIALOG.ANCHOR_BOTTOM,
 
     // Textbox types
     TEXTBOX_NONE = 0,
       // ...
-    TEXTBOX_COUNT,
+    TEXTBOXES_COUNT,
     TEXTBOX_DEFAULT = DIALOG.TEXTBOX_NONE,
 
     // Dialog tags
     TAG_NONE = 0,
       // ...
-    TAG_COUNT,
+    TAGS_COUNT,
     TAG_DEFAULT = DIALOG.TAG_NONE,
 
     // Settings masks
-    __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVEL_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_DIALOG - 1) - 1,
+    __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * (DIALOG_ITEM.LEVELS_LINKABLE_COUNT - DIALOG_ITEM.LEVEL_DIALOG - 1) - 1,
     __BITMASK_SPEAKER_SHIFT = 0,
     __BITMASK_SPEAKER_BITS = 8,
     __BITMASK_SPEAKER_MASK = (1 << DIALOG.__BITMASK_SPEAKER_BITS) - 1 << DIALOG.__BITMASK_SPEAKER_SHIFT,
@@ -3703,8 +3701,8 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     ARG_ARGV,
     ARG_FUNC,
     ARG_ID,
-    ARG_COUNT,
-    ARG_COUNT_DESERIALIZATION = DIALOG_FX.ARG_COUNT,
+    ARGS_COUNT,
+    ARGS_COUNT_DESERIALIZATION = DIALOG_FX.ARGS_COUNT,
 
     // FX flowres argument positions
     FX_ARG_FLOWRES_DATA = 0,
@@ -3722,7 +3720,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     FX_ARG_FLOWRES_DATA_COUNT,
     FX_ARG_FLOWRES_DATA_POSITION_DESTINATION = 0,
     FX_ARG_FLOWRES_DATA_POSITION_SETTINGS,
-    FX_ARG_FLOWRES_DATA_POSITION_COUNT,
+    FX_ARG_FLOWRES_DATA_POSITIONS_COUNT,
 
     // FX types
     TYPE_ANY = 0,
@@ -3730,7 +3728,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     TYPE_FLOWRES_DISPATCH,
     TYPE_FLOWRES_FALLBACK,
     TYPE_FLOWRES_CHOICE,
-    __TYPE_FLOWRES_COUNT = DIALOG_FX.TYPE_FLOWRES_CHOICE,
+    TYPES_FLOWRES_COUNT = DIALOG_FX.TYPE_FLOWRES_CHOICE,
     TYPE_STATE_MODIFIER,
     TYPE_TEXT_PARSE,
     TYPE_TEXT,
@@ -3740,7 +3738,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     TYPE_BGS,
     TYPE_SFX,
       // ...
-    TYPE_COUNT,
+    TYPES_COUNT,
     TYPE_DEFAULT = DIALOG_FX.TYPE_ANY,
 
     // FX triggers
@@ -3750,7 +3748,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     TRIGGER_ON_LEAVE,
     TRIGGER_ON_CUSTOM,
       // ...
-    TRIGGER_COUNT,
+    TRIGGERS_COUNT,
     TRIGGER_DEFAULT = DIALOG_FX.TRIGGER_NONE,
 
     // Flow signals
@@ -3761,25 +3759,25 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     SIGNAL_SKIP_NEXT_FX,
     SIGNAL_STOP_CYCLE,
     SIGNAL_STOP_RESOLUTION,
-    SIGNAL_COUNT,
+    SIGNALS_COUNT,
     SIGNAL_DEFAULT = DIALOG_FX.SIGNAL_NONE,
 
     // FX tags
     TAG_NONE = 0,
       // ...
-    TAG_COUNT,
+    TAGS_COUNT,
     TAG_DEFAULT = DIALOG_FX.TAG_NONE,
 
     // FX condition indices
     FUNC_CONDITION_FALSE = 0,
     FUNC_CONDITION_TRUE,
       // ...
-    FUNC_CONDITION_COUNT,
+    FUNC_CONDITIONS_COUNT,
 
     // FX indexers indices
     FUNC_INDEXER_RUNNER_CHOICE_INDEX = 0,
       // ...
-    FUNC_INDEXER_COUNT,
+    FUNC_INDEXERS_COUNT,
 
     // Settings masks
     __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * DIALOG_ITEM.LEVEL_DIALOG_FX - 1,
@@ -3801,7 +3799,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     __REGISTER_SETTING_FX_FUNC = 0,
     __REGISTER_SETTING_FX_FUNC_INDEXER,
     __REGISTER_SETTING_FX_FUNC_CONDITION,
-    __REGISTER_SETTING_FX_FUNC_TYPE_COUNT,
+    __REGISTER_SETTING_FX_FUNC_TYPES_COUNT,
     __BITMASK_REGISTER_SHIFT = 0,
     __BITMASK_REGISTER_BITS = 2,
     __BITMASK_REGISTER_MASK = (1 << DIALOG_FX.__BITMASK_REGISTER_BITS) - 1 << DIALOG_FX.__BITMASK_REGISTER_SHIFT,
@@ -4018,7 +4016,7 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 
   static isflowresolver = function(type = self.type())
   {
-    return type && type <= DIALOG_FX.__TYPE_FLOWRES_COUNT;
+    return type && type <= DIALOG_FX.TYPES_FLOWRES_COUNT;
   }
 
 
@@ -4847,9 +4845,9 @@ function DialogItem(settings_mask, id) constructor
     LEVEL_SCENE,
     LEVEL_SEQUENCE,
     LEVEL_DIALOG,
-    LEVEL_LINKABLE_COUNT,
-    LEVEL_DIALOG_FX = DIALOG_ITEM.LEVEL_LINKABLE_COUNT,
-    LEVEL_COUNT,
+    LEVELS_LINKABLE_COUNT,
+    LEVEL_DIALOG_FX = DIALOG_ITEM.LEVELS_LINKABLE_COUNT,
+    LEVELS_COUNT,
   }
 
 
