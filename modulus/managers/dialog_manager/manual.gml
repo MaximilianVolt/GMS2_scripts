@@ -58,6 +58,7 @@ var spk_system      = Dialog.speaker(DIALOG.SPEAKER_SYSTEM)
   , emt_happy       = Dialog.emotion(DIALOG.EMOTION_HAPPY)
   , fxtrigger_enter = DialogFX.trigger(DIALOG_FX.TRIGGER_ON_ENTER)
   , fxtrigger_leave = DialogFX.trigger(DIALOG_FX.TRIGGER_ON_LEAVE)
+  , fxtrigger_enter_leave = DialogFX.trigger(DIALOG_FX.TRIGGER_ON_ENTER | DIALOG_FX.TRIGGER_ON_LEAVE)
   // ... etc., recommended for readability and faster composition
 ;
 

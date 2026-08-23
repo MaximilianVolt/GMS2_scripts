@@ -2,12 +2,12 @@
  * @desc A lightweight, bitmask-focused dialog management system.
  * @link https://github.com/MaximilianVolt/GMS2_scripts/tree/main/modulus/dialog_manager
  * @author @MaximilianVolt
- * @version 0.12.5
+ * @version 0.12.6
  */
 
 
 
-#macro __DIALOG_MANAGER_VERSION__             "0.12.5"
+#macro __DIALOG_MANAGER_VERSION__             "0.12.6"
 #macro __DIALOG_MANAGER_LINK__                "https://github.com/MaximilianVolt/GMS2/tree/main/modulus/managers/dialog_manager"
 
 #macro __DIALOG_MANAGER_SERIALIZER_METHOD__   __struct      // Must be <__struct> or <__array>
@@ -765,7 +765,7 @@ function DialogRunner(manager) constructor
     {
       if (!(jump_settings & DIALOG_RUNNER.JUMP_SETTING_BYPASS_FX_ON_STAY)) {
         manager.__to_dialog(prev_position).__fx_execute_all_of(function(fx) {
-          return fx.trigger() == DIALOG_FX.TRIGGER_ON_STAY;
+          return fx.trigger() & DIALOG_FX.TRIGGER_ON_STAY;
         });
       }
 
@@ -803,6 +803,7 @@ function DialogRunner(manager) constructor
    * @param {Real|Struct.DialogLinkable} [position] The current position of the runner.
    * @param {Constant.DIALOG_RUNNER|Real} [jump_settings] The settings of the jump.
    * @param {Array} [argv] The arguments to pass to eventual DialogFX's.
+   * @return {Real}
    */
 
   static __resolve = function(target_position = self.position, position = self.position, jump_settings = 0, argv = undefined)
@@ -3504,7 +3505,7 @@ function Dialog(text, settings_mask, fx_map, id = undefined) : DialogLinkable(fx
 
       var fx = self.fx(i);
 
-      if (fx.trigger() != trigger || !filter_fn(fx, argv))
+      if (!(fx.trigger() & trigger && filter_fn(fx, argv)))
         continue;
 
       if (fx_first_exec_index < 0)
@@ -3723,6 +3724,10 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     FX_ARG_FLOWRES_DATA_POSITIONS_COUNT,
 
     // FX types
+    __BITMASK_TYPE_SHIFT = 0,
+    __BITMASK_TYPE_BITS = 10,
+    __BITMASK_TYPE_MAX_COUNT = (1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1,
+    __BITMASK_TYPE_MASK = DIALOG_FX.__BITMASK_TYPE_MAX_COUNT << DIALOG_FX.__BITMASK_TYPE_SHIFT,
     TYPE_ANY = 0,
     TYPE_FLOWRES_JUMP,
     TYPE_FLOWRES_DISPATCH,
@@ -3742,13 +3747,21 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
     TYPE_DEFAULT = DIALOG_FX.TYPE_ANY,
 
     // FX triggers
-    TRIGGER_NONE = 0,
-    TRIGGER_ON_ENTER,
-    TRIGGER_ON_STAY,
-    TRIGGER_ON_LEAVE,
-    TRIGGER_ON_CUSTOM,
+    __BITMASK_TRIGGER_SHIFT = DIALOG_FX.__BITMASK_TYPE_SHIFT + DIALOG_FX.__BITMASK_TYPE_BITS,
+    __BITMASK_FLAG_INDEX_TRIGGER_ON_ENTER = 0,
+    __BITMASK_FLAG_INDEX_TRIGGER_ON_STAY,
+    __BITMASK_FLAG_INDEX_TRIGGER_ON_LEAVE,
+    __BITMASK_FLAG_INDEX_TRIGGER_ON_CUSTOM,
       // ...
-    TRIGGERS_COUNT,
+    __BITMASK_TRIGGER_BITS,
+    TRIGGERS_COUNT = DIALOG_FX.__BITMASK_TRIGGER_BITS,
+    __BITMASK_TRIGGER_MASK = (1 << DIALOG_FX.__BITMASK_TRIGGER_BITS) - 1 << DIALOG_FX.__BITMASK_TRIGGER_SHIFT,
+    TRIGGER_NONE = 0,
+    TRIGGER_ON_ENTER  = 1 << DIALOG_FX.__BITMASK_FLAG_INDEX_TRIGGER_ON_ENTER,
+    TRIGGER_ON_STAY   = 1 << DIALOG_FX.__BITMASK_FLAG_INDEX_TRIGGER_ON_STAY,
+    TRIGGER_ON_LEAVE  = 1 << DIALOG_FX.__BITMASK_FLAG_INDEX_TRIGGER_ON_LEAVE,
+    TRIGGER_ON_CUSTOM = 1 << DIALOG_FX.__BITMASK_FLAG_INDEX_TRIGGER_ON_CUSTOM,
+      // ...
     TRIGGER_DEFAULT = DIALOG_FX.TRIGGER_NONE,
 
     // Flow signals
@@ -3781,13 +3794,6 @@ function DialogFX(settings_mask, argv, id = undefined) : DialogItem(settings_mas
 
     // Settings masks
     __INITIAL_ID = DIALOG_MANAGER.__ID_SEPARATOR * DIALOG_ITEM.LEVEL_DIALOG_FX - 1,
-    __BITMASK_TYPE_SHIFT = 0,
-    __BITMASK_TYPE_BITS = 10,
-    __BITMASK_TYPE_MAX_COUNT = (1 << DIALOG_FX.__BITMASK_TYPE_BITS) - 1,
-    __BITMASK_TYPE_MASK = DIALOG_FX.__BITMASK_TYPE_MAX_COUNT << DIALOG_FX.__BITMASK_TYPE_SHIFT,
-    __BITMASK_TRIGGER_SHIFT = DIALOG_FX.__BITMASK_TYPE_SHIFT + DIALOG_FX.__BITMASK_TYPE_BITS,
-    __BITMASK_TRIGGER_BITS = 3,
-    __BITMASK_TRIGGER_MASK = (1 << DIALOG_FX.__BITMASK_TRIGGER_BITS) - 1 << DIALOG_FX.__BITMASK_TRIGGER_SHIFT,
     __BITMASK_SIGNAL_SHIFT = DIALOG_FX.__BITMASK_TRIGGER_SHIFT + DIALOG_FX.__BITMASK_TRIGGER_BITS,
     __BITMASK_SIGNAL_BITS = 3,
     __BITMASK_SIGNAL_MASK = (1 << DIALOG_FX.__BITMASK_SIGNAL_BITS) - 1 << DIALOG_FX.__BITMASK_SIGNAL_SHIFT,
